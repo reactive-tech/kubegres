@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-with-pg-hba-conf
+  namespace: default
+  labels:
+    environment: acceptancetesting
+
+data:
+
+  pg_hba.conf: |
+    # TYPE  DATABASE        USER            ADDRESS                 METHOD
+    # Replication connections by a user with the replication privilege
+    host    replication     replication     all                     md5
+    # As long as it is authenticated, all connections allowed except from "0.0.0.0/0"
+    local   all             all                                     md5
+    host    all             all             all                     md5
+    host    all             all             0.0.0.0/0               reject
+

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-kubegres-replica
+  namespace: default
+  labels:
+    environment: acceptancetesting
+spec:
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 5432
+      nodePort: 30008
+  selector:
+    app: my-kubegres
+    replicationRole: replica

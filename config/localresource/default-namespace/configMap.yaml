@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: custom-toto
+  namespace: default
+
+data:
+
+  # This script is run once, the 1st time a Primary Kubegres container is created.
+  # It is run in the Primary container only.
+  #
+  # Even if you do not use this script, please do not remove it because it is referenced in the StatefulSets.
+  #
+  # You can add in this script any instructions that you would like to run once
+  # such as SQL statements to create specific database(s), user(s), grant accesses, etc...
+  # See the commented example below.
+  #
+  #
+  # This script will be located in the container folder "/docker-entrypoint-initdb.d"
+  # That folder is referenced in the Postgres Docker page: https://hub.docker.com/_/postgres
+  primary_init_script.sh: |
+    #!/bin/bash
+    set -e
+
+    dt=$(date '+%d/%m/%Y %H:%M:%S');
+    echo "$dt - Running init script the 1st time Primary Kubegres container is created...";
+
+    customDatabaseName="my_app"
+    customUserName="my_username"
+
+    echo "$dt - Running: psql -v ON_ERROR_STOP=1 --username $POSTGRES_USER --dbname $POSTGRES_DB ...";
+
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+    CREATE DATABASE $customDatabaseName;
+    CREATE USER $customUserName WITH PASSWORD '$POSTGRES_MYAPP_PASSWORD';
+    \connect $customDatabaseName;
+    CREATE TABLE account(user_id serial PRIMARY KEY, username VARCHAR (50) NOT NULL);
+    INSERT INTO account VALUES (1, 'username1');
+    INSERT INTO account VALUES (2, 'username2');
+    GRANT ALL PRIVILEGES ON DATABASE "$customDatabaseName" to $customUserName;
+    GRANT ALL ON "account" to $customUserName;
+    EOSQL
+
+    echo "$dt - Init script is completed";
+

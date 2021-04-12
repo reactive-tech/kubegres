@@ -1,0 +1,16 @@
+domain: reactive-tech.io
+layout:
+- go.kubebuilder.io/v3
+projectName: kubegres
+repo: reactive-tech.io/kubegres
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: reactive-tech.io
+  group: kubegres
+  kind: Kubegres
+  path: reactive-tech.io/kubegres/api/v1
+  version: v1
+version: "3"

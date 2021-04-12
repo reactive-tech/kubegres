@@ -1,0 +1,60 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: backup-job-postgres-name
+spec:
+
+  # Corn format: https://en.wikipedia.org/wiki/Cron
+  schedule: "* */1 * * *"
+
+  concurrencyPolicy: Forbid
+
+  jobTemplate:
+    spec:
+      template:
+        spec:
+
+          restartPolicy: OnFailure
+
+          volumes:
+            - name: backup-volume
+              persistentVolumeClaim:
+                claimName: backup-pvc-postgres-name
+
+            - name: postgres-config
+              configMap:
+                name: base-kubegres-config
+                defaultMode: 0777
+
+          containers:
+            - name: backup-postgres
+              image: postgres:latest
+              imagePullPolicy: IfNotPresent
+              args:
+                - sh
+                - -c
+                - /tmp/backup_database.sh
+
+              volumeMounts:
+                - name: backup-volume
+                  mountPath: toBeReplaced
+
+                - name: postgres-config
+                  mountPath: /tmp/backup_database.sh
+                  subPath: backup_database.sh
+
+              env:
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: toBeReplaced
+                      key: superUserPassword
+
+                - name: KUBEPOSTGRES_RESOURCE_NAME
+                  value: toBeReplaced
+
+                - name: BACKUP_DESTINATION_FOLDER
+                  value: toBeReplaced
+
+                - name: BACKUP_SOURCE_DB_HOST_NAME
+                  value: toBeReplaced

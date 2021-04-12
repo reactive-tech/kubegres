@@ -1,0 +1,7 @@
+apiVersion: kubegres.reactive-tech.io/v1
+kind: Kubegres
+metadata:
+  name: kubegres-sample
+spec:
+  # Add fields here
+  foo: bar

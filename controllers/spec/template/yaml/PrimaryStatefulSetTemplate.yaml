@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-name-0
+  namespace: default
+  labels:
+    app: postgres-name
+    index: '1'
+    replicationRole: primary
+
+spec:
+  serviceName: "postgres-name"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-name
+      index: '1'
+
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-db
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 1Gi
+
+  template:
+    metadata:
+      labels:
+        app: postgres-name
+        index: '1'
+        replicationRole: primary
+
+    spec:
+      terminationGracePeriodSeconds: 10
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - postgres-name
+              topologyKey: "kubernetes.io/hostname"
+
+      volumes:
+        - name: base-config
+          configMap:
+            name: base-kubegres-config
+            defaultMode: 0777
+
+        - name: custom-config
+          configMap:
+            name: toBeReplaced
+            defaultMode: 0777
+
+      containers:
+        - name: postgres-name-0
+          image: postgres:latest
+          imagePullPolicy: IfNotPresent
+          args: ["-c", "config_file=/etc/postgres.conf", "-c", "hba_file=/etc/pg_hba.conf", "-c", "wal_level=replica"]
+
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - exec pg_isready -U postgres -h $POD_IP
+            failureThreshold: 6
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+
+          readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - exec pg_isready -U postgres -h $POD_IP
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 3
+
+          volumeMounts:
+            - name: postgres-db
+              mountPath: toBeReplaced
+
+            - name: base-config
+              mountPath: /docker-entrypoint-initdb.d/primary_create_replication_role.sh
+              subPath: primary_create_replication_role.sh
+
+            - name: base-config
+              mountPath: /etc/postgres.conf
+              subPath: postgres.conf
+
+            - name: base-config
+              mountPath: /docker-entrypoint-initdb.d/primary_init_script.sh
+              subPath: primary_init_script.sh
+
+            - name: base-config
+              mountPath: /etc/pg_hba.conf
+              subPath: pg_hba.conf

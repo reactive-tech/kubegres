@@ -1,0 +1,41 @@
+apiVersion: kubegres.reactive-tech.io/v1
+kind: Kubegres
+metadata:
+  name: titi
+  namespace: custom
+spec:
+
+  replicas: 3
+  image: postgres:13.2
+  port: 5432
+
+  database:
+    size: 200Mi
+    volumeMount: /var/lib/postgres/data
+    storageClassName: standard
+
+  #backup:
+  #  schedule: "*/1 * * * *"
+  #  volumeMount: /tmp/toto
+  #  pvcName: postgres-db-toto-2-0
+
+  customConfig: custom-toto
+
+  env:
+    - name: POSTGRES_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: toto
+          key: superUserPassword
+
+    - name: POSTGRES_REPLICATION_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: toto
+          key: replicationUserPassword
+
+    - name: POSTGRES_MYAPP_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: toto
+          key: myAppUserPassword

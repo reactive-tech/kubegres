@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-with-backup-database-script
+  namespace: default
+  labels:
+    environment: acceptancetesting
+
+data:
+
+  backup_database.sh: |
+    #!/bin/bash
+    set -e
+
+    dt=$(date '+%d/%m/%Y %H:%M:%S');
+    fileDt=$(date '+%d_%m_%Y_%H_%M_%S');
+    backUpFileName="$Kubegres_RESOURCE_NAME-backup-$fileDt.gz"
+    backUpFilePath="$BACKUP_DESTINATION_FOLDER/$backUpFileName"
+
+    echo "$dt - Starting DB backup of Kubegres resource $Kubegres_RESOURCE_NAME into file: $backUpFilePath";
+    echo "$dt - Running: pg_dumpall -h $BACKUP_SOURCE_DB_HOST_NAME -U postgres -c | gzip > $backUpFilePath"
+
+    pg_dumpall -h $BACKUP_SOURCE_DB_HOST_NAME -U postgres -c | gzip > $backUpFilePath
+
+    if [ $? -ne 0 ]; then
+      rm $backUpFilePath
+      echo "Unable to execute a BackUp. Please check DB connection settings"
+      exit 1
+    fi
+
+    echo "$dt - DB backup completed for Kubegres resource $Kubegres_RESOURCE_NAME into file: $backUpFilePath";

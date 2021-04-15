@@ -17,9 +17,9 @@ Kubegres has the following features:
 * It is resilient, has over [55 automatized tests](https://github.com/reactive-tech/kubegres/tree/main/test) cases and 
   has been running in production.
 
-* It works with the official PostgreSql docker image: it does not ship nor require an additional Docker image to work. 
-  Just install the Kubernetes controller once and deploy as many PostgreSql clusters as you need by simply deploying the 
-  official container of the PostgreSql community.
+* It works with the official [PostgreSql containers](https://hub.docker.com/_/postgres) created by the 
+  [Docker Official Images team](https://docs.docker.com/docker-hub/official_images/): it does not ship nor require a 
+  custom Docker image to work.
 
 [Kubegres](https://www.kubegres.io/) was developed by [Reactive Tech Limited](https://www.reactive-tech.io/)  and Alex 
 Arica as the lead developer.

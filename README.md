@@ -29,3 +29,6 @@ APIs using CRDs. Kubebuilder is maintained by the official Kubernetes API Machin
 
 Get-started:
 https://www.kubegres.io/doc/getting-started.html
+
+Note: If you  would like to make a change to Kubegres' documentation, the [GIT repo is available here](https://github.com/reactive-tech/kubegres-website). 
+Any changes to the documentation will update the website https://www.kubegres.io/

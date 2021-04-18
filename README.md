@@ -17,7 +17,7 @@ Kubegres has the following features:
 * It is resilient, has over [55 automatized tests](https://github.com/reactive-tech/kubegres/tree/main/test) cases and 
   has been running in production.
 
-* It works with the official [PostgreSql containers](https://hub.docker.com/_/postgres) created by the 
+* It works with the [PostgreSql containers](https://hub.docker.com/_/postgres) created by the 
   [Docker Official Images team](https://docs.docker.com/docker-hub/official_images/): it does not ship nor require a 
   custom Docker image to work.
 

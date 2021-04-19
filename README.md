@@ -17,9 +17,9 @@ Kubegres has the following features:
 * It is resilient, has over [55 automatized tests](https://github.com/reactive-tech/kubegres/tree/main/test) cases and 
   has been running in production.
 
-* It works with the [PostgreSql containers](https://hub.docker.com/_/postgres) created by the 
-  [Docker Official Images team](https://docs.docker.com/docker-hub/official_images/): it does not ship nor require a 
-  custom Docker image to work.
+* It works with the [PostgreSql containers](https://hub.docker.com/_/postgres) created by the [Docker Official Images team](https://docs.docker.com/docker-hub/official_images/). Kubegres uses the standard PostgreSql libraries to manage replication and failover and it does not require a custom Docker image with a set of third party libraries.
+
+* It is portable because compatible with any Docker images which derive from the [PostgreSql containers](https://hub.docker.com/_/postgres)
 
 [Kubegres](https://www.kubegres.io/) was developed by [Reactive Tech Limited](https://www.reactive-tech.io/)  and Alex 
 Arica as the lead developer.

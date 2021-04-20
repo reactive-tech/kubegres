@@ -3,7 +3,7 @@
 replication enabled out-of-the box. It brings simplicity when using PostgreSql considering how complex managing 
 stateful-set's life-cycle and data replication could be with Kubernetes.
 
-Kubegres has the following features:
+**Features**
 
 * It creates a cluster of PostgreSql servers with data replication enabled: it creates a Primary PostgreSql pod and a 
   number of Replica PostgreSql pods and replicates primary's database in real-time to Replica pods.
@@ -15,20 +15,23 @@ Kubegres has the following features:
 * It provides a very simple YAML with properties specialised for PostgreSql.
 
 * It is resilient, has over [55 automatized tests](https://github.com/reactive-tech/kubegres/tree/main/test) cases and 
-  has been running in production.
+  has been running in production. 
 
-* It works with the [PostgreSql containers](https://hub.docker.com/_/postgres) created by the [Docker Official Images team](https://docs.docker.com/docker-hub/official_images/). Kubegres uses the standard PostgreSql libraries to manage replication and failover and it does not require a custom Docker image with a set of third party libraries.
+[Please click here to get started](https://www.kubegres.io/doc/getting-started.html).
 
-* It is portable because compatible with any Docker images which derive from the [PostgreSql containers](https://hub.docker.com/_/postgres)
+**More details**
 
 [Kubegres](https://www.kubegres.io/) was developed by [Reactive Tech Limited](https://www.reactive-tech.io/)  and Alex 
-Arica as the lead developer.
+Arica as the lead developer. Reactive Tech offers [support services](https://www.kubegres.io/support/) for Kubegres, 
+Kubernetes and PostgreSql.
 
 It was developed with the framework [Kubebuilder](https://book.kubebuilder.io/) version 3, an SDK for building Kubernetes 
 APIs using CRDs. Kubebuilder is maintained by the official Kubernetes API Machinery Special Interest Group (SIG).
 
-Get-started:
-https://www.kubegres.io/doc/getting-started.html
+[Please click here to get started](https://www.kubegres.io/doc/getting-started.html).
 
-Note: If you  would like to make a change to Kubegres' documentation, the [GIT repo is available here](https://github.com/reactive-tech/kubegres-website). 
+
+**Contribute**
+
+If you  would like to contribute to Kubegres' documentation, the [GIT repo is available here](https://github.com/reactive-tech/kubegres-website). 
 Any changes to the documentation will update the website https://www.kubegres.io/

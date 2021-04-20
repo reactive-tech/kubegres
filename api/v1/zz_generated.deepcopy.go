@@ -144,6 +144,11 @@ func (in *KubegresSpec) DeepCopyInto(out *KubegresSpec) {
 		*out = new(int32)
 		**out = **in
 	}
+	if in.ImagePullSecrets != nil {
+		in, out := &in.ImagePullSecrets, &out.ImagePullSecrets
+		*out = make([]corev1.LocalObjectReference, len(*in))
+		copy(*out, *in)
+	}
 	in.Database.DeepCopyInto(&out.Database)
 	out.Backup = in.Backup
 	if in.Env != nil {

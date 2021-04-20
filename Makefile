@@ -44,7 +44,7 @@ vet: ## Run go vet against code.
 	go vet ./...
 
 test: manifests generate fmt vet ## Run tests.
-	go test $(shell pwd)/test -run $(shell pwd)/test/suite_test.go -v
+	go test $(shell pwd)/test -run $(shell pwd)/test/suite_test.go -v -test.timeout 6000s
 
 #ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 #test: manifests generate fmt vet ## Run tests.
@@ -55,6 +55,7 @@ test: manifests generate fmt vet ## Run tests.
 ##@ Build
 
 build: generate fmt vet ## Build manager binary.
+	go generate
 	go build -o bin/manager main.go
 
 run: manifests generate fmt vet ## Run a controller from your host.
@@ -70,6 +71,7 @@ docker-push: ## Push docker image with the manager.
 ##@ Deployment
 
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
+	go generate
 	$(KUSTOMIZE) build config/crd | kubectl apply -f -
 
 uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config.

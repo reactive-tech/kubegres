@@ -197,7 +197,10 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 	statefulSetTemplate.Spec.Template.Labels["index"] = instanceIndex
 
 	statefulSetTemplateSpec := &statefulSetTemplate.Spec.Template.Spec
-	statefulSetTemplateSpec.Affinity.PodAntiAffinity.RequiredDuringSchedulingIgnoredDuringExecution[0].LabelSelector.MatchExpressions[0].Values[0] = resourceName
+
+	if postgresSpec.ImagePullSecrets != nil {
+		statefulSetTemplateSpec.ImagePullSecrets = append(statefulSetTemplateSpec.ImagePullSecrets, postgresSpec.ImagePullSecrets...)
+	}
 
 	container := &statefulSetTemplateSpec.Containers[0]
 	container.Name = statefulSetResourceName

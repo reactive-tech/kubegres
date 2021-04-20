@@ -9,17 +9,20 @@ spec:
   image: postgres:13.2
   port: 5432
 
+  #imagePullSecrets:
+  #  - name: my-private-docker-repo-secret
+
   database:
     size: 200Mi
-    volumeMount: /var/lib/postgres/data
     storageClassName: standard
+    volumeMount: /var/lib/postgres/data
+
+  customConfig: custom-toto
 
   #backup:
   #  schedule: "*/1 * * * *"
-  #  volumeMount: /tmp/toto
   #  pvcName: postgres-db-toto-2-0
-
-  customConfig: custom-toto
+  #  volumeMount: /tmp/toto
 
   env:
     - name: POSTGRES_PASSWORD

@@ -9,6 +9,9 @@ spec:
   image: postgres:13.2
   port: 5432
 
+  #imagePullSecrets:
+  #  - name: my-private-docker-repo-secret
+
   database:
     size: 200Mi
     storageClassName: standard

@@ -40,9 +40,10 @@ type KubegresBackUp struct {
 }
 
 type KubegresSpec struct {
-	Replicas *int32 `json:"replicas,omitempty"`
-	Image    string `json:"image,omitempty"`
-	Port     int32  `json:"port,omitempty"`
+	Replicas         *int32                    `json:"replicas,omitempty"`
+	Image            string                    `json:"image,omitempty"`
+	Port             int32                     `json:"port,omitempty"`
+	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 
 	CustomConfig string           `json:"customConfig,omitempty"`
 	Database     KubegresDatabase `json:"database,omitempty"`

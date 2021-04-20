@@ -202,6 +202,8 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 		statefulSetTemplateSpec.ImagePullSecrets = append(statefulSetTemplateSpec.ImagePullSecrets, postgresSpec.ImagePullSecrets...)
 	}
 
+	statefulSetTemplateSpec.Affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution[0].PodAffinityTerm.LabelSelector.MatchExpressions[0].Values[0] = resourceName
+
 	container := &statefulSetTemplateSpec.Containers[0]
 	container.Name = statefulSetResourceName
 	container.Image = postgresSpec.Image

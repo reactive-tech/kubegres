@@ -1,6 +1,7 @@
 
 # Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+LATEST = controller:latest
+IMG ?= $(LATEST)
 # Produce CRDs that work back to Kubernetes 1.11 (no version conversion)
 CRD_OPTIONS ?= "crd:trivialVersions=true,preserveUnknownFields=false"
 
@@ -37,13 +38,13 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
-fmt: ## Run go fmt against code.
+fmt: ## Run go fmt against code (it formats source code).
 	go fmt ./...
 
-vet: ## Run go vet against code.
+vet: ## Run go vet against code (it check the constructs in the code).
 	go vet ./...
 
-test: manifests generate fmt vet ## Run tests.
+test: build ## Run tests.
 	go test $(shell pwd)/test -run $(shell pwd)/test/suite_test.go -v -test.timeout 6000s
 
 #ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
@@ -54,15 +55,15 @@ test: manifests generate fmt vet ## Run tests.
 
 ##@ Build
 
-build: generate fmt vet ## Build manager binary.
+build: manifests generate fmt vet ## Build manager binary.
 	go generate
 	go build -o bin/manager main.go
 
-run: manifests generate fmt vet ## Run a controller from your host.
+run: install build ## Connect to a local Kubernetes cluster, install the operator and run controller
 	go run ./main.go
 
 #docker-build: test ## Build docker image with the manager.
-docker-build: ## Build docker image with the manager.
+docker-build: build ## Build docker image with the manager.
 	docker build -t ${IMG} .
 
 docker-push: ## Push docker image with the manager.
@@ -70,21 +71,30 @@ docker-push: ## Push docker image with the manager.
 
 ##@ Deployment
 
-install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
-	go generate
+install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config. (by default a local Kubernetes cluster)
 	$(KUSTOMIZE) build config/crd | kubectl apply -f -
 
-uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config.
+uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. (by default a local Kubernetes cluster)
 	$(KUSTOMIZE) build config/crd | kubectl delete -f -
 
-deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+
+deploy-check:
+ifeq ($(IMG),$(LATEST))
+	@echo "PLEASE PROVIDE THE ARGUMENT 'IMG' WHEN RUNNING 'make deploy'. EXAMPLE OF USAGE: 'make deploy IMG=reactivetechio/kubegres:1.89'"
+	exit 1
+endif
+	@echo "RUNNING THE ACCEPTANCE TESTS AND THEN WILL DEPLOY $(IMG) INTO DOCKER HUB."
+
+## Run acceptance tests then deploy into Docker Hub the controller as the Docker image provided in arg ${IMG}
+## and update the local file "kubegres.yaml" with the image ${IMG}
+## Usage: make deploy IMG=reactivetechio/kubegres:[version]'
+deploy: deploy-check test docker-build docker-push kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default > kubegres.yaml
-	kubectl apply -f kubegres.yaml
+	@echo "DEPLOYED $(IMG) INTO DOCKER HUB. UPDATED 'kubegres.yaml' WITH '$(IMG)'. YOU CAN COMMIT 'kubegres.yaml' AND CREATE A RELEASE IN GITHUB."
 
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/default | kubectl delete -f -
-
 
 CONTROLLER_GEN = $(shell pwd)/bin/controller-gen
 controller-gen: ## Download controller-gen locally if necessary.

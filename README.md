@@ -19,7 +19,15 @@ stateful-set's life-cycle and data replication could be with Kubernetes.
 
 [Please click here to get started](https://www.kubegres.io/doc/getting-started.html).
 
-**More details**
+**Getting started**
+
+If you would like to install Kubegres, please read the page [Getting started](http://www.kubegres.io/doc/getting-started.html).
+
+**Contribute**
+
+If you would like to contribute to Kubegres, please read the page [How to contribute](http://www.kubegres.io/contribute/).
+
+**More details about the project**
 
 [Kubegres](https://www.kubegres.io/) was developed by [Reactive Tech Limited](https://www.reactive-tech.io/)  and Alex 
 Arica as the lead developer. Reactive Tech offers [support services](https://www.kubegres.io/support/) for Kubegres, 
@@ -27,11 +35,3 @@ Kubernetes and PostgreSql.
 
 It was developed with the framework [Kubebuilder](https://book.kubebuilder.io/) version 3, an SDK for building Kubernetes 
 APIs using CRDs. Kubebuilder is maintained by the official Kubernetes API Machinery Special Interest Group (SIG).
-
-[Please click here to get started](https://www.kubegres.io/doc/getting-started.html).
-
-
-**Contribute**
-
-If you  would like to contribute to Kubegres' documentation, the [GIT repo is available here](https://github.com/reactive-tech/kubegres-website). 
-Any changes to the documentation will update the website https://www.kubegres.io/

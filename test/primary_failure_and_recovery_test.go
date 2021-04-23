@@ -240,11 +240,11 @@ func (r *PrimaryFailureAndRecoveryTest) whenPrimaryAndItsPVCAreDeleted() {
 
 func (r *PrimaryFailureAndRecoveryTest) wait10Seconds() bool {
 
-	toto := 0
+	waitingAttempts := 0
 
 	return Eventually(func() bool {
-		toto++
-		return toto == 13
+		waitingAttempts++
+		return waitingAttempts == 13
 	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
 }
 

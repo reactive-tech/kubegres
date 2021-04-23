@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: custom-toto
+  name: mypostgres-conf
   namespace: default
 
 data:

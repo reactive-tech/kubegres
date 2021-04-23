@@ -1,3 +1,4 @@
+News: A webinar about Kubegres will be organised on 25 May 2021 hosted by PostgresConf. [Register here!](https://postgresconf.org/conferences/2021_Postgres_Conference_Webinars/program/proposals/creating-a-resilient-postgresql-cluster-with-kubegres)
 
 [Kubegres](https://www.kubegres.io/) is a Kubernetes operator allowing to deploy a cluster of PostgreSql pods with data 
 replication enabled out-of-the box. It brings simplicity when using PostgreSql considering how complex managing 

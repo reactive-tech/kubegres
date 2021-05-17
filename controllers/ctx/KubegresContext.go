@@ -45,6 +45,7 @@ const (
 	BaseConfigMapName                      = "base-kubegres-config"
 	CronJobNamePrefix                      = "backup-"
 	DefaultContainerVolumeMount            = "/var/lib/postgresql/data"
+	DefaultDatabaseFolder                  = "pgdata"
 	EnvVarNamePgData                       = "PGDATA"
 	EnvVarNameOfPostgresSuperUserPsw       = "POSTGRES_PASSWORD"
 	EnvVarNameOfPostgresReplicationUserPsw = "POSTGRES_REPLICATION_PASSWORD"

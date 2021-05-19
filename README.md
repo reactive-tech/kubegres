@@ -6,7 +6,7 @@ stateful-set's life-cycle and data replication could be with Kubernetes.
 
 **Features**
 
-* It creates a cluster of PostgreSql servers with data replication enabled: it creates a Primary PostgreSql pod and a 
+* It creates a cluster of PostgreSql servers with [Streaming Replication](https://wiki.postgresql.org/wiki/Streaming_Replication) enabled: it creates a Primary PostgreSql pod and a 
   number of Replica PostgreSql pods and replicates primary's database in real-time to Replica pods.
 
 * It manages fail-over: if a Primary PostgreSql crashes, it automatically promotes a Replica PostgreSql as a Primary.
@@ -18,7 +18,13 @@ stateful-set's life-cycle and data replication could be with Kubernetes.
 * It is resilient, has over [55 automatized tests](https://github.com/reactive-tech/kubegres/tree/main/test) cases and 
   has been running in production. 
 
-[Please click here to get started](https://www.kubegres.io/doc/getting-started.html).
+
+**Why to use Kubegres over other operators?**
+
+Kubegres is minimalist in terms of codebase compared to other open-source Postgres operators. It has the minimal and 
+yet robust required features to manage a cluster of PostgreSql on Kubernetes. We aim keeping this project small and simple.
+
+Among many reasons, there are [5 main ones why we recommend Kubegres](https://www.kubegres.io/#kubegres_compared).
 
 **Getting started**
 

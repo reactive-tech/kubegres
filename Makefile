@@ -85,9 +85,10 @@ ifeq ($(IMG),$(LATEST))
 endif
 	@echo "RUNNING THE ACCEPTANCE TESTS AND THEN WILL DEPLOY $(IMG) INTO DOCKER HUB."
 
+## Usage: 'make deploy IMG=reactivetechio/kubegres:[version]'
+## eg: 'make deploy IMG=reactivetechio/kubegres:1.4'
 ## Run acceptance tests then deploy into Docker Hub the controller as the Docker image provided in arg ${IMG}
 ## and update the local file "kubegres.yaml" with the image ${IMG}
-## Usage: make deploy IMG=reactivetechio/kubegres:[version]'
 deploy: deploy-check test docker-build docker-push kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default > kubegres.yaml

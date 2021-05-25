@@ -19,9 +19,10 @@ stateful-set's life-cycle and data replication could be with Kubernetes.
   has been running in production. 
 
 
-**Why to use Kubegres over other operators?**
+**How does Kubegres differentiate itself?**
 
-Kubegres is minimalist in terms of codebase compared to other open-source Postgres operators. It has the minimal and 
+Kubegres is fully integrated with Kubernetes as it runs as an operator written in Go. It is integrated in Kubernetes lifecyle. 
+It is minimalist in terms of codebase compared to other open-source Postgres operators. It has the minimal and 
 yet robust required features to manage a cluster of PostgreSql on Kubernetes. We aim keeping this project small and simple.
 
 Among many reasons, there are [5 main ones why we recommend Kubegres](https://www.kubegres.io/#kubegres_compared).

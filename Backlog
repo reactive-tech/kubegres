@@ -1,0 +1,6 @@
+#7 : Allow major version upgrade using pg_upgrade
+
+#10 : Deploy Kubegres with a HELM chart
+
+#? : Allow disabling automatic failover via the deployment YAML "kind: Kubegres"
+and allow manual failover by updating which POD is Primary in the YAML.

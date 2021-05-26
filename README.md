@@ -1,4 +1,4 @@
-News: A webinar about Kubegres will be organised on 25 May 2021 hosted by PostgresConf. [Register here!](https://postgresconf.org/conferences/2021_Postgres_Conference_Webinars/program/proposals/creating-a-resilient-postgresql-cluster-with-kubegres)
+A webinar about Kubegres took place on 25 May 2021 hosted by PostgresConf. [View the recorded video.](https://postgresconf.org/conferences/2021_Postgres_Conference_Webinars/program/proposals/creating-a-resilient-postgresql-cluster-with-kubegres)
 
 [Kubegres](https://www.kubegres.io/) is a Kubernetes operator allowing to deploy a cluster of PostgreSql pods with data 
 replication enabled out-of-the box. It brings simplicity when using PostgreSql considering how complex managing 
@@ -21,7 +21,7 @@ stateful-set's life-cycle and data replication could be with Kubernetes.
 
 **How does Kubegres differentiate itself?**
 
-Kubegres is fully integrated with Kubernetes as it runs as an operator written in Go. It is integrated in Kubernetes lifecyle. 
+Kubegres is fully integrated with Kubernetes' lifecycle as it runs as an operator written in Go.  
 It is minimalist in terms of codebase compared to other open-source Postgres operators. It has the minimal and 
 yet robust required features to manage a cluster of PostgreSql on Kubernetes. We aim keeping this project small and simple.
 

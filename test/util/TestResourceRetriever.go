@@ -26,6 +26,7 @@ import (
 	"k8s.io/api/batch/v1beta1"
 	core "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"log"
 	postgresv1 "reactive-tech.io/kubegres/api/v1"
@@ -62,12 +63,14 @@ type TestKubegresBackUpCronJob struct {
 
 type TestKubegresPod struct {
 	Name     string
+	Metadata metav1.ObjectMeta
 	Spec     core.PodSpec
 	Resource *core.Pod
 }
 
 type TestKubegresStatefulSet struct {
 	Name     string
+	Metadata metav1.ObjectMeta
 	Spec     v1.StatefulSetSpec
 	Resource *v1.StatefulSet
 }
@@ -202,11 +205,13 @@ func (r *TestResourceRetriever) GetKubegresResourcesByName(kubegresName string) 
 			IsPrimary: isPrimaryPod,
 			Pod: TestKubegresPod{
 				Name:     pod.Name,
+				Metadata: pod.ObjectMeta,
 				Spec:     pod.Spec,
 				Resource: pod,
 			},
 			StatefulSet: TestKubegresStatefulSet{
 				Name:     statefulSet.Name,
+				Metadata: statefulSet.ObjectMeta,
 				Spec:     statefulSet.Spec,
 				Resource: &statefulSetCopy,
 			},

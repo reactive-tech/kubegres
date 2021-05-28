@@ -37,6 +37,10 @@ type ResourcesCreatorFromTemplate struct {
 	templateFromFiles      ResourceTemplateLoader
 }
 
+const (
+	KubegresInternalAnnotationKey = "kubectl.kubernetes.io/last-applied-configuration"
+)
+
 func CreateResourcesCreatorFromTemplate(kubegresContext ctx.KubegresContext,
 	customConfigSpecHelper CustomConfigSpecHelper,
 	resourceTemplateLoader ResourceTemplateLoader) ResourcesCreatorFromTemplate {
@@ -225,7 +229,7 @@ func (r *ResourcesCreatorFromTemplate) getCustomAnnotations() map[string]string 
 	var customSpecAnnotations = make(map[string]string)
 
 	for key, value := range r.kubegresContext.Kubegres.ObjectMeta.Annotations {
-		if key == "kubectl.kubernetes.io/last-applied-configuration" {
+		if key == KubegresInternalAnnotationKey {
 			continue
 		}
 		customSpecAnnotations[key] = value

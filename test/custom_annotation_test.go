@@ -33,19 +33,23 @@ import (
 	"time"
 )
 
-const customNamespace = "toto"
+const customAnnotation1Key = "linkerd.io/inject"
+const customAnnotation1Value = "enabled"
+const customAnnotation2Key = "toto.io/test"
+const customAnnotation2Value = "disabled"
 
-var _ = Describe("Creating Kubegres with a custom namespace", func() {
+var _ = Describe("Creating Kubegres with custom annotations", func() {
 
-	var test = CustomNamespaceTest{}
+	var test = CustomAnnotationTest{}
 
 	BeforeEach(func() {
 		//Skip("Temporarily skipping test")
 
-		namespace := customNamespace
+		namespace := resourceConfigs.DefaultNamespace
 		test.resourceRetriever = util.CreateTestResourceRetriever(k8sClientTest, namespace)
 		test.resourceCreator = util.CreateTestResourceCreator(k8sClientTest, test.resourceRetriever, namespace)
-		test.dbQueryTestCases = testcases.InitDbQueryTestCasesWithNodePorts(test.resourceCreator, resourceConfigs.KubegresResourceName, resourceConfigs.ServiceToSqlQueryPrimaryDbNodePort+4, resourceConfigs.ServiceToSqlQueryReplicaDbNodePort+4)
+		test.dbQueryTestCases = testcases.InitDbQueryTestCases(test.resourceCreator, resourceConfigs.KubegresResourceName)
+		test.kubegresResource = resourceConfigs.LoadKubegresYaml()
 	})
 
 	AfterEach(func() {
@@ -56,89 +60,40 @@ var _ = Describe("Creating Kubegres with a custom namespace", func() {
 		}
 	})
 
-	Context("GIVEN new Kubegres is created in a custom namespace with spec 'replica' set to 3 and then it is updated to different values", func() {
+	Context("GIVEN new Kubegres is created with custom annotations and with spec 'replica' set to 3", func() {
 
-		It("GIVEN new Kubegres is created in a custom namespace with spec 'replica' set to 3 THEN 1 primary and 2 replica should be created", func() {
+		// GIVEN new Kubegres is created with custom annotations and spec 'replica' set to 3 then
 
-			log.Print("START OF: Test 'GIVEN new Kubegres is created in a custom namespace with spec 'replica' set to 3'")
+		It("GIVEN new Kubegres is created with with custom annotations and with spec 'replica' set to 3 THEN it should be deployed with StatefulSets and Pods containing the custom annotations AND 1 primary and 2 replica should be created", func() {
 
-			test.givenNewKubegresSpecIsSetTo(customNamespace, 3)
+			log.Print("START OF: Test 'GIVEN new Kubegres is created with custom annotations and with spec 'replica' set to 3'")
+
+			test.givenKubegresAnnotationIsSetTo(customAnnotation1Key, customAnnotation1Value)
+			test.givenKubegresAnnotationIsSetTo(customAnnotation2Key, customAnnotation2Value)
+
+			test.givenKubegresSpecIsSetTo(3)
 
 			test.whenKubernetesIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
 			test.thenDeployedKubegresSpecShouldBeSetTo(3)
+			test.thenPodsAndStatefulSetsShouldHaveAnnotation(customAnnotation1Key, customAnnotation1Value)
+			test.thenPodsAndStatefulSetsShouldHaveAnnotation(customAnnotation2Key, customAnnotation2Value)
 
 			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
 			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
 
 			test.keepCreatedResourcesForNextTest = true
 
-			log.Print("END OF: Test 'GIVEN new Kubegres is created in a custom namespace with spec 'replica' set to 3'")
+			log.Print("END OF: Test 'GIVEN new Kubegres is created with custom annotations and with spec 'replica' set to 3'")
 		})
 
-		It("GIVEN existing Kubegres is updated with spec 'replica' set from 3 to 4 THEN 1 more replica should be created", func() {
-
-			log.Print("START OF: Test 'GIVEN existing Kubegres is updated with spec 'replica' set from 3 to 4'")
-
-			test.givenExistingKubegresSpecIsSetTo(4)
-
-			test.whenKubernetesIsUpdated()
-
-			test.thenPodsStatesShouldBe(1, 3)
-
-			test.thenDeployedKubegresSpecShouldBeSetTo(4)
-
-			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
-			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
-
-			test.keepCreatedResourcesForNextTest = true
-
-			log.Print("END OF: Test 'GIVEN existing Kubegres is updated with spec 'replica' set from 3 to 4'")
-		})
-
-		It("GIVEN existing Kubegres is updated with spec 'replica' set from 4 to 3 THEN 1 replica should be deleted", func() {
-
-			log.Print("START OF: Test 'GIVEN existing Kubegres is updated with spec 'replica' set from 4 to 3'")
-
-			test.givenExistingKubegresSpecIsSetTo(3)
-
-			test.whenKubernetesIsUpdated()
-
-			test.thenPodsStatesShouldBe(1, 2)
-
-			test.thenDeployedKubegresSpecShouldBeSetTo(3)
-
-			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
-			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
-
-			test.keepCreatedResourcesForNextTest = true
-
-			log.Print("END OF: Test 'GIVEN existing Kubegres is updated with spec 'replica' set from 4 to 3'")
-		})
-
-		It("GIVEN existing Kubegres is updated with spec 'replica' set from 3 to 1 THEN 2 replica should be deleted", func() {
-
-			log.Print("START OF: Test 'GIVEN existing Kubegres is updated with spec 'replica' set from 3 to 1'")
-
-			test.givenExistingKubegresSpecIsSetTo(1)
-
-			test.whenKubernetesIsUpdated()
-
-			test.thenPodsStatesShouldBe(1, 0)
-
-			test.thenDeployedKubegresSpecShouldBeSetTo(1)
-
-			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
-
-			log.Print("END OF: Test 'GIVEN existing Kubegres is updated with spec 'replica' set from 3 to 1'")
-		})
 	})
 
 })
 
-type CustomNamespaceTest struct {
+type CustomAnnotationTest struct {
 	keepCreatedResourcesForNextTest bool
 	kubegresResource                *postgresv1.Kubegres
 	dbQueryTestCases                testcases.DbQueryTestCases
@@ -146,13 +101,20 @@ type CustomNamespaceTest struct {
 	resourceRetriever               util.TestResourceRetriever
 }
 
-func (r *CustomNamespaceTest) givenNewKubegresSpecIsSetTo(namespace string, specNbreReplicas int32) {
-	r.kubegresResource = resourceConfigs.LoadKubegresYaml()
-	r.kubegresResource.Namespace = namespace
+func (r *CustomAnnotationTest) givenKubegresAnnotationIsSetTo(annotationKey string, annotationValue string) {
+
+
+	if r.kubegresResource.Annotations == nil {
+		r.kubegresResource.Annotations = make(map[string]string)
+	}
+	r.kubegresResource.Annotations[annotationKey] = annotationValue
+}
+
+func (r *CustomAnnotationTest) givenKubegresSpecIsSetTo(specNbreReplicas int32) {
 	r.kubegresResource.Spec.Replicas = &specNbreReplicas
 }
 
-func (r *CustomNamespaceTest) givenExistingKubegresSpecIsSetTo(specNbreReplicas int32) {
+func (r *CustomAnnotationTest) givenExistingKubegresSpecIsSetTo(specNbreReplicas int32) {
 	var err error
 	r.kubegresResource, err = r.resourceRetriever.GetKubegres()
 
@@ -165,15 +127,15 @@ func (r *CustomNamespaceTest) givenExistingKubegresSpecIsSetTo(specNbreReplicas 
 	r.kubegresResource.Spec.Replicas = &specNbreReplicas
 }
 
-func (r *CustomNamespaceTest) whenKubernetesIsCreated() {
+func (r *CustomAnnotationTest) whenKubernetesIsCreated() {
 	r.resourceCreator.CreateKubegres(r.kubegresResource)
 }
 
-func (r *CustomNamespaceTest) whenKubernetesIsUpdated() {
+func (r *CustomAnnotationTest) whenKubernetesIsUpdated() {
 	r.resourceCreator.UpdateResource(r.kubegresResource, "Kubegres")
 }
 
-func (r *CustomNamespaceTest) thenErrorEventShouldBeLogged() {
+func (r *CustomAnnotationTest) thenErrorEventShouldBeLogged() {
 	expectedErrorEvent := util.EventRecord{
 		Eventtype: v12.EventTypeWarning,
 		Reason:    "SpecCheckErr",
@@ -189,7 +151,35 @@ func (r *CustomNamespaceTest) thenErrorEventShouldBeLogged() {
 	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
 }
 
-func (r *CustomNamespaceTest) thenPodsStatesShouldBe(nbrePrimary, nbreReplicas int) bool {
+func (r *CustomAnnotationTest) thenPodsAndStatefulSetsShouldHaveAnnotation(annotationKey, annotationValue string) bool {
+	return Eventually(func() bool {
+
+		kubegresResources, err := r.resourceRetriever.GetKubegresResources()
+		if err != nil && !apierrors.IsNotFound(err) {
+			log.Println("ERROR while retrieving Kubegres kubegresResources")
+			return false
+		}
+
+
+		for _, kubegresResource := range kubegresResources.Resources {
+			if kubegresResource.Pod.Metadata.Annotations[annotationKey] != annotationValue {
+				log.Println("Pods do NOT contain the annotation '" + annotationKey + ":" + annotationValue + "'")
+				return false
+			}
+			if kubegresResource.StatefulSet.Metadata.Annotations[annotationKey] != annotationValue {
+				log.Println("StatefulSets do NOT contain the annotation '" + annotationKey + ":" + annotationValue + "'")
+				return false
+			}
+		}
+
+		log.Println("Pods and StatefulSets do contain the annotation '" + annotationKey + ":" + annotationValue + "'")
+		return true
+
+	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
+}
+
+
+func (r *CustomAnnotationTest) thenPodsStatesShouldBe(nbrePrimary, nbreReplicas int) bool {
 	return Eventually(func() bool {
 
 		pods, err := r.resourceRetriever.GetKubegresResources()
@@ -212,7 +202,7 @@ func (r *CustomNamespaceTest) thenPodsStatesShouldBe(nbrePrimary, nbreReplicas i
 	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
 }
 
-func (r *CustomNamespaceTest) thenDeployedKubegresSpecShouldBeSetTo(specNbreReplicas int32) {
+func (r *CustomAnnotationTest) thenDeployedKubegresSpecShouldBeSetTo(specNbreReplicas int32) {
 	var err error
 	r.kubegresResource, err = r.resourceRetriever.GetKubegres()
 

@@ -27,6 +27,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"log"
 	postgresv1 "reactive-tech.io/kubegres/api/v1"
+	"reactive-tech.io/kubegres/controllers/spec/template"
 	"reactive-tech.io/kubegres/test/resourceConfigs"
 	"reactive-tech.io/kubegres/test/util"
 	"reactive-tech.io/kubegres/test/util/testcases"
@@ -80,6 +81,7 @@ var _ = Describe("Creating Kubegres with custom annotations", func() {
 			test.thenDeployedKubegresSpecShouldBeSetTo(3)
 			test.thenPodsAndStatefulSetsShouldHaveAnnotation(customAnnotation1Key, customAnnotation1Value)
 			test.thenPodsAndStatefulSetsShouldHaveAnnotation(customAnnotation2Key, customAnnotation2Value)
+			test.thenPodsAndStatefulSetsShouldNOTHaveAnnotationKey(template.KubegresInternalAnnotationKey)
 
 			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
 			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
@@ -173,6 +175,38 @@ func (r *CustomAnnotationTest) thenPodsAndStatefulSetsShouldHaveAnnotation(annot
 		}
 
 		log.Println("Pods and StatefulSets do contain the annotation '" + annotationKey + ":" + annotationValue + "'")
+		return true
+
+	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
+}
+
+
+func (r *CustomAnnotationTest) thenPodsAndStatefulSetsShouldNOTHaveAnnotationKey(annotationKey string) bool {
+	return Eventually(func() bool {
+
+		kubegresResources, err := r.resourceRetriever.GetKubegresResources()
+		if err != nil && !apierrors.IsNotFound(err) {
+			log.Println("ERROR while retrieving Kubegres kubegresResources")
+			return false
+		}
+
+
+		for _, kubegresResource := range kubegresResources.Resources {
+
+			_, existsInPod := kubegresResource.Pod.Metadata.Annotations[annotationKey]
+			if existsInPod {
+				log.Println("Pods do contain the unexpected annotation key '" + annotationKey + "'")
+				return false
+			}
+
+			_, existsInStatefulSet := kubegresResource.StatefulSet.Metadata.Annotations[annotationKey]
+			if existsInStatefulSet {
+				log.Println("StatefulSets do contain the unexpected annotation key '" + annotationKey + "'")
+				return false
+			}
+		}
+
+		log.Println("As expected, Pods and StatefulSets do NOT contain the annotation key '" + annotationKey + "'")
 		return true
 
 	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())

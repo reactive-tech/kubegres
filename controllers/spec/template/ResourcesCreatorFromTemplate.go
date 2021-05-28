@@ -186,6 +186,7 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 
 	statefulSetTemplate.Name = statefulSetResourceName
 	statefulSetTemplate.Namespace = r.kubegresContext.Kubegres.Namespace
+	statefulSetTemplate.Annotations = r.getCustomAnnotations()
 	statefulSetTemplate.Labels["app"] = resourceName
 	statefulSetTemplate.Labels["index"] = instanceIndex
 	statefulSetTemplate.OwnerReferences = r.getOwnerReference()
@@ -195,6 +196,7 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 	statefulSetTemplate.Spec.Selector.MatchLabels["index"] = instanceIndex
 	statefulSetTemplate.Spec.Template.Labels["app"] = resourceName
 	statefulSetTemplate.Spec.Template.Labels["index"] = instanceIndex
+	statefulSetTemplate.Spec.Template.Annotations = r.getCustomAnnotations()
 
 	statefulSetTemplateSpec := &statefulSetTemplate.Spec.Template.Spec
 
@@ -214,6 +216,22 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 
 	statefulSetTemplate.Spec.VolumeClaimTemplates[0].Spec.StorageClassName = postgresSpec.Database.StorageClassName
 	statefulSetTemplate.Spec.VolumeClaimTemplates[0].Spec.Resources.Requests = core.ResourceList{core.ResourceStorage: resource.MustParse(postgresSpec.Database.Size)}
+}
+
+// Extract annotations set in Kubegres YAML by
+// excluding the internal annotation "kubectl.kubernetes.io/last-applied-configuration"
+func (r *ResourcesCreatorFromTemplate) getCustomAnnotations() map[string]string {
+
+	var customSpecAnnotations = make(map[string]string)
+
+	for key, value := range r.kubegresContext.Kubegres.ObjectMeta.Annotations {
+		if key == "kubectl.kubernetes.io/last-applied-configuration" {
+			continue
+		}
+		customSpecAnnotations[key] = value
+	}
+
+	return customSpecAnnotations
 }
 
 func (r *ResourcesCreatorFromTemplate) getOwnerReference() []metav1.OwnerReference {

@@ -105,7 +105,6 @@ type CustomAnnotationTest struct {
 
 func (r *CustomAnnotationTest) givenKubegresAnnotationIsSetTo(annotationKey string, annotationValue string) {
 
-
 	if r.kubegresResource.Annotations == nil {
 		r.kubegresResource.Annotations = make(map[string]string)
 	}
@@ -162,7 +161,6 @@ func (r *CustomAnnotationTest) thenPodsAndStatefulSetsShouldHaveAnnotation(annot
 			return false
 		}
 
-
 		for _, kubegresResource := range kubegresResources.Resources {
 			if kubegresResource.Pod.Metadata.Annotations[annotationKey] != annotationValue {
 				log.Println("Pods do NOT contain the annotation '" + annotationKey + ":" + annotationValue + "'")
@@ -180,7 +178,6 @@ func (r *CustomAnnotationTest) thenPodsAndStatefulSetsShouldHaveAnnotation(annot
 	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
 }
 
-
 func (r *CustomAnnotationTest) thenPodsAndStatefulSetsShouldNOTHaveAnnotationKey(annotationKey string) bool {
 	return Eventually(func() bool {
 
@@ -189,7 +186,6 @@ func (r *CustomAnnotationTest) thenPodsAndStatefulSetsShouldNOTHaveAnnotationKey
 			log.Println("ERROR while retrieving Kubegres kubegresResources")
 			return false
 		}
-
 
 		for _, kubegresResource := range kubegresResources.Resources {
 
@@ -211,7 +207,6 @@ func (r *CustomAnnotationTest) thenPodsAndStatefulSetsShouldNOTHaveAnnotationKey
 
 	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
 }
-
 
 func (r *CustomAnnotationTest) thenPodsStatesShouldBe(nbrePrimary, nbreReplicas int) bool {
 	return Eventually(func() bool {

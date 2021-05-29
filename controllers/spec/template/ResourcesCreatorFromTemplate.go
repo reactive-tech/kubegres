@@ -147,6 +147,9 @@ func (r *ResourcesCreatorFromTemplate) CreateBackUpCronJob() (v1beta1.CronJob, e
 	backUpCronJob.OwnerReferences = r.getOwnerReference()
 
 	backUpCronJob.Spec.Schedule = backupSpec.Schedule
+
+	backUpCronJob.Spec.JobTemplate.Spec.Template.Annotations = r.getCustomAnnotations()
+
 	backUpCronJobSpec := &backUpCronJob.Spec.JobTemplate.Spec.Template.Spec
 
 	backUpCronJobSpec.Volumes[0].PersistentVolumeClaim.ClaimName = backupSpec.PvcName
@@ -158,6 +161,7 @@ func (r *ResourcesCreatorFromTemplate) CreateBackUpCronJob() (v1beta1.CronJob, e
 	backUpCronJobContainer.Env[0].ValueFrom = r.getEnvVar(ctx.EnvVarNameOfPostgresSuperUserPsw).ValueFrom
 	backUpCronJobContainer.Env[1].Value = postgres.Name
 	backUpCronJobContainer.Env[2].Value = backupSpec.VolumeMount
+	backUpCronJobContainer.Env = append(backUpCronJobContainer.Env, r.kubegresContext.Kubegres.Spec.Env...)
 
 	backSourceDbHostName := r.kubegresContext.GetServiceResourceName(false)
 	if *postgres.Spec.Replicas == 1 {

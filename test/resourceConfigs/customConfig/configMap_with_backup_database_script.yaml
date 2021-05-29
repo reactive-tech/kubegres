@@ -14,10 +14,10 @@ data:
 
     dt=$(date '+%d/%m/%Y %H:%M:%S');
     fileDt=$(date '+%d_%m_%Y_%H_%M_%S');
-    backUpFileName="$KUBEPOSTGRES_RESOURCE_NAME-backup-$fileDt.gz"
+    backUpFileName="$KUBEGRES_RESOURCE_NAME-backup-$fileDt.gz"
     backUpFilePath="$BACKUP_DESTINATION_FOLDER/$backUpFileName"
 
-    echo "$dt - Starting DB backup of Kubegres resource $KUBEPOSTGRES_RESOURCE_NAME into file: $backUpFilePath";
+    echo "$dt - Starting DB backup of Kubegres resource $KUBEGRES_RESOURCE_NAME into file: $backUpFilePath";
     echo "$dt - Running: pg_dumpall -h $BACKUP_SOURCE_DB_HOST_NAME -U postgres -c | gzip > $backUpFilePath"
 
     pg_dumpall -h $BACKUP_SOURCE_DB_HOST_NAME -U postgres -c | gzip > $backUpFilePath
@@ -28,4 +28,4 @@ data:
       exit 1
     fi
 
-    echo "$dt - DB backup completed for Kubegres resource $KUBEPOSTGRES_RESOURCE_NAME into file: $backUpFilePath";
+    echo "$dt - DB backup completed for Kubegres resource $KUBEGRES_RESOURCE_NAME into file: $backUpFilePath";

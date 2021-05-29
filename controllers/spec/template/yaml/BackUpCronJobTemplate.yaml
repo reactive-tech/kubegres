@@ -50,7 +50,7 @@ spec:
                       name: toBeReplaced
                       key: superUserPassword
 
-                - name: KUBEPOSTGRES_RESOURCE_NAME
+                - name: KUBEGRES_RESOURCE_NAME
                   value: toBeReplaced
 
                 - name: BACKUP_DESTINATION_FOLDER

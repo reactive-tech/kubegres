@@ -34,6 +34,13 @@ import (
 	"time"
 )
 
+const customAnnotationKey = "linkerd.io/inject"
+const customAnnotationValue = "enabled"
+const customEnvVarName = "MY_CUSTOM_ENV_VAR"
+const customEnvVarValue = "postgreSqlPower"
+const scheduleBackupEveryMin = "*/1 * * * *"
+const scheduleBackupEvery2Mins = "*/2 * * * *"
+
 var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 
 	var test = SpecBackUpTest{}
@@ -95,7 +102,7 @@ var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 
 			log.Print("START OF: Test 'GIVEN new Kubegres is created with spec 'backup.schedule' BUT WITHOUT spec 'backup.volumeMount''")
 
-			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, "*/1 * * * *", resourceConfigs.BackUpPvcResourceName, "", 3)
+			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, scheduleBackupEveryMin, resourceConfigs.BackUpPvcResourceName, "", 3)
 
 			test.whenKubernetesIsCreated()
 
@@ -111,7 +118,7 @@ var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 
 			log.Print("START OF: Test 'GIVEN new Kubegres is created with spec 'backup.schedule' AND 'backup.volumeMount' BUT WITHOUT spec 'backup.pvcName''")
 
-			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, "*/1 * * * *", "", "/tmp/my-kubegres", 3)
+			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, scheduleBackupEveryMin, "", "/tmp/my-kubegres", 3)
 
 			test.whenKubernetesIsCreated()
 
@@ -127,7 +134,7 @@ var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 
 			log.Print("START OF: Test 'GIVEN new Kubegres is created with spec 'backup.schedule' AND 'backup.volumeMount' AND 'backup.pvcName' BUT the given PVC is NOT deployed'")
 
-			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, "*/1 * * * *", "PvcDoesNotExists", "/tmp/my-kubegres", 3)
+			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, scheduleBackupEveryMin, "PvcDoesNotExists", "/tmp/my-kubegres", 3)
 
 			test.whenKubernetesIsCreated()
 
@@ -143,13 +150,17 @@ var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 
 			log.Print("START OF: Test 'GIVEN new Kubegres is created with spec 'backup.schedule' AND 'backup.volumeMount' AND 'backup.pvcName' and the given PVC is deployed")
 
-			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, "*/1 * * * *", resourceConfigs.BackUpPvcResourceName, "/tmp/my-kubegres", 3)
+			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, scheduleBackupEveryMin, resourceConfigs.BackUpPvcResourceName, "/tmp/my-kubegres", 3)
+			test.givenKubegresEnvVarIsSetTo(customEnvVarName, customEnvVarValue)
+			test.givenKubegresAnnotationIsSetTo(customAnnotationKey, customAnnotationValue)
 
 			test.whenKubernetesIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
-			test.thenCronJobExistsWithSpec(ctx.BaseConfigMapName, "*/1 * * * *", resourceConfigs.BackUpPvcResourceName, "/tmp/my-kubegres")
+			test.thenCronJobExistsWithSpec(ctx.BaseConfigMapName, scheduleBackupEveryMin, resourceConfigs.BackUpPvcResourceName, "/tmp/my-kubegres")
+			test.thenCronJobSpecShouldHaveEnvVar(customEnvVarName, customEnvVarValue)
+			test.thenCronJobSpecShouldHaveAnnotation(customAnnotationKey, customAnnotationValue)
 
 			log.Print("END OF: Test 'GIVEN new Kubegres is created with spec 'backup.schedule' AND 'backup.volumeMount' AND 'backup.pvcName' and the given PVC is deployed")
 		})
@@ -161,17 +172,17 @@ var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 
 			log.Print("START OF: Test 'GIVEN new Kubegres is created with backup specs set AND later Kubegres is updated with new values for backup specs'")
 
-			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, "*/1 * * * *", resourceConfigs.BackUpPvcResourceName, "/tmp/my-kubegres", 3)
+			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, scheduleBackupEveryMin, resourceConfigs.BackUpPvcResourceName, "/tmp/my-kubegres", 3)
 
 			test.whenKubernetesIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
-			test.givenExistingKubegresSpecIsSetTo("*/2 * * * *", resourceConfigs.BackUpPvcResourceName2, "/tmp/my-kubegres-2")
+			test.givenExistingKubegresSpecIsSetTo(scheduleBackupEvery2Mins, resourceConfigs.BackUpPvcResourceName2, "/tmp/my-kubegres-2")
 
 			test.whenKubernetesIsUpdated()
 
-			test.thenCronJobExistsWithSpec(ctx.BaseConfigMapName, "*/2 * * * *", resourceConfigs.BackUpPvcResourceName2, "/tmp/my-kubegres-2")
+			test.thenCronJobExistsWithSpec(ctx.BaseConfigMapName, scheduleBackupEvery2Mins, resourceConfigs.BackUpPvcResourceName2, "/tmp/my-kubegres-2")
 
 			log.Print("END OF: Test 'GIVEN new Kubegres is created with backup specs set AND later Kubegres is updated with new values for backup specs'")
 		})
@@ -183,7 +194,7 @@ var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 
 			log.Print("START OF: Test 'GIVEN new Kubegres is created with backup specs set AND later Kubegres is updated with backup disabled'")
 
-			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, "*/1 * * * *", resourceConfigs.BackUpPvcResourceName, "/tmp/my-kubegres", 3)
+			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, scheduleBackupEveryMin, resourceConfigs.BackUpPvcResourceName, "/tmp/my-kubegres", 3)
 
 			test.whenKubernetesIsCreated()
 
@@ -200,6 +211,7 @@ var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 			log.Print("END OF: Test 'GIVEN new Kubegres is created with backup specs set AND later Kubegres is updated with backup disabled'")
 		})
 	})
+
 })
 
 type SpecBackUpTest struct {
@@ -207,6 +219,7 @@ type SpecBackUpTest struct {
 	dbQueryTestCases  testcases.DbQueryTestCases
 	resourceCreator   util.TestResourceCreator
 	resourceRetriever util.TestResourceRetriever
+	resourceModifier  util.TestResourceModifier
 }
 
 func (r *SpecBackUpTest) givenNewKubegresSpecIsSetTo(customConfig, backupSchedule, backupPvcName, backupVolumeMount string, specNbreReplicas int32) {
@@ -219,6 +232,14 @@ func (r *SpecBackUpTest) givenNewKubegresSpecIsSetTo(customConfig, backupSchedul
 		r.kubegresResource.Spec.Backup.PvcName = backupPvcName
 		r.kubegresResource.Spec.Backup.VolumeMount = backupVolumeMount
 	}
+}
+
+func (r *SpecBackUpTest) givenKubegresEnvVarIsSetTo(envVarName, envVarVal string) {
+	r.resourceModifier.AppendEnvVar(envVarName, envVarVal, r.kubegresResource)
+}
+
+func (r *SpecBackUpTest) givenKubegresAnnotationIsSetTo(annotationKey, annotationValue string) {
+	r.resourceModifier.AppendAnnotation(annotationKey, annotationValue, r.kubegresResource)
 }
 
 func (r *SpecBackUpTest) givenExistingKubegresSpecIsSetTo(backupSchedule, backupPvcName, backupVolumeMount string) {
@@ -316,7 +337,11 @@ func (r *SpecBackUpTest) thenBackupCronJobDoesNOTExist() bool {
 	}, time.Second*10, time.Second*5).Should(BeTrue())
 }
 
-func (r *SpecBackUpTest) thenCronJobExistsWithSpec(expectedConfigMapName, expectedBackupSchedule, expectedBackupPvcName, expectedBackupVolumeMount string) bool {
+func (r *SpecBackUpTest) thenCronJobExistsWithSpec(expectedConfigMapName,
+	expectedBackupSchedule,
+	expectedBackupPvcName,
+	expectedBackupVolumeMount string) bool {
+
 	return Eventually(func() bool {
 
 		kubegresResources, err := r.resourceRetriever.GetKubegresResources()
@@ -355,6 +380,64 @@ func (r *SpecBackUpTest) thenCronJobExistsWithSpec(expectedConfigMapName, expect
 		}
 
 		return true
+
+	}, time.Second*10, time.Second*5).Should(BeTrue())
+}
+
+func (r *SpecBackUpTest) thenCronJobSpecShouldHaveAnnotation(annotationKey, annotationValue string) bool {
+
+	return Eventually(func() bool {
+
+		kubegresResources, err := r.resourceRetriever.GetKubegresResources()
+		if err != nil && !apierrors.IsNotFound(err) {
+			log.Println("ERROR while retrieving Kubegres kubegresResources")
+			return false
+		}
+
+		backUpCronJob := kubegresResources.BackUpCronJob
+		if backUpCronJob.Name == "" {
+			return false
+		}
+
+		if backUpCronJob.Spec.JobTemplate.Spec.Template.Annotations[annotationKey] == annotationValue {
+			log.Println("The container of CronJob'" + backUpCronJob.Name + "' has the expected annotation with " +
+				"key: '" + annotationKey + "' and value: '" + annotationValue + "' in its metadata.")
+			return true
+		}
+
+		log.Println("The container of CronJob'" + backUpCronJob.Name + "' does NOT have the expected annotation with " +
+			"key: '" + annotationKey + "' and value: '" + annotationValue + "' in its metadata. Waiting...")
+		return false
+
+	}, time.Second*10, time.Second*5).Should(BeTrue())
+}
+
+func (r *SpecBackUpTest) thenCronJobSpecShouldHaveEnvVar(envVarName, envVarVal string) bool {
+
+	return Eventually(func() bool {
+
+		kubegresResources, err := r.resourceRetriever.GetKubegresResources()
+		if err != nil && !apierrors.IsNotFound(err) {
+			log.Println("ERROR while retrieving Kubegres kubegresResources")
+			return false
+		}
+
+		backUpCronJob := kubegresResources.BackUpCronJob
+		if backUpCronJob.Name == "" {
+			return false
+		}
+
+		for _, envVar := range backUpCronJob.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Env {
+			if envVar.Name == envVarName && envVar.Value == envVarVal {
+				log.Println("The container of CronJob'" + backUpCronJob.Name + "' has the expected environment variable with " +
+					"name: '" + envVarName + "' and value: '" + envVarVal + "' in its Spec.")
+				return true
+			}
+		}
+
+		log.Println("The container of CronJob'" + backUpCronJob.Name + "' does NOT have the expected environment variable with " +
+			"name: '" + envVarName + "' and value: '" + envVarVal + "' in its Spec.")
+		return false
 
 	}, time.Second*10, time.Second*5).Should(BeTrue())
 }

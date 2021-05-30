@@ -23,7 +23,6 @@ package test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	v12 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"log"
 	postgresv1 "reactive-tech.io/kubegres/api/v1"
@@ -101,55 +100,19 @@ type CustomAnnotationTest struct {
 	dbQueryTestCases                testcases.DbQueryTestCases
 	resourceCreator                 util.TestResourceCreator
 	resourceRetriever               util.TestResourceRetriever
+	resourceModifier                util.TestResourceModifier
 }
 
 func (r *CustomAnnotationTest) givenKubegresAnnotationIsSetTo(annotationKey string, annotationValue string) {
-
-	if r.kubegresResource.Annotations == nil {
-		r.kubegresResource.Annotations = make(map[string]string)
-	}
-	r.kubegresResource.Annotations[annotationKey] = annotationValue
+	r.resourceModifier.AppendAnnotation(annotationKey, annotationValue, r.kubegresResource)
 }
 
 func (r *CustomAnnotationTest) givenKubegresSpecIsSetTo(specNbreReplicas int32) {
 	r.kubegresResource.Spec.Replicas = &specNbreReplicas
 }
 
-func (r *CustomAnnotationTest) givenExistingKubegresSpecIsSetTo(specNbreReplicas int32) {
-	var err error
-	r.kubegresResource, err = r.resourceRetriever.GetKubegres()
-
-	if err != nil {
-		log.Println("Error while getting Kubegres resource : ", err)
-		Expect(err).Should(Succeed())
-		return
-	}
-
-	r.kubegresResource.Spec.Replicas = &specNbreReplicas
-}
-
 func (r *CustomAnnotationTest) whenKubernetesIsCreated() {
 	r.resourceCreator.CreateKubegres(r.kubegresResource)
-}
-
-func (r *CustomAnnotationTest) whenKubernetesIsUpdated() {
-	r.resourceCreator.UpdateResource(r.kubegresResource, "Kubegres")
-}
-
-func (r *CustomAnnotationTest) thenErrorEventShouldBeLogged() {
-	expectedErrorEvent := util.EventRecord{
-		Eventtype: v12.EventTypeWarning,
-		Reason:    "SpecCheckErr",
-		Message:   "In the Resources Spec the value of 'spec.replicas' is undefined. Please set a value otherwise this operator cannot work correctly.",
-	}
-	Eventually(func() bool {
-		_, err := r.resourceRetriever.GetKubegres()
-		if err != nil {
-			return false
-		}
-		return eventRecorderTest.CheckEventExist(expectedErrorEvent)
-
-	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
 }
 
 func (r *CustomAnnotationTest) thenPodsAndStatefulSetsShouldHaveAnnotation(annotationKey, annotationValue string) bool {

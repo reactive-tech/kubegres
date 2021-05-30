@@ -130,6 +130,7 @@ type SpecEnVariablesTest struct {
 	dbQueryTestCases      testcases.DbQueryTestCases
 	resourceCreator       util.TestResourceCreator
 	resourceRetriever     util.TestResourceRetriever
+	resourceModifier      util.TestResourceModifier
 	customEnvVariableName string
 	customEnvVariableKey  string
 }
@@ -137,15 +138,13 @@ type SpecEnVariablesTest struct {
 func (r *SpecEnVariablesTest) givenNewKubegresWithoutEnvVarOfPostgresSuperUserPassword() {
 	r.kubegresResource = resourceConfigs.LoadKubegresYaml()
 	r.kubegresResource.Spec.Env = []v12.EnvVar{}
-	envVar := r.createEnvVarToSpec(ctx.EnvVarNameOfPostgresReplicationUserPsw, "replicationUserPassword")
-	r.kubegresResource.Spec.Env = append(r.kubegresResource.Spec.Env, *envVar)
+	r.resourceModifier.AppendEnvVarFromSecretKey(ctx.EnvVarNameOfPostgresReplicationUserPsw, "replicationUserPassword", r.kubegresResource)
 }
 
 func (r *SpecEnVariablesTest) givenNewKubegresWithoutEnvVarOfPostgresReplicationUserPassword() {
 	r.kubegresResource = resourceConfigs.LoadKubegresYaml()
 	r.kubegresResource.Spec.Env = []v12.EnvVar{}
-	envVar := r.createEnvVarToSpec(ctx.EnvVarNameOfPostgresSuperUserPsw, "superUserPassword")
-	r.kubegresResource.Spec.Env = append(r.kubegresResource.Spec.Env, *envVar)
+	r.resourceModifier.AppendEnvVarFromSecretKey(ctx.EnvVarNameOfPostgresSuperUserPsw, "superUserPassword", r.kubegresResource)
 }
 
 func (r *SpecEnVariablesTest) givenNewKubegresWithAllEnvVarsSet(specNbreReplicas int32) {
@@ -154,12 +153,8 @@ func (r *SpecEnVariablesTest) givenNewKubegresWithAllEnvVarsSet(specNbreReplicas
 	r.kubegresResource.Spec.Replicas = &specNbreReplicas
 
 	r.kubegresResource.Spec.Env = []v12.EnvVar{}
-
-	envVar := r.createEnvVarToSpec(ctx.EnvVarNameOfPostgresReplicationUserPsw, "replicationUserPassword")
-	r.kubegresResource.Spec.Env = append(r.kubegresResource.Spec.Env, *envVar)
-
-	envVar = r.createEnvVarToSpec(ctx.EnvVarNameOfPostgresSuperUserPsw, "superUserPassword")
-	r.kubegresResource.Spec.Env = append(r.kubegresResource.Spec.Env, *envVar)
+	r.resourceModifier.AppendEnvVarFromSecretKey(ctx.EnvVarNameOfPostgresReplicationUserPsw, "replicationUserPassword", r.kubegresResource)
+	r.resourceModifier.AppendEnvVarFromSecretKey(ctx.EnvVarNameOfPostgresSuperUserPsw, "superUserPassword", r.kubegresResource)
 }
 
 func (r *SpecEnVariablesTest) givenNewKubegresWithAllEnvVarsSetAndACustomOne(specNbreReplicas int32) {
@@ -168,9 +163,7 @@ func (r *SpecEnVariablesTest) givenNewKubegresWithAllEnvVarsSetAndACustomOne(spe
 
 	r.customEnvVariableName = "POSTGRES_CUSTOM_ENV_VAR"
 	r.customEnvVariableKey = "myAppUserPassword"
-
-	envVar := r.createEnvVarToSpec(r.customEnvVariableName, r.customEnvVariableKey)
-	r.kubegresResource.Spec.Env = append(r.kubegresResource.Spec.Env, *envVar)
+	r.resourceModifier.AppendEnvVarFromSecretKey(r.customEnvVariableName, r.customEnvVariableKey, r.kubegresResource)
 }
 
 func (r *SpecEnVariablesTest) whenKubernetesIsCreated() {
@@ -235,20 +228,6 @@ func (r *SpecEnVariablesTest) doesEnvVarExist(envVarName string, envVars []v12.E
 		}
 	}
 	return false
-}
-
-func (r *SpecEnVariablesTest) createEnvVarToSpec(envVarName, envVarKey string) *v12.EnvVar {
-	return &v12.EnvVar{
-		Name: envVarName,
-		ValueFrom: &v12.EnvVarSource{
-			SecretKeyRef: &v12.SecretKeySelector{
-				Key: envVarKey,
-				LocalObjectReference: v12.LocalObjectReference{
-					Name: "my-kubegres-secret",
-				},
-			},
-		},
-	}
 }
 
 func (r *SpecEnVariablesTest) thenErrorEventShouldBeLogged(specName string) {

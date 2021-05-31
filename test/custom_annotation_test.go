@@ -53,11 +53,7 @@ var _ = Describe("Creating Kubegres with custom annotations", func() {
 	})
 
 	AfterEach(func() {
-		if !test.keepCreatedResourcesForNextTest {
-			test.resourceCreator.DeleteAllTestResources()
-		} else {
-			test.keepCreatedResourcesForNextTest = false
-		}
+		test.resourceCreator.DeleteAllTestResources()
 	})
 
 	Context("GIVEN new Kubegres is created with custom annotations and with spec 'replica' set to 3", func() {
@@ -85,8 +81,6 @@ var _ = Describe("Creating Kubegres with custom annotations", func() {
 			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
 			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
 
-			test.keepCreatedResourcesForNextTest = true
-
 			log.Print("END OF: Test 'GIVEN new Kubegres is created with custom annotations and with spec 'replica' set to 3'")
 		})
 
@@ -95,12 +89,11 @@ var _ = Describe("Creating Kubegres with custom annotations", func() {
 })
 
 type CustomAnnotationTest struct {
-	keepCreatedResourcesForNextTest bool
-	kubegresResource                *postgresv1.Kubegres
-	dbQueryTestCases                testcases.DbQueryTestCases
-	resourceCreator                 util.TestResourceCreator
-	resourceRetriever               util.TestResourceRetriever
-	resourceModifier                util.TestResourceModifier
+	kubegresResource  *postgresv1.Kubegres
+	dbQueryTestCases  testcases.DbQueryTestCases
+	resourceCreator   util.TestResourceCreator
+	resourceRetriever util.TestResourceRetriever
+	resourceModifier  util.TestResourceModifier
 }
 
 func (r *CustomAnnotationTest) givenKubegresAnnotationIsSetTo(annotationKey string, annotationValue string) {

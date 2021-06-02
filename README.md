@@ -1,7 +1,12 @@
-A webinar about Kubegres took place on 25 May 2021 hosted by PostgresConf. [View the recorded video.](https://postgresconf.org/conferences/2021_Postgres_Conference_Webinars/program/proposals/creating-a-resilient-postgresql-cluster-with-kubegres)
+**Interesting links**
+* A webinar about Kubegres was hosted by PostgresConf on 25 May 2021. [Watch the recorded video here.](https://postgresconf.org/conferences/2021_Postgres_Conference_Webinars/program/proposals/creating-a-resilient-postgresql-cluster-with-kubegres)
+* The [availability of Kubegres](https://www.postgresql.org/about/news/kubegres-is-available-as-open-source-2197/) was published on PostgreSql's official website
+* Google's Kubernetes Podcast announced the [availability of Kubegres](https://kubernetespodcast.com/episode/146-kubernetes-1.21/).
+
+**What is Kubegres?**
 
 [Kubegres](https://www.kubegres.io/) is a Kubernetes operator allowing to deploy a cluster of PostgreSql pods with data 
-replication enabled out-of-the box. It brings simplicity when using PostgreSql considering how complex managing 
+replication and failover enabled out-of-the box. It brings simplicity when using PostgreSql considering how complex managing 
 stateful-set's life-cycle and data replication could be with Kubernetes.
 
 **Features**

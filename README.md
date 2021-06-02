@@ -1,5 +1,5 @@
 **Interesting links**
-* A webinar about Kubegres was hosted by PostgresConf on 25 May 2021. [Watch the recorded video here.](https://postgresconf.org/conferences/2021_Postgres_Conference_Webinars/program/proposals/creating-a-resilient-postgresql-cluster-with-kubegres)
+* A webinar about Kubegres was hosted by PostgresConf on 25 May 2021. [Watch the recorded video.](https://postgresconf.org/conferences/2021_Postgres_Conference_Webinars/program/proposals/creating-a-resilient-postgresql-cluster-with-kubegres)
 * The [availability of Kubegres](https://www.postgresql.org/about/news/kubegres-is-available-as-open-source-2197/) was published on PostgreSql's official website
 * Google's Kubernetes Podcast announced the [availability of Kubegres](https://kubernetespodcast.com/episode/146-kubernetes-1.21/).
 

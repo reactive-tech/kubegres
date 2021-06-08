@@ -49,6 +49,7 @@ type ResourcesContext struct {
 	ResourcesStates              states.ResourcesStates
 	ResourcesStatesLogger        log2.ResourcesStatesLogger
 	SpecChecker                  checker.SpecChecker
+	DefaultStorageClass          corrector.DefaultStorageClass
 	CustomConfigSpecHelper       template.CustomConfigSpecHelper
 	ResourcesCreatorFromTemplate template.ResourcesCreatorFromTemplate
 	ResourcesCountSpecEnforcer   resources_count_spec.ResourcesCountSpecEnforcer
@@ -94,7 +95,8 @@ func CreateResourcesContext(kubegres *postgresV1.Kubegres,
 		Client:   client,
 	}
 
-	if err = corrector.CorrectSpec(rc.KubegresContext); err != nil {
+	rc.DefaultStorageClass = corrector.CreateDefaultStorageClass(rc.KubegresContext)
+	if err = corrector.CorrectSpec(rc.KubegresContext, rc.DefaultStorageClass); err != nil {
 		return nil, err
 	}
 

@@ -26,11 +26,12 @@ import (
 )
 
 type specCorrector struct {
-	kubegresContext ctx.KubegresContext
+	kubegresContext     ctx.KubegresContext
+	defaultStorageClass DefaultStorageClass
 }
 
-func CorrectSpec(kubegresContext ctx.KubegresContext) error {
-	specCorrector := specCorrector{kubegresContext: kubegresContext}
+func CorrectSpec(kubegresContext ctx.KubegresContext, defaultStorageClass DefaultStorageClass) error {
+	specCorrector := specCorrector{kubegresContext: kubegresContext, defaultStorageClass: defaultStorageClass}
 	return specCorrector.correctSpec()
 }
 
@@ -56,7 +57,18 @@ func (r *specCorrector) correctSpec() error {
 		wasSpecCorrected = true
 		spec.CustomConfig = ctx.BaseConfigMapName
 		r.createSpecCorrectionLog("spec.customConfig", spec.CustomConfig)
+	}
 
+	if r.isStorageClassNameUndefinedInSpec() {
+
+		wasSpecCorrected = true
+		defaultStorageClassName, err := r.defaultStorageClass.GetDefaultStorageClassName()
+		if err != nil {
+			return err
+		}
+
+		spec.Database.StorageClassName = &defaultStorageClassName
+		r.createSpecCorrectionLog("spec.Database.StorageClassName", defaultStorageClassName)
 	}
 
 	if wasSpecCorrected {
@@ -68,6 +80,11 @@ func (r *specCorrector) correctSpec() error {
 
 func (r *specCorrector) createSpecCorrectionLog(specName string, specValue string) {
 	r.kubegresContext.Log.InfoEvent("SpecCheckCorrection", "Corrected an undefined value in Spec.", specName, "New value: "+specValue+"")
+}
+
+func (r *specCorrector) isStorageClassNameUndefinedInSpec() bool {
+	storageClassName := r.kubegresContext.Kubegres.Spec.Database.StorageClassName
+	return storageClassName == nil || *storageClassName == ""
 }
 
 func (r *specCorrector) updateSpec() error {

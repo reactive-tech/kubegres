@@ -83,11 +83,7 @@ func (r *SpecChecker) CheckSpec() (SpecCheckResult, error) {
 		}
 	}
 
-	if *spec.Database.StorageClassName == emptyStr {
-		specCheckResult.HasSpecFatalError = true
-		specCheckResult.FatalErrorMessage = r.createErrMsgSpecUndefined("spec.database.storageClassName")
-
-	} else if !r.dbStorageClassDeployed() {
+	if !r.dbStorageClassDeployed() {
 		specCheckResult.HasSpecFatalError = true
 		specCheckResult.FatalErrorMessage = r.logSpecErrMsg("In the Resources Spec the value of 'spec.database.storageClassName' has a StorageClass name which is not deployed. Please deploy this StorageClass, otherwise this operator cannot work correctly.")
 	}

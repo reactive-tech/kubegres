@@ -56,15 +56,24 @@ var _ = Describe("Setting Kubegres specs 'database.storageClassName'", func() {
 
 	Context("GIVEN new Kubegres is created without spec 'database.storageClassName'", func() {
 
-		It("THEN an error event should be logged", func() {
+		It("THEN it should be set to the 'standard' storage class (which is the default one in our test cluster)", func() {
 
 			log.Print("START OF: Test 'GIVEN new Kubegres is created without spec 'database.storageClassName''")
 
-			test.givenNewKubegresSpecIsSetTo("", 3)
+			test.givenNewKubegresSpecIsSetTo(nil, 3)
 
 			test.whenKubernetesIsCreated()
 
-			test.thenErrorEventShouldBeLogged()
+			test.thenPodsStatesShouldBe("standard", 1, 2)
+
+			test.thenDeployedKubegresSpecShouldBeSetTo("standard")
+
+			test.thenEventShouldBeLoggedSayingStorageClassNameWasCorrected()
+
+			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
+			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
+
+			test.keepCreatedResourcesForNextTest = false
 
 			log.Print("END OF: Test 'GIVEN new Kubegres is created without spec 'database.storageClassName'")
 		})
@@ -76,13 +85,15 @@ var _ = Describe("Setting Kubegres specs 'database.storageClassName'", func() {
 
 			log.Print("START OF: Test 'GIVEN new Kubegres is created with spec 'database.storageClassName' set to 'standard' and spec 'replica' set to 3")
 
-			test.givenNewKubegresSpecIsSetTo("standard", 3)
+			customStorageClassName := "standard"
+
+			test.givenNewKubegresSpecIsSetTo(&customStorageClassName, 3)
 
 			test.whenKubernetesIsCreated()
 
-			test.thenPodsStatesShouldBe("standard", 1, 2)
+			test.thenPodsStatesShouldBe(customStorageClassName, 1, 2)
 
-			test.thenDeployedKubegresSpecShouldBeSetTo("standard")
+			test.thenDeployedKubegresSpecShouldBeSetTo(customStorageClassName)
 
 			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
 			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
@@ -123,9 +134,9 @@ type SpecDatabaseStorageClassTest struct {
 	resourceRetriever               util.TestResourceRetriever
 }
 
-func (r *SpecDatabaseStorageClassTest) givenNewKubegresSpecIsSetTo(databaseStorageClassName string, specNbreReplicas int32) {
+func (r *SpecDatabaseStorageClassTest) givenNewKubegresSpecIsSetTo(databaseStorageClassName *string, specNbreReplicas int32) {
 	r.kubegresResource = resourceConfigs.LoadKubegresYaml()
-	r.kubegresResource.Spec.Database.StorageClassName = &databaseStorageClassName
+	r.kubegresResource.Spec.Database.StorageClassName = databaseStorageClassName
 	r.kubegresResource.Spec.Replicas = &specNbreReplicas
 }
 
@@ -209,6 +220,23 @@ func (r *SpecDatabaseStorageClassTest) thenDeployedKubegresSpecShouldBeSetTo(dat
 	}
 
 	Expect(*r.kubegresResource.Spec.Database.StorageClassName).Should(Equal(databaseStorageClassName))
+}
+
+func (r *SpecDatabaseStorageClassTest) thenEventShouldBeLoggedSayingStorageClassNameWasCorrected() {
+
+	expectedErrorEvent := util.EventRecord{
+		Eventtype: v12.EventTypeNormal,
+		Reason:    "SpecCheckCorrection",
+		Message:   "Corrected an undefined value in Spec. 'spec.Database.StorageClassName': New value: standard",
+	}
+	Eventually(func() bool {
+		_, err := r.resourceRetriever.GetKubegres()
+		if err != nil {
+			return false
+		}
+		return eventRecorderTest.CheckEventExist(expectedErrorEvent)
+
+	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
 }
 
 func (r *SpecDatabaseStorageClassTest) thenErrorEventShouldBeLoggedSayingCannotChangeStorageClassName(currentValue, newValue string) {

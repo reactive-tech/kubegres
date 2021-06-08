@@ -14,8 +14,8 @@ spec:
 
   database:
     size: 200Mi
-    storageClassName: standard
-    volumeMount: /var/lib/postgres/data
+    #storageClassName: standard
+    #volumeMount: /var/lib/postgres/data
 
   customConfig: mypostgres-conf
 

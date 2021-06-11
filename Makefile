@@ -63,11 +63,8 @@ run: install build ## Connect to a local Kubernetes cluster, install the operato
 	go run ./main.go
 
 #docker-build: test ## Build docker image with the manager.
-docker-build: build ## Build docker image with the manager.
-	docker build -t ${IMG} .
-
-docker-push: ## Push docker image with the manager.
-	docker push ${IMG}
+docker-build-push: build ## Build docker image with the manager.
+	docker buildx build --platform linux/amd64,linux/arm64 -t ${IMG} --push .
 
 ##@ Deployment
 
@@ -89,7 +86,7 @@ endif
 ## eg: 'make deploy IMG=reactivetechio/kubegres:1.4'
 ## Run acceptance tests then deploy into Docker Hub the controller as the Docker image provided in arg ${IMG}
 ## and update the local file "kubegres.yaml" with the image ${IMG}
-deploy: deploy-check test docker-build docker-push kustomize
+deploy: deploy-check test docker-build-push kustomize
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
 	$(KUSTOMIZE) build config/default > kubegres.yaml
 	@echo "DEPLOYED $(IMG) INTO DOCKER HUB. UPDATED 'kubegres.yaml' WITH '$(IMG)'. YOU CAN COMMIT 'kubegres.yaml' AND CREATE A RELEASE IN GITHUB."

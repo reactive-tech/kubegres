@@ -62,7 +62,7 @@ var _ = Describe("Setting Kubegres spec 'image'", func() {
 
 			test.givenNewKubegresSpecIsSetTo("", 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenErrorEventShouldBeLogged()
 
@@ -78,7 +78,7 @@ var _ = Describe("Setting Kubegres spec 'image'", func() {
 
 			test.givenNewKubegresSpecIsSetTo("postgres:12.4", 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe("postgres:12.4", 1, 2)
 
@@ -141,7 +141,7 @@ func (r *SpecImageTest) givenExistingKubegresSpecIsSetTo(image string) {
 	r.kubegresResource.Spec.Image = image
 }
 
-func (r *SpecImageTest) whenKubernetesIsCreated() {
+func (r *SpecImageTest) whenKubegresIsCreated() {
 	r.resourceCreator.CreateKubegres(r.kubegresResource)
 }
 

@@ -58,7 +58,7 @@ var _ = Describe("Primary instances is not available, checking recovery works", 
 
 			test.givenNewKubegresSpecIsSetTo(1)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 0)
 
@@ -88,7 +88,7 @@ var _ = Describe("Primary instances is not available, checking recovery works", 
 
 			test.givenNewKubegresSpecIsSetTo(1)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 0)
 
@@ -124,7 +124,7 @@ var _ = Describe("Primary instances is not available, checking recovery works", 
 
 			test.givenNewKubegresSpecIsSetTo(3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
@@ -170,7 +170,7 @@ func (r *PrimaryFailureAndRecoveryTest) givenNewKubegresSpecIsSetTo(specNbreRepl
 	r.kubegresResource.Spec.Replicas = &specNbreReplicas
 }
 
-func (r *PrimaryFailureAndRecoveryTest) whenKubernetesIsCreated() {
+func (r *PrimaryFailureAndRecoveryTest) whenKubegresIsCreated() {
 	r.resourceCreator.CreateKubegres(r.kubegresResource)
 }
 

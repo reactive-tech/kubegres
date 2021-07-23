@@ -62,7 +62,7 @@ var _ = Describe("Setting Kubegres specs 'database.storageClassName'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(nil, 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe("standard", 1, 2)
 
@@ -89,7 +89,7 @@ var _ = Describe("Setting Kubegres specs 'database.storageClassName'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(&customStorageClassName, 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(customStorageClassName, 1, 2)
 
@@ -153,7 +153,7 @@ func (r *SpecDatabaseStorageClassTest) givenExistingKubegresSpecIsSetTo(database
 	r.kubegresResource.Spec.Database.StorageClassName = &databaseStorageClassName
 }
 
-func (r *SpecDatabaseStorageClassTest) whenKubernetesIsCreated() {
+func (r *SpecDatabaseStorageClassTest) whenKubegresIsCreated() {
 	r.resourceCreator.CreateKubegres(r.kubegresResource)
 }
 

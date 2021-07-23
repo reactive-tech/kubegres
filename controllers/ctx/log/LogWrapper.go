@@ -49,6 +49,10 @@ func (r *LogWrapper) Error(err error, msg string, keysAndValues ...interface{}) 
 	r.Logger.Error(err, msg, keysAndValues...)
 }
 
+func (r *LogWrapper) Warning(msg string, keysAndValues ...interface{}) {
+	r.Logger.Info("Warning: "+msg, keysAndValues...)
+}
+
 func (r *LogWrapper) InfoEvent(eventReason string, msg string, keysAndValues ...interface{}) {
 	r.Info(msg, keysAndValues...)
 	r.Recorder.Eventf(r.Kubegres, v1.EventTypeNormal, eventReason, r.constructFullMsg(msg, keysAndValues))
@@ -57,6 +61,11 @@ func (r *LogWrapper) InfoEvent(eventReason string, msg string, keysAndValues ...
 func (r *LogWrapper) ErrorEvent(eventReason string, err error, msg string, keysAndValues ...interface{}) {
 	r.Error(err, msg, keysAndValues...)
 	r.Recorder.Eventf(r.Kubegres, v1.EventTypeWarning, eventReason, r.constructFullErrMsg(err, msg, keysAndValues))
+}
+
+func (r *LogWrapper) WarningEvent(eventReason string, msg string, keysAndValues ...interface{}) {
+	r.Warning(msg, keysAndValues...)
+	r.Recorder.Eventf(r.Kubegres, v1.EventTypeWarning, eventReason, r.constructFullMsg(msg, keysAndValues))
 }
 
 func (r *LogWrapper) constructFullMsg(msg string, keysAndValues ...interface{}) string {

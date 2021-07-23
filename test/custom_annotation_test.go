@@ -69,7 +69,7 @@ var _ = Describe("Creating Kubegres with custom annotations", func() {
 
 			test.givenKubegresSpecIsSetTo(3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
@@ -104,7 +104,7 @@ func (r *CustomAnnotationTest) givenKubegresSpecIsSetTo(specNbreReplicas int32) 
 	r.kubegresResource.Spec.Replicas = &specNbreReplicas
 }
 
-func (r *CustomAnnotationTest) whenKubernetesIsCreated() {
+func (r *CustomAnnotationTest) whenKubegresIsCreated() {
 	r.resourceCreator.CreateKubegres(r.kubegresResource)
 }
 

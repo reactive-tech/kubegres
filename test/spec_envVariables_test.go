@@ -58,7 +58,7 @@ var _ = Describe("Setting Kubegres spec 'env.*'", func() {
 
 			test.givenNewKubegresWithoutEnvVarOfPostgresSuperUserPassword()
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenErrorEventShouldBeLogged("spec.env.POSTGRES_PASSWORD")
 
@@ -74,7 +74,7 @@ var _ = Describe("Setting Kubegres spec 'env.*'", func() {
 
 			test.givenNewKubegresWithoutEnvVarOfPostgresReplicationUserPassword()
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenErrorEventShouldBeLogged("spec.env.POSTGRES_REPLICATION_PASSWORD")
 
@@ -90,7 +90,7 @@ var _ = Describe("Setting Kubegres spec 'env.*'", func() {
 
 			test.givenNewKubegresWithAllEnvVarsSet(3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsShouldContainAllEnvVariables(1, 2)
 
@@ -111,7 +111,7 @@ var _ = Describe("Setting Kubegres spec 'env.*'", func() {
 
 			test.givenNewKubegresWithAllEnvVarsSetAndACustomOne(3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsShouldContainAllEnvVariables(1, 2)
 
@@ -166,7 +166,7 @@ func (r *SpecEnVariablesTest) givenNewKubegresWithAllEnvVarsSetAndACustomOne(spe
 	r.resourceModifier.AppendEnvVarFromSecretKey(r.customEnvVariableName, r.customEnvVariableKey, r.kubegresResource)
 }
 
-func (r *SpecEnVariablesTest) whenKubernetesIsCreated() {
+func (r *SpecEnVariablesTest) whenKubegresIsCreated() {
 	r.resourceCreator.CreateKubegres(r.kubegresResource)
 }
 

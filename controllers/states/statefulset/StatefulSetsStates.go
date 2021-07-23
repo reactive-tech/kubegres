@@ -163,7 +163,7 @@ func (r *StatefulSetsStates) getPodByInstanceIndex(instanceIndex int32, podsStat
 }
 
 func (r *StatefulSetsStates) isPrimary(statefulSet apps.StatefulSet) bool {
-	return statefulSet.Spec.Template.Labels["replicationRole"] == ctx.PrimaryReplicationRole
+	return statefulSet.Spec.Template.Labels["replicationRole"] == ctx.PrimaryRoleName
 }
 
 func (r *StatefulSetsStates) getDeployedStatefulSets() (*apps.StatefulSetList, error) {

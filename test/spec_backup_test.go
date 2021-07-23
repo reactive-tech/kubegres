@@ -68,7 +68,7 @@ var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, "", "", "", 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
@@ -86,7 +86,7 @@ var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, "", resourceConfigs.BackUpPvcResourceName, "/tmp/my-kubegres", 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
@@ -104,7 +104,7 @@ var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, scheduleBackupEveryMin, resourceConfigs.BackUpPvcResourceName, "", 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenErrorEventShouldBeLogged("spec.Backup.VolumeMount")
 
@@ -120,7 +120,7 @@ var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, scheduleBackupEveryMin, "", "/tmp/my-kubegres", 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenErrorEventShouldBeLogged("spec.Backup.PvcName")
 
@@ -136,7 +136,7 @@ var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, scheduleBackupEveryMin, "PvcDoesNotExists", "/tmp/my-kubegres", 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenErrorEventSayingPvcIsNotDeployed()
 
@@ -154,7 +154,7 @@ var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 			test.givenKubegresEnvVarIsSetTo(customEnvVarName, customEnvVarValue)
 			test.givenKubegresAnnotationIsSetTo(customAnnotationKey, customAnnotationValue)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
@@ -174,7 +174,7 @@ var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, scheduleBackupEveryMin, resourceConfigs.BackUpPvcResourceName, "/tmp/my-kubegres", 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
@@ -196,7 +196,7 @@ var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, scheduleBackupEveryMin, resourceConfigs.BackUpPvcResourceName, "/tmp/my-kubegres", 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
@@ -256,7 +256,7 @@ func (r *SpecBackUpTest) givenExistingKubegresSpecIsSetTo(backupSchedule, backup
 	}
 }
 
-func (r *SpecBackUpTest) whenKubernetesIsCreated() {
+func (r *SpecBackUpTest) whenKubegresIsCreated() {
 	if r.kubegresResource == nil {
 		r.kubegresResource = resourceConfigs.LoadKubegresYaml()
 	}

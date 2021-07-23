@@ -69,6 +69,10 @@ func (r *PrimaryDbCountSpecEnforcer) CreateOperationConfigForPrimaryDbDeploying(
 
 func (r *PrimaryDbCountSpecEnforcer) Enforce() error {
 
+	// Backward compatibility logic where we initialize the field 'EnforcedReplicas'
+	// added in Kubegres' status from version 1.8
+	r.initialiseStatusEnforcedReplicas()
+
 	if r.blockingOperation.IsActiveOperationIdDifferentOf(operation.OperationIdPrimaryDbCountSpecEnforcement) {
 		return nil
 	}
@@ -88,6 +92,18 @@ func (r *PrimaryDbCountSpecEnforcer) Enforce() error {
 	return nil
 }
 
+func (r *PrimaryDbCountSpecEnforcer) initialiseStatusEnforcedReplicas() {
+	if r.kubegresContext.Kubegres.Status.EnforcedReplicas > 0 {
+		return
+	}
+
+	specReplicas := *r.kubegresContext.Kubegres.Spec.Replicas
+
+	if specReplicas >= 1 && specReplicas == r.resourcesStates.StatefulSets.NbreDeployed {
+		r.kubegresContext.Status.SetEnforcedReplicas(specReplicas)
+	}
+}
+
 func (r *PrimaryDbCountSpecEnforcer) hasLastPrimaryCountSpecEnforcementAttemptTimedOut() bool {
 	return r.blockingOperation.HasActiveOperationIdTimedOut(operation.OperationIdPrimaryDbCountSpecEnforcement)
 }
@@ -102,8 +118,21 @@ func (r *PrimaryDbCountSpecEnforcer) logKubegresFeaturesAreReEnabled() {
 }
 
 func (r *PrimaryDbCountSpecEnforcer) shouldWeDeployNewPrimaryDb() bool {
-	return r.resourcesStates.StatefulSets.Replicas.NbreDeployed == 0 &&
+
+	shouldWeDeployNewPrimary := r.resourcesStates.StatefulSets.Replicas.NbreDeployed == 0 &&
 		!r.resourcesStates.StatefulSets.Primary.IsDeployed
+
+	if shouldWeDeployNewPrimary {
+		if *r.kubegresContext.Kubegres.Spec.Replicas == 1 || !r.hasPrimaryEverBeenDeployed() {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (r *PrimaryDbCountSpecEnforcer) hasPrimaryEverBeenDeployed() bool {
+	return r.kubegresContext.Kubegres.Status.EnforcedReplicas > 0
 }
 
 func (r *PrimaryDbCountSpecEnforcer) deployNewPrimaryStatefulSet() error {
@@ -136,6 +165,8 @@ func (r *PrimaryDbCountSpecEnforcer) deployNewPrimaryStatefulSet() error {
 		r.blockingOperation.RemoveActiveOperation()
 		return err
 	}
+
+	r.kubegresContext.Status.SetEnforcedReplicas(r.kubegresContext.Kubegres.Status.EnforcedReplicas + 1)
 
 	if r.kubegresContext.Status.GetLastCreatedInstanceIndex() == 0 {
 		r.kubegresContext.Status.SetLastCreatedInstanceIndex(1)

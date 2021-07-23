@@ -19,6 +19,10 @@ spec:
 
   customConfig: mypostgres-conf
 
+  #failover:
+  #  isDisabled: true
+  #  promotePod: "mypostgres-3-0"
+
   #backup:
   #  schedule: "*/1 * * * *"
   #  pvcName: postgres-db-mypostgres-2-0

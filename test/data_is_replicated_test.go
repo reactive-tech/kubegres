@@ -58,7 +58,7 @@ var _ = Describe("Checking changes in Primary DB is replicated in Replica DBs", 
 
 			test.givenNewKubegresSpecIsSetTo(3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
@@ -94,7 +94,7 @@ var _ = Describe("Checking changes in Primary DB is replicated in Replica DBs", 
 
 			test.givenNewKubegresSpecIsSetTo(1)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 0)
 
@@ -163,7 +163,7 @@ func (r *DataIsReplicatedTest) givenExistingKubegresSpecIsSetTo(specNbreReplicas
 	r.kubegresResource.Spec.Replicas = &specNbreReplicas
 }
 
-func (r *DataIsReplicatedTest) whenKubernetesIsCreated() {
+func (r *DataIsReplicatedTest) whenKubegresIsCreated() {
 	r.resourceCreator.CreateKubegres(r.kubegresResource)
 }
 

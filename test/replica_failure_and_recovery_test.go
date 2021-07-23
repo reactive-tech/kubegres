@@ -58,7 +58,7 @@ var _ = Describe("Replica instances are not available, checking recovery works",
 
 			test.givenNewKubegresSpecIsSetTo(3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
@@ -100,7 +100,7 @@ func (r *ReplicaFailureAndRecoveryTest) givenNewKubegresSpecIsSetTo(specNbreRepl
 	r.kubegresResource.Spec.Replicas = &specNbreReplicas
 }
 
-func (r *ReplicaFailureAndRecoveryTest) whenKubernetesIsCreated() {
+func (r *ReplicaFailureAndRecoveryTest) whenKubegresIsCreated() {
 	r.resourceCreator.CreateKubegres(r.kubegresResource)
 }
 

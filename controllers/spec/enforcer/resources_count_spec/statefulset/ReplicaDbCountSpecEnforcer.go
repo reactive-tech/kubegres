@@ -95,15 +95,28 @@ func (r *ReplicaDbCountSpecEnforcer) Enforce() error {
 		return nil
 	}
 
+	isManualFailoverRequested := r.isManualFailoverRequested()
+	if isManualFailoverRequested {
+		r.resetInSpecManualFailover()
+	}
+
 	if r.shouldMoreReplicaBeDeployed() {
+
+		if r.isAutomaticFailoverDisabled() &&
+			!isManualFailoverRequested &&
+			!r.doesSpecRequireTheDeploymentOfAdditionalReplicas() {
+
+			r.logAutomaticFailoverIsDisabled()
+			return nil
+		}
+
 		return r.deployReplicaStatefulSets()
 
 	} else if r.shouldLessReplicaBeDeployed() {
 		return r.undeployReplicaStatefulSets()
-
-	} else {
-		return nil
 	}
+
+	return nil
 }
 
 func (r *ReplicaDbCountSpecEnforcer) hasLastAttemptTimedOut() bool {
@@ -146,6 +159,24 @@ func (r *ReplicaDbCountSpecEnforcer) logTimedOut() {
 				"Until the ReplicaDB is removed, most of the features of Kubegres are disabled for safety reason. ",
 			"Replica DB StatefulSet to remove", replicaStatefulSetName)
 	}
+}
+
+func (r *ReplicaDbCountSpecEnforcer) isAutomaticFailoverDisabled() bool {
+	return r.kubegresContext.Kubegres.Spec.Failover.IsDisabled
+}
+
+func (r *ReplicaDbCountSpecEnforcer) isManualFailoverRequested() bool {
+	return r.kubegresContext.Kubegres.Spec.Failover.PromotePod != ""
+}
+
+func (r *ReplicaDbCountSpecEnforcer) doesSpecRequireTheDeploymentOfAdditionalReplicas() bool {
+	return *r.kubegresContext.Kubegres.Spec.Replicas > r.kubegresContext.Kubegres.Status.EnforcedReplicas
+}
+
+func (r *ReplicaDbCountSpecEnforcer) resetInSpecManualFailover() error {
+	r.kubegresContext.Log.Info("Resetting the field 'failover.promotePod' in spec.")
+	r.kubegresContext.Kubegres.Spec.Failover.PromotePod = ""
+	return r.kubegresContext.Client.Update(r.kubegresContext.Ctx, r.kubegresContext.Kubegres)
 }
 
 func (r *ReplicaDbCountSpecEnforcer) shouldMoreReplicaBeDeployed() bool {
@@ -218,6 +249,8 @@ func (r *ReplicaDbCountSpecEnforcer) deployReplicaStatefulSet() error {
 		return err
 	}
 
+	r.kubegresContext.Status.SetEnforcedReplicas(r.kubegresContext.Kubegres.Status.EnforcedReplicas + 1)
+
 	r.kubegresContext.Status.SetLastCreatedInstanceIndex(instanceIndex)
 	r.kubegresContext.Log.InfoEvent("ReplicaStatefulSetDeployment", "Deployed Replica StatefulSet.", "Replica name", replicaStatefulSet.Name)
 	return nil
@@ -271,6 +304,8 @@ func (r *ReplicaDbCountSpecEnforcer) undeployReplicaStatefulSets() error {
 		return err
 	}
 
+	r.kubegresContext.Status.SetEnforcedReplicas(r.kubegresContext.Kubegres.Status.EnforcedReplicas - 1)
+
 	return nil
 }
 
@@ -290,4 +325,13 @@ func (r *ReplicaDbCountSpecEnforcer) deleteStatefulSet(statefulSetToDelete v1.St
 
 	r.kubegresContext.Log.InfoEvent("ReplicaStatefulSetDeletion", "Deleted Replica StatefulSet.", "Replica name", statefulSetToDelete.Name)
 	return nil
+}
+
+func (r *ReplicaDbCountSpecEnforcer) logAutomaticFailoverIsDisabled() {
+	r.kubegresContext.Log.InfoEvent("AutomaticFailoverIsDisabled",
+		"We need to deploy additional Replica(s) because the number of Replicas deployed is less "+
+			"than the number of required Replicas in the Spec. "+
+			"However, a Replica failover cannot happen because the automatic failover feature is disabled in the YAML. "+
+			"To re-enable automatic failover, either set the field 'failover.isDisabled' to false "+
+			"or remove that field from the YAML.")
 }

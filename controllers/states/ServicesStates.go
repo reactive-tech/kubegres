@@ -91,5 +91,5 @@ func (r *ServicesStates) getDeployedServices() (*core.ServiceList, error) {
 }
 
 func (r *ServicesStates) isPrimary(service core.Service) bool {
-	return service.Labels["replicationRole"] == ctx.PrimaryReplicationRole
+	return service.Labels["replicationRole"] == ctx.PrimaryRoleName
 }

@@ -64,7 +64,7 @@ var _ = Describe("Creating Kubegres with a custom namespace", func() {
 
 			test.givenNewKubegresSpecIsSetTo(customNamespace, 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
@@ -165,7 +165,7 @@ func (r *CustomNamespaceTest) givenExistingKubegresSpecIsSetTo(specNbreReplicas 
 	r.kubegresResource.Spec.Replicas = &specNbreReplicas
 }
 
-func (r *CustomNamespaceTest) whenKubernetesIsCreated() {
+func (r *CustomNamespaceTest) whenKubegresIsCreated() {
 	r.resourceCreator.CreateKubegres(r.kubegresResource)
 }
 

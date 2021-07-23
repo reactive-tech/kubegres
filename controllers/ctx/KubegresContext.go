@@ -38,9 +38,9 @@ type KubegresContext struct {
 }
 
 const (
-	PrimaryReplicationRole = "primary"
-	KindKubegres           = "Kubegres"
-	DeploymentOwnerKey     = ".metadata.controller"
+	PrimaryRoleName    = "primary"
+	KindKubegres       = "Kubegres"
+	DeploymentOwnerKey = ".metadata.controller"
 
 	BaseConfigMapName                      = "base-kubegres-config"
 	CronJobNamePrefix                      = "backup-"

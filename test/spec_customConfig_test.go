@@ -68,7 +68,7 @@ var _ = Describe("Setting Kubegres specs 'customConfig'", func() {
 
 			test.givenNewKubegresSpecIsSetTo("", 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
@@ -94,7 +94,7 @@ var _ = Describe("Setting Kubegres specs 'customConfig'", func() {
 
 			test.givenNewKubegresSpecIsSetTo("doesNotExistConfigMap", 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenErrorEventShouldBeLogged()
 
@@ -110,7 +110,7 @@ var _ = Describe("Setting Kubegres specs 'customConfig'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(resourceConfigs.CustomConfigMapEmptyResourceName, 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
@@ -134,7 +134,7 @@ var _ = Describe("Setting Kubegres specs 'customConfig'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(resourceConfigs.CustomConfigMapWithPostgresConfResourceName, 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
@@ -158,7 +158,7 @@ var _ = Describe("Setting Kubegres specs 'customConfig'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(resourceConfigs.CustomConfigMapWithPrimaryInitScriptResourceName, 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
@@ -182,7 +182,7 @@ var _ = Describe("Setting Kubegres specs 'customConfig'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(resourceConfigs.CustomConfigMapWithPgHbaConfResourceName, 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
@@ -206,7 +206,7 @@ var _ = Describe("Setting Kubegres specs 'customConfig'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
@@ -240,7 +240,7 @@ var _ = Describe("Setting Kubegres specs 'customConfig'", func() {
 
 			test.givenNewKubegresSpecHasBackupEnabledWithCustomConfig(resourceConfigs.CustomConfigMapWithBackupDatabaseScriptResourceName, 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
@@ -266,7 +266,7 @@ var _ = Describe("Setting Kubegres specs 'customConfig'", func() {
 
 			test.givenNewKubegresSpecHasBackupEnabledWithCustomConfig(ctx.BaseConfigMapName, 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
@@ -333,7 +333,7 @@ func (r *SpecCustomConfigTest) givenNewKubegresSpecHasBackupEnabledWithCustomCon
 	r.kubegresResource.Spec.Backup.VolumeMount = "/tmp/my-kubegres"
 }
 
-func (r *SpecCustomConfigTest) whenKubernetesIsCreated() {
+func (r *SpecCustomConfigTest) whenKubegresIsCreated() {
 	if r.kubegresResource == nil {
 		r.kubegresResource = resourceConfigs.LoadKubegresYaml()
 	}

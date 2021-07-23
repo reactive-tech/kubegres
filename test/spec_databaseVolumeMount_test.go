@@ -63,7 +63,7 @@ var _ = Describe("Setting Kubegres specs 'database.volumeMount'", func() {
 
 			test.givenNewKubegresSpecIsSetTo("", 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(ctx.DefaultContainerVolumeMount, 1, 2)
 
@@ -86,7 +86,7 @@ var _ = Describe("Setting Kubegres specs 'database.volumeMount'", func() {
 
 			test.givenNewKubegresSpecIsSetTo("/tmp/folder1", 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe("/tmp/folder1", 1, 2)
 
@@ -150,7 +150,7 @@ func (r *SpecDatabaseVolumeMountTest) givenExistingKubegresSpecIsSetTo(specDatab
 	r.kubegresResource.Spec.Database.VolumeMount = specDatabaseVolumeMount
 }
 
-func (r *SpecDatabaseVolumeMountTest) whenKubernetesIsCreated() {
+func (r *SpecDatabaseVolumeMountTest) whenKubegresIsCreated() {
 	r.resourceCreator.CreateKubegres(r.kubegresResource)
 }
 

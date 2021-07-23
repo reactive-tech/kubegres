@@ -62,7 +62,7 @@ var _ = Describe("Setting Kubegres specs 'database.size'", func() {
 
 			test.givenNewKubegresSpecIsSetTo("", 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenErrorEventShouldBeLogged()
 
@@ -78,7 +78,7 @@ var _ = Describe("Setting Kubegres specs 'database.size'", func() {
 
 			test.givenNewKubegresSpecIsSetTo("300Mi", 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe("300Mi", 1, 2)
 
@@ -142,7 +142,7 @@ func (r *SpecDatabaseSizeTest) givenExistingKubegresSpecIsSetTo(databaseSize str
 	r.kubegresResource.Spec.Database.Size = databaseSize
 }
 
-func (r *SpecDatabaseSizeTest) whenKubernetesIsCreated() {
+func (r *SpecDatabaseSizeTest) whenKubegresIsCreated() {
 	r.resourceCreator.CreateKubegres(r.kubegresResource)
 }
 

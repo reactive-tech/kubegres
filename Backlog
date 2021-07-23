@@ -1,6 +1,10 @@
+#12 : Reuse PVC
+#20 : Delete PVC
+
+#17 : Node scheduling
+#21 : Additional volumes
+#22 : Add support for resources requests/limits
+
 #7 : Allow major version upgrade using pg_upgrade
 
 #10 : Deploy Kubegres with a HELM chart
-
-#? : Allow disabling automatic failover via the deployment YAML "kind: Kubegres"
-and allow manual failover by updating which POD is Primary in the YAML.

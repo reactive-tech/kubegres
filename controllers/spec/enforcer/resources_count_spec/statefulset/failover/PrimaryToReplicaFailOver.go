@@ -67,8 +67,27 @@ func (r *PrimaryToReplicaFailOver) CreateOperationConfigForFailingOver() operati
 }
 
 func (r *PrimaryToReplicaFailOver) ShouldWeFailOver() bool {
-	return r.areThereAvailableReplicas() &&
-		(!r.isPrimaryDbDeployed() || !r.isPrimaryDbReady())
+
+	if !r.hasPrimaryEverBeenDeployed() {
+		return false
+
+	} else if !r.isThereDeployedReplica() {
+		r.logFailoverCannotHappenAsNoReplicaDeployed()
+		return false
+
+	} else if r.isManualFailoverRequested() {
+		return true
+
+	} else if r.isNewPrimaryRequired() {
+
+		if r.isAutomaticFailoverDisabled() {
+			r.logFailoverCannotHappenAsAutomaticFailoverIsDisabled()
+			return false
+		}
+		return true
+	}
+
+	return false
 }
 
 func (r *PrimaryToReplicaFailOver) FailOver() error {
@@ -82,35 +101,47 @@ func (r *PrimaryToReplicaFailOver) FailOver() error {
 		return nil
 	}
 
-	var newPrimary = r.selectReplicaToPromote()
-	if !newPrimary.IsReady {
-		r.logFailOverCannotHappenAsNoReplica()
-		return nil
+	var newPrimary, err = r.selectReplicaToPromote()
+	if err != nil {
+		return err
 	}
 
-	if r.isWaitingBeforeStartingFailOver() {
-		return r.promoteReplicaToPrimary(newPrimary)
-
-	} else {
+	if !r.isWaitingBeforeStartingFailOver() {
 		return r.waitBeforePromotingReplicaToPrimary(newPrimary)
+	} else {
+		return r.promoteReplicaToPrimary(newPrimary)
 	}
 }
 
 func (r *PrimaryToReplicaFailOver) isFailOverCompleted(operation v1.KubegresBlockingOperation) bool {
 
-	if r.blockingOperation.GetNbreSecondsSinceOperationHasStarted() < 20 {
+	if r.blockingOperation.GetNbreSecondsSinceOperationHasStarted() < 40 {
+
+		if r.isPrimaryDbReady() {
+			r.kubegresContext.Log.Info("The new Primary Pod is ready. " +
+				"We are waiting on the connections between pods to be ready before completing the failover process.")
+		}
+
 		return false
 	}
 
 	return r.isPrimaryDbReady()
 }
 
+func (r *PrimaryToReplicaFailOver) isNewPrimaryRequired() bool {
+	return !r.isPrimaryDbDeployed() || !r.isPrimaryDbReady()
+}
+
 func (r *PrimaryToReplicaFailOver) isPrimaryDbReady() bool {
 	return r.resourcesStates.StatefulSets.Primary.IsReady
 }
 
-func (r *PrimaryToReplicaFailOver) areThereAvailableReplicas() bool {
+func (r *PrimaryToReplicaFailOver) isThereDeployedReplica() bool {
 	return r.resourcesStates.StatefulSets.Replicas.NbreDeployed > 0
+}
+
+func (r *PrimaryToReplicaFailOver) isAutomaticFailoverDisabled() bool {
+	return r.kubegresContext.Kubegres.Spec.Failover.IsDisabled
 }
 
 func (r *PrimaryToReplicaFailOver) isPrimaryDbDeployed() bool {
@@ -119,12 +150,6 @@ func (r *PrimaryToReplicaFailOver) isPrimaryDbDeployed() bool {
 
 func (r *PrimaryToReplicaFailOver) hasLastFailOverAttemptTimedOut() bool {
 	return r.blockingOperation.HasActiveOperationIdTimedOut(operation.OperationIdPrimaryDbCountSpecEnforcement)
-}
-
-func (r *PrimaryToReplicaFailOver) logFailOverCannotHappenAsNoReplica() {
-	r.kubegresContext.Log.InfoEvent("FailOverCannotHappenAsNoReplica",
-		"We cannot FailOver to a Replica because there are not any Replicas which are ready to serve requests. "+
-			"Primary has to be fixed manually.")
 }
 
 func (r *PrimaryToReplicaFailOver) logFailoverTimedOut() {
@@ -141,6 +166,35 @@ func (r *PrimaryToReplicaFailOver) logFailoverTimedOut() {
 		"Primary DB StatefulSet to fix", primaryStatefulSetName)
 }
 
+func (r *PrimaryToReplicaFailOver) getPodToManuallyPromote() string {
+	return r.kubegresContext.Kubegres.Spec.Failover.PromotePod
+}
+
+func (r *PrimaryToReplicaFailOver) getInstanceIndexToManuallyPromote() int32 {
+	podToPromote := r.getPodToManuallyPromote()
+	if podToPromote == "" || podToPromote == r.resourcesStates.StatefulSets.Primary.Pod.Pod.Name {
+		return 0
+	}
+
+	for _, statefulSetWrapper := range r.resourcesStates.StatefulSets.Replicas.All.GetAllSortedByInstanceIndex() {
+		if podToPromote == statefulSetWrapper.Pod.Pod.Name {
+			return statefulSetWrapper.InstanceIndex
+		}
+	}
+
+	r.logManualFailoverCannotHappenAsConfigErr()
+	return 0
+}
+
+func (r *PrimaryToReplicaFailOver) getPrimaryInstanceIndex() int32 {
+	return r.resourcesStates.StatefulSets.Primary.InstanceIndex
+}
+
+func (r *PrimaryToReplicaFailOver) isManualFailoverRequested() bool {
+	return r.getInstanceIndexToManuallyPromote() > 0 &&
+		r.getInstanceIndexToManuallyPromote() != r.getPrimaryInstanceIndex()
+}
+
 func (r *PrimaryToReplicaFailOver) isWaitingBeforeStartingFailOver() bool {
 	if !r.blockingOperation.IsActiveOperationInTransition(operation.OperationIdPrimaryDbCountSpecEnforcement) {
 		return false
@@ -150,21 +204,45 @@ func (r *PrimaryToReplicaFailOver) isWaitingBeforeStartingFailOver() bool {
 	return previouslyActiveOperation.StepId == operation.OperationStepIdPrimaryDbWaitingBeforeFailingOver
 }
 
-func (r *PrimaryToReplicaFailOver) selectReplicaToPromote() statefulset.StatefulSetWrapper {
+func (r *PrimaryToReplicaFailOver) getStatefulSetByInstanceIndex(newPrimaryInstanceIndex int32) (statefulset.StatefulSetWrapper, error) {
+	return r.resourcesStates.StatefulSets.All.GetByInstanceIndex(newPrimaryInstanceIndex)
+}
+
+func (r *PrimaryToReplicaFailOver) selectReplicaToPromote() (statefulset.StatefulSetWrapper, error) {
+
+	if r.isManualFailoverRequested() {
+		return r.manuallySelectReplicaToPromote()
+	}
 
 	for _, statefulSetWrapper := range r.resourcesStates.StatefulSets.Replicas.All.GetAllSortedByInstanceIndex() {
 		if statefulSetWrapper.IsReady {
-			return statefulSetWrapper
+			return statefulSetWrapper, nil
 		}
 	}
 
-	return statefulset.StatefulSetWrapper{}
+	errorMsg := r.logFailoverCannotHappenAsNoHealthyReplica()
+	return statefulset.StatefulSetWrapper{}, errors.New(errorMsg)
+}
+
+func (r *PrimaryToReplicaFailOver) manuallySelectReplicaToPromote() (statefulset.StatefulSetWrapper, error) {
+
+	replicaInstanceIndexToPromote := r.getInstanceIndexToManuallyPromote()
+	r.logManualFailoverIsRequested()
+
+	for _, statefulSetWrapper := range r.resourcesStates.StatefulSets.Replicas.All.GetAllSortedByInstanceIndex() {
+		if statefulSetWrapper.IsReady && statefulSetWrapper.InstanceIndex == replicaInstanceIndexToPromote {
+			return statefulSetWrapper, nil
+		}
+	}
+
+	errorMsg := r.logManualFailoverCannotHappenAsConfigErr()
+	return statefulset.StatefulSetWrapper{}, errors.New(errorMsg)
 }
 
 func (r *PrimaryToReplicaFailOver) promoteReplicaToPrimary(newPrimary statefulset.StatefulSetWrapper) error {
 
-	newPrimary.StatefulSet.Labels["replicationRole"] = ctx.PrimaryReplicationRole
-	newPrimary.StatefulSet.Spec.Template.Labels["replicationRole"] = ctx.PrimaryReplicationRole
+	newPrimary.StatefulSet.Labels["replicationRole"] = ctx.PrimaryRoleName
+	newPrimary.StatefulSet.Spec.Template.Labels["replicationRole"] = ctx.PrimaryRoleName
 	volumeMount := core.VolumeMount{
 		Name:      "base-config",
 		MountPath: "/tmp/promote_replica_to_primary.sh",
@@ -200,11 +278,7 @@ func (r *PrimaryToReplicaFailOver) promoteReplicaToPrimary(newPrimary statefulse
 
 func (r *PrimaryToReplicaFailOver) waitBeforePromotingReplicaToPrimary(newPrimary statefulset.StatefulSetWrapper) error {
 
-	if r.isPrimaryDeployedButNotReady() {
-		if err := r.deletePrimaryStatefulSet(); err != nil {
-			return err
-		}
-	}
+	r.deletePrimaryStatefulSet()
 
 	err := r.activateOperationWaitingBeforeFailingOver(newPrimary)
 	if err != nil {
@@ -231,27 +305,64 @@ func (r *PrimaryToReplicaFailOver) activateOperationFailingOver(newPrimary state
 		newPrimary.InstanceIndex)
 }
 
-func (r *PrimaryToReplicaFailOver) deletePrimaryStatefulSet() error {
+func (r *PrimaryToReplicaFailOver) deletePrimaryStatefulSet() {
 
 	statefulSetToDelete := r.resourcesStates.StatefulSets.Primary.StatefulSet
 	r.kubegresContext.Log.Info("FailOver: Deleting the failing Primary StatefulSet.",
 		"Primary name", statefulSetToDelete.Name)
 
 	err := r.kubegresContext.Client.Delete(r.kubegresContext.Ctx, &statefulSetToDelete)
-	if err != nil {
-		r.kubegresContext.Log.ErrorEvent("FailOverErr", err,
-			"FailOver: Unable to delete the failing Primary StatefulSet.",
+	if err == nil {
+		r.kubegresContext.Log.InfoEvent("FailOverPrimaryDeleted",
+			"Deleted the failing Primary StatefulSet.",
 			"Primary name", statefulSetToDelete.Name)
-		return err
 	}
-
-	r.kubegresContext.Log.InfoEvent("FailOverPrimaryDeleted",
-		"Deleted the failing Primary StatefulSet.",
-		"Primary name", statefulSetToDelete.Name)
-	return nil
 }
 
-func (r *PrimaryToReplicaFailOver) isPrimaryDeployedButNotReady() bool {
-	return r.resourcesStates.StatefulSets.Primary.IsDeployed &&
-		!r.resourcesStates.StatefulSets.Primary.IsReady
+func (r *PrimaryToReplicaFailOver) logFailoverCannotHappenAsNoReplicaDeployed() {
+	message := ""
+	if r.isManualFailoverRequested() {
+		message = "A manual failover to promote a Replica as a Primary was requested."
+	} else if r.isNewPrimaryRequired() {
+		message = "A failover is required for a Primary Pod as it is not healthy."
+	}
+
+	if message != "" {
+		r.kubegresContext.Log.InfoEvent("FailoverCannotHappenAsNoReplicaDeployed",
+			message+" However, a failover cannot happen because there is not any Replica deployed.")
+	}
+}
+
+func (r *PrimaryToReplicaFailOver) hasPrimaryEverBeenDeployed() bool {
+	return r.kubegresContext.Kubegres.Status.EnforcedReplicas > 0
+}
+
+func (r *PrimaryToReplicaFailOver) logFailoverCannotHappenAsAutomaticFailoverIsDisabled() {
+	r.kubegresContext.Log.InfoEvent("AutomaticFailoverIsDisabled",
+		"A failover is required for a Primary Pod as it is not healthy. "+
+			"However, a failover cannot happen because the automatic failover feature is disabled in the YAML. "+
+			"To re-enable automatic failover, either set the field 'failover.isDisabled' to false "+
+			"or remove that field from the YAML.")
+}
+
+func (r *PrimaryToReplicaFailOver) logManualFailoverIsRequested() {
+	r.kubegresContext.Log.InfoEvent("ManualFailover",
+		"A manual failover to promote a Replica as a Primary was requested.")
+}
+
+func (r *PrimaryToReplicaFailOver) logFailoverCannotHappenAsNoHealthyReplica() string {
+	errorReason := "FailoverCannotHappenAsNotFoundHealthyReplicaErr"
+	errorMsg := "We cannot Failover to a Replica because there are not any Replicas which are ready to serve requests. " +
+		"Primary has to be fixed manually."
+	r.kubegresContext.Log.ErrorEvent(errorReason, errors.New(""), errorMsg)
+	return errorMsg
+}
+
+func (r *PrimaryToReplicaFailOver) logManualFailoverCannotHappenAsConfigErr() string {
+	errorReason := "ManualFailoverCannotHappenAsConfigErr"
+	errorMsg := "The value of the field 'failover.promotePod' is set to '" + r.getPodToManuallyPromote() + "'. " +
+		"That value is either the name of a Primary Pod OR a Replica Pod which is not ready OR a Pod which does not exist. " +
+		"Please set the name of a Replica Pod that you would like to promote as a Primary Pod."
+	r.kubegresContext.Log.WarningEvent(errorReason, errorMsg)
+	return errorMsg
 }

@@ -135,6 +135,13 @@ spec:
                   - name
                   type: object
                 type: array
+              failover:
+                properties:
+                  isDisabled:
+                    type: boolean
+                  promotePod:
+                    type: string
+                type: object
               image:
                 type: string
               imagePullSecrets:
@@ -181,6 +188,9 @@ spec:
                     format: int64
                     type: integer
                 type: object
+              enforcedReplicas:
+                format: int32
+                type: integer
               lastCreatedInstanceIndex:
                 format: int32
                 type: integer
@@ -518,7 +528,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: reactivetechio/kubegres:1.7
+        image: reactivetechio/kubegres:1.8
         livenessProbe:
           httpGet:
             path: /healthz

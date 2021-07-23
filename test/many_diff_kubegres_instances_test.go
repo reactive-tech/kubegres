@@ -65,8 +65,8 @@ var _ = Describe("Testing when there are 2 different Kubegres instances running 
 			kubegresOneResource := test.givenNewKubegresSpecIsSetTo(kubegresOne, 2)
 			kubegresTwoResource := test.givenNewKubegresSpecIsSetTo(kubegresTwo, 3)
 
-			test.whenKubernetesIsCreated(kubegresOneResource)
-			test.whenKubernetesIsCreated(kubegresTwoResource)
+			test.whenKubegresIsCreated(kubegresOneResource)
+			test.whenKubegresIsCreated(kubegresTwoResource)
 
 			test.thenPodsStatesShouldBe(kubegresOne, 1, 1)
 			test.thenPodsStatesShouldBe(kubegresTwo, 1, 2)
@@ -114,7 +114,7 @@ func (r *ManyDifferentKubegresInstancesTest) givenExistingKubegresSpecIsSetTo(ku
 	kubegresResource.Spec.Replicas = &specNbreReplicas
 }
 
-func (r *ManyDifferentKubegresInstancesTest) whenKubernetesIsCreated(kubegresResource *postgresv1.Kubegres) {
+func (r *ManyDifferentKubegresInstancesTest) whenKubegresIsCreated(kubegresResource *postgresv1.Kubegres) {
 	r.resourceCreator.CreateKubegres(kubegresResource)
 }
 

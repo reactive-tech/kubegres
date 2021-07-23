@@ -39,6 +39,11 @@ type KubegresBackUp struct {
 	PvcName     string `json:"pvcName,omitempty"`
 }
 
+type KubegresFailover struct {
+	IsDisabled bool   `json:"isDisabled,omitempty"`
+	PromotePod string `json:"promotePod,omitempty"`
+}
+
 type KubegresSpec struct {
 	Replicas         *int32                    `json:"replicas,omitempty"`
 	Image            string                    `json:"image,omitempty"`
@@ -47,6 +52,7 @@ type KubegresSpec struct {
 
 	CustomConfig string           `json:"customConfig,omitempty"`
 	Database     KubegresDatabase `json:"database,omitempty"`
+	Failover     KubegresFailover `json:"failover,omitempty"`
 	Backup       KubegresBackUp   `json:"backup,omitempty"`
 	Env          []v1.EnvVar      `json:"env,omitempty"`
 }
@@ -77,6 +83,7 @@ type KubegresStatus struct {
 	LastCreatedInstanceIndex  int32                     `json:"lastCreatedInstanceIndex,omitempty"`
 	BlockingOperation         KubegresBlockingOperation `json:"blockingOperation,omitempty"`
 	PreviousBlockingOperation KubegresBlockingOperation `json:"previousBlockingOperation,omitempty"`
+	EnforcedReplicas          int32                     `json:"enforcedReplicas,omitempty"`
 }
 
 // ----------------------- RESOURCE ---------------------------------------

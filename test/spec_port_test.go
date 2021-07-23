@@ -63,7 +63,7 @@ var _ = Describe("Setting Kubegres spec 'port'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(0, 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(5432, 1, 2)
 
@@ -88,7 +88,7 @@ var _ = Describe("Setting Kubegres spec 'port'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(5433, 3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(5433, 1, 2)
 
@@ -164,7 +164,7 @@ func (r *SpecPortTest) givenExistingKubegresSpecIsSetTo(port int32) {
 	}
 }
 
-func (r *SpecPortTest) whenKubernetesIsCreated() {
+func (r *SpecPortTest) whenKubegresIsCreated() {
 	r.resourceCreator.CreateKubegres(r.kubegresResource)
 }
 

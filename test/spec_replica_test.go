@@ -62,7 +62,7 @@ var _ = Describe("Setting Kubegres spec 'replica'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(0)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenErrorEventShouldBeLogged()
 
@@ -78,7 +78,7 @@ var _ = Describe("Setting Kubegres spec 'replica'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(1)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 0)
 
@@ -99,7 +99,7 @@ var _ = Describe("Setting Kubegres spec 'replica'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(2)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 1)
 
@@ -121,7 +121,7 @@ var _ = Describe("Setting Kubegres spec 'replica'", func() {
 
 			test.givenNewKubegresSpecIsSetTo(3)
 
-			test.whenKubernetesIsCreated()
+			test.whenKubegresIsCreated()
 
 			test.thenPodsStatesShouldBe(1, 2)
 
@@ -221,7 +221,7 @@ func (r *SpecReplicaTest) givenExistingKubegresSpecIsSetTo(specNbreReplicas int3
 	r.kubegresResource.Spec.Replicas = &specNbreReplicas
 }
 
-func (r *SpecReplicaTest) whenKubernetesIsCreated() {
+func (r *SpecReplicaTest) whenKubegresIsCreated() {
 	r.resourceCreator.CreateKubegres(r.kubegresResource)
 }
 

@@ -33,6 +33,15 @@ func (r *KubegresStatusWrapper) SetBlockingOperation(value v1.KubegresBlockingOp
 	r.Kubegres.Status.BlockingOperation = value
 }
 
+func (r *KubegresStatusWrapper) GetEnforcedReplicas() int32 {
+	return r.Kubegres.Status.EnforcedReplicas
+}
+
+func (r *KubegresStatusWrapper) SetEnforcedReplicas(value int32) {
+	r.addStatusFieldToUpdate("EnforcedReplicas", value)
+	r.Kubegres.Status.EnforcedReplicas = value
+}
+
 func (r *KubegresStatusWrapper) GetPreviousBlockingOperation() v1.KubegresBlockingOperation {
 	return r.Kubegres.Status.PreviousBlockingOperation
 }

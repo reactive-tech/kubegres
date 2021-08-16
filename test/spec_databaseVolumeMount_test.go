@@ -69,7 +69,7 @@ var _ = Describe("Setting Kubegres specs 'database.volumeMount'", func() {
 
 			test.thenDeployedKubegresSpecShouldBeSetTo(ctx.DefaultContainerVolumeMount)
 
-			test.thenEventShouldBeLoggedSayingDatabaseVolumeMountWasCorrected()
+			test.thenEventShouldBeLoggedSayingDatabaseVolumeMountWasSetToDefaultValue()
 
 			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
 			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
@@ -158,12 +158,12 @@ func (r *SpecDatabaseVolumeMountTest) whenKubernetesIsUpdated() {
 	r.resourceCreator.UpdateResource(r.kubegresResource, "Kubegres")
 }
 
-func (r *SpecDatabaseVolumeMountTest) thenEventShouldBeLoggedSayingDatabaseVolumeMountWasCorrected() {
+func (r *SpecDatabaseVolumeMountTest) thenEventShouldBeLoggedSayingDatabaseVolumeMountWasSetToDefaultValue() {
 
 	expectedErrorEvent := util.EventRecord{
 		Eventtype: v12.EventTypeNormal,
-		Reason:    "SpecCheckCorrection",
-		Message:   "Corrected an undefined value in Spec. 'spec.database.volumeMount': New value: " + ctx.DefaultContainerVolumeMount,
+		Reason:    "DefaultSpecValue",
+		Message:   "A default value was set for a field in Kubegres YAML spec. 'spec.database.volumeMount': New value: " + ctx.DefaultContainerVolumeMount,
 	}
 	Eventually(func() bool {
 		_, err := r.resourceRetriever.GetKubegres()

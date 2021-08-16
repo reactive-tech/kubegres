@@ -368,19 +368,6 @@ spec:
 
     spec:
       terminationGracePeriodSeconds: 10
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                    - key: app
-                      operator: In
-                      values:
-                        - postgres-name
-                topologyKey: "kubernetes.io/hostname"
-
       volumes:
         - name: base-config
           configMap:
@@ -507,19 +494,6 @@ spec:
 
     spec:
       terminationGracePeriodSeconds: 10
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - weight: 100
-              podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                    - key: app
-                      operator: In
-                      values:
-                        - postgres-name
-                topologyKey: "kubernetes.io/hostname"
-
       volumes:
         - name: base-config
           configMap:

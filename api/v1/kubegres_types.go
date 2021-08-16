@@ -44,6 +44,11 @@ type KubegresFailover struct {
 	PromotePod string `json:"promotePod,omitempty"`
 }
 
+type KubegresScheduler struct {
+	Affinity    *v1.Affinity    `json:"affinity,omitempty"`
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+}
+
 type KubegresSpec struct {
 	Replicas         *int32                    `json:"replicas,omitempty"`
 	Image            string                    `json:"image,omitempty"`
@@ -55,6 +60,8 @@ type KubegresSpec struct {
 	Failover     KubegresFailover `json:"failover,omitempty"`
 	Backup       KubegresBackUp   `json:"backup,omitempty"`
 	Env          []v1.EnvVar      `json:"env,omitempty"`
+
+	Scheduler KubegresScheduler `json:"scheduler,omitempty"`
 }
 
 // ----------------------- STATUS -----------------------------------------

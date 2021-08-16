@@ -44,6 +44,7 @@ const (
 
 	BaseConfigMapName                      = "base-kubegres-config"
 	CronJobNamePrefix                      = "backup-"
+	DefaultContainerPortNumber             = 5432
 	DefaultContainerVolumeMount            = "/var/lib/postgresql/data"
 	DefaultDatabaseFolder                  = "pgdata"
 	EnvVarNamePgData                       = "PGDATA"

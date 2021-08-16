@@ -212,8 +212,6 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 		statefulSetTemplateSpec.ImagePullSecrets = append(statefulSetTemplateSpec.ImagePullSecrets, postgresSpec.ImagePullSecrets...)
 	}
 
-	statefulSetTemplateSpec.Affinity.PodAntiAffinity.PreferredDuringSchedulingIgnoredDuringExecution[0].PodAffinityTerm.LabelSelector.MatchExpressions[0].Values[0] = resourceName
-
 	container := &statefulSetTemplateSpec.Containers[0]
 	container.Name = statefulSetResourceName
 	container.Image = postgresSpec.Image
@@ -224,6 +222,14 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 
 	statefulSetTemplate.Spec.VolumeClaimTemplates[0].Spec.StorageClassName = postgresSpec.Database.StorageClassName
 	statefulSetTemplate.Spec.VolumeClaimTemplates[0].Spec.Resources.Requests = core.ResourceList{core.ResourceStorage: resource.MustParse(postgresSpec.Database.Size)}
+
+	if postgresSpec.Scheduler.Affinity != nil {
+		statefulSetTemplateSpec.Affinity = postgresSpec.Scheduler.Affinity
+	}
+
+	if len(postgresSpec.Scheduler.Tolerations) > 0 {
+		statefulSetTemplateSpec.Tolerations = postgresSpec.Scheduler.Tolerations
+	}
 }
 
 // Extract annotations set in Kubegres YAML by

@@ -31,7 +31,7 @@ import (
 	"reactive-tech.io/kubegres/controllers/operation"
 	log3 "reactive-tech.io/kubegres/controllers/operation/log"
 	"reactive-tech.io/kubegres/controllers/spec/checker"
-	"reactive-tech.io/kubegres/controllers/spec/corrector"
+	"reactive-tech.io/kubegres/controllers/spec/defaultspec"
 	"reactive-tech.io/kubegres/controllers/spec/enforcer/resources_count_spec"
 	"reactive-tech.io/kubegres/controllers/spec/enforcer/resources_count_spec/statefulset"
 	"reactive-tech.io/kubegres/controllers/spec/enforcer/resources_count_spec/statefulset/failover"
@@ -49,7 +49,7 @@ type ResourcesContext struct {
 	ResourcesStates              states.ResourcesStates
 	ResourcesStatesLogger        log2.ResourcesStatesLogger
 	SpecChecker                  checker.SpecChecker
-	DefaultStorageClass          corrector.DefaultStorageClass
+	DefaultStorageClass          defaultspec.DefaultStorageClass
 	CustomConfigSpecHelper       template.CustomConfigSpecHelper
 	ResourcesCreatorFromTemplate template.ResourcesCreatorFromTemplate
 	ResourcesCountSpecEnforcer   resources_count_spec.ResourcesCountSpecEnforcer
@@ -95,8 +95,8 @@ func CreateResourcesContext(kubegres *postgresV1.Kubegres,
 		Client:   client,
 	}
 
-	rc.DefaultStorageClass = corrector.CreateDefaultStorageClass(rc.KubegresContext)
-	if err = corrector.CorrectSpec(rc.KubegresContext, rc.DefaultStorageClass); err != nil {
+	rc.DefaultStorageClass = defaultspec.CreateDefaultStorageClass(rc.KubegresContext)
+	if err = defaultspec.SetDefaultForUndefinedSpecValues(rc.KubegresContext, rc.DefaultStorageClass); err != nil {
 		return nil, err
 	}
 
@@ -147,12 +147,16 @@ func addStatefulSetSpecEnforcers(rc *ResourcesContext) {
 	portSpecEnforcer := statefulset_spec.CreatePortSpecEnforcer(rc.KubegresContext, rc.ResourcesStates)
 	storageClassSizeSpecEnforcer := statefulset_spec.CreateStorageClassSizeSpecEnforcer(rc.KubegresContext, rc.ResourcesStates)
 	customConfigSpecEnforcer := statefulset_spec.CreateCustomConfigSpecEnforcer(rc.CustomConfigSpecHelper)
+	affinityConfigSpecEnforcer := statefulset_spec.CreateAffinitySpecEnforcer(rc.KubegresContext)
+	tolerationsConfigSpecEnforcer := statefulset_spec.CreateTolerationsSpecEnforcer(rc.KubegresContext)
 
 	rc.StatefulSetsSpecsEnforcer = statefulset_spec.CreateStatefulSetsSpecsEnforcer(rc.KubegresContext)
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&imageSpecEnforcer)
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&portSpecEnforcer)
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&storageClassSizeSpecEnforcer)
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&customConfigSpecEnforcer)
+	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&affinityConfigSpecEnforcer)
+	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&tolerationsConfigSpecEnforcer)
 
 	rc.AllStatefulSetsSpecEnforcer = statefulset_spec.CreateAllStatefulSetsSpecEnforcer(rc.KubegresContext, rc.ResourcesStates, rc.BlockingOperation, rc.StatefulSetsSpecsEnforcer)
 }

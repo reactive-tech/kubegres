@@ -68,7 +68,7 @@ var _ = Describe("Setting Kubegres specs 'database.storageClassName'", func() {
 
 			test.thenDeployedKubegresSpecShouldBeSetTo("standard")
 
-			test.thenEventShouldBeLoggedSayingStorageClassNameWasCorrected()
+			test.thenEventShouldBeLoggedSayingStorageClassNameWasSetToDefaultValue()
 
 			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
 			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
@@ -222,12 +222,12 @@ func (r *SpecDatabaseStorageClassTest) thenDeployedKubegresSpecShouldBeSetTo(dat
 	Expect(*r.kubegresResource.Spec.Database.StorageClassName).Should(Equal(databaseStorageClassName))
 }
 
-func (r *SpecDatabaseStorageClassTest) thenEventShouldBeLoggedSayingStorageClassNameWasCorrected() {
+func (r *SpecDatabaseStorageClassTest) thenEventShouldBeLoggedSayingStorageClassNameWasSetToDefaultValue() {
 
 	expectedErrorEvent := util.EventRecord{
 		Eventtype: v12.EventTypeNormal,
-		Reason:    "SpecCheckCorrection",
-		Message:   "Corrected an undefined value in Spec. 'spec.Database.StorageClassName': New value: standard",
+		Reason:    "DefaultSpecValue",
+		Message:   "A default value was set for a field in Kubegres YAML spec. 'spec.Database.StorageClassName': New value: standard",
 	}
 	Eventually(func() bool {
 		_, err := r.resourceRetriever.GetKubegres()

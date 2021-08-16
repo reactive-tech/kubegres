@@ -27,6 +27,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"log"
 	postgresv1 "reactive-tech.io/kubegres/api/v1"
+	"reactive-tech.io/kubegres/controllers/ctx"
 	"reactive-tech.io/kubegres/test/resourceConfigs"
 	"reactive-tech.io/kubegres/test/util"
 	"reactive-tech.io/kubegres/test/util/testcases"
@@ -65,13 +66,13 @@ var _ = Describe("Setting Kubegres spec 'port'", func() {
 
 			test.whenKubegresIsCreated()
 
-			test.thenPodsStatesShouldBe(5432, 1, 2)
+			test.thenPodsStatesShouldBe(ctx.DefaultContainerPortNumber, 1, 2)
 
-			test.thenDeployedKubegresSpecShouldBeSetTo(5432)
+			test.thenDeployedKubegresSpecShouldBeSetTo(ctx.DefaultContainerPortNumber)
 
-			test.thenPortOfKubegresPrimaryAndReplicaServicesShouldBeSetTo(5432)
+			test.thenPortOfKubegresPrimaryAndReplicaServicesShouldBeSetTo(ctx.DefaultContainerPortNumber)
 
-			test.thenEventShouldBeLoggedSayingPortIsCorrectedTo5432()
+			test.thenEventShouldBeLoggedSayingPortIsSetToDefaultValue()
 
 			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
 			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
@@ -172,12 +173,12 @@ func (r *SpecPortTest) whenKubernetesIsUpdated() {
 	r.resourceCreator.UpdateResource(r.kubegresResource, "Kubegres")
 }
 
-func (r *SpecPortTest) thenEventShouldBeLoggedSayingPortIsCorrectedTo5432() {
+func (r *SpecPortTest) thenEventShouldBeLoggedSayingPortIsSetToDefaultValue() {
 
 	expectedErrorEvent := util.EventRecord{
 		Eventtype: v12.EventTypeNormal,
-		Reason:    "SpecCheckCorrection",
-		Message:   "Corrected an undefined value in Spec. 'spec.port': New value: 5432",
+		Reason:    "DefaultSpecValue",
+		Message:   "A default value was set for a field in Kubegres YAML spec. 'spec.port': New value: " + strconv.Itoa(ctx.DefaultContainerPortNumber),
 	}
 	Eventually(func() bool {
 		_, err := r.resourceRetriever.GetKubegres()

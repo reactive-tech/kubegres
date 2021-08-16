@@ -28,6 +28,26 @@ spec:
   #  pvcName: postgres-db-mypostgres-2-0
   #  volumeMount: /tmp/mypostgres
 
+  #scheduler:
+  #
+  #  affinity:
+  #    podAntiAffinity:
+  #      preferredDuringSchedulingIgnoredDuringExecution:
+  #        - weight: 90
+  #          podAffinityTerm:
+  #            labelSelector:
+  #              matchExpressions:
+  #                - key: app
+  #                  operator: In
+  #                  values:
+  #                    - postgres-name
+  #            topologyKey: "kubernetes.io/hostname"
+  #
+  #  tolerations:
+  #    - key: group
+  #      operator: Equal
+  #      value: critical
+
   env:
     - name: POSTGRES_PASSWORD
       valueFrom:

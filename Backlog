@@ -1,10 +1,6 @@
-#12 : Reuse PVC
+By priority:
 #20 : Delete PVC
-
-#17 : Node scheduling
-#21 : Additional volumes
+#27 : Additional volumes
 #22 : Add support for resources requests/limits
-
-#7 : Allow major version upgrade using pg_upgrade
-
+#7  : Allow major version upgrade using pg_upgrade
 #10 : Deploy Kubegres with a HELM chart

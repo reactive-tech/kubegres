@@ -18,6 +18,22 @@ spec:
     #volumeMount: /var/lib/postgres/data
 
   customConfig: mypostgres-conf
+  primary:
+    resources:
+      limits:
+        memory: "4Gi"
+        cpu: "2"
+      requests:
+        memory: "2Gi"
+        cpu: "1"
+  replica:
+    resources:
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
 
   #failover:
   #  isDisabled: true

@@ -27,6 +27,14 @@ import (
 
 // ----------------------- SPEC -------------------------------------------
 
+type KubegresPrimary struct {
+	Resources v1.ResourceRequirements `json:"resources,omitempty"`
+}
+
+type KubegresReplicas struct {
+	Resources v1.ResourceRequirements `json:"resources,omitempty"`
+}
+
 type KubegresDatabase struct {
 	Size             string  `json:"size,omitempty"`
 	VolumeMount      string  `json:"volumeMount,omitempty"`
@@ -55,13 +63,14 @@ type KubegresSpec struct {
 	Port             int32                     `json:"port,omitempty"`
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 
-	CustomConfig string           `json:"customConfig,omitempty"`
-	Database     KubegresDatabase `json:"database,omitempty"`
-	Failover     KubegresFailover `json:"failover,omitempty"`
-	Backup       KubegresBackUp   `json:"backup,omitempty"`
-	Env          []v1.EnvVar      `json:"env,omitempty"`
-
-	Scheduler KubegresScheduler `json:"scheduler,omitempty"`
+	CustomConfig string            `json:"customConfig,omitempty"`
+	Database     KubegresDatabase  `json:"database,omitempty"`
+	Failover     KubegresFailover  `json:"failover,omitempty"`
+	Backup       KubegresBackUp    `json:"backup,omitempty"`
+	Env          []v1.EnvVar       `json:"env,omitempty"`
+	Primary      KubegresPrimary   `json:"primary,omitempty"`
+	Replica      KubegresReplicas  `json:"replica,omitempty"`
+	Scheduler    KubegresScheduler `json:"scheduler,omitempty"`
 }
 
 // ----------------------- STATUS -----------------------------------------

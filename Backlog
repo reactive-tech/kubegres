@@ -1,6 +1,9 @@
 By priority:
-#20 : Delete PVC
-#27 : Additional volumes
+#34 : Expand Storage
 #22 : Add support for resources requests/limits
+#27 : Additional volumes
+#20 : Delete PVC
+#40 : Wal_level to logical
 #7  : Allow major version upgrade using pg_upgrade
+#35 : Restore databse from a PV backup
 #10 : Deploy Kubegres with a HELM chart

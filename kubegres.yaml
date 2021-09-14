@@ -894,7 +894,7 @@ spec:
         - --leader-elect
         command:
         - /manager
-        image: reactivetechio/kubegres:1.9
+        image: reactivetechio/kubegres:1.10
         livenessProbe:
           httpGet:
             path: /healthz

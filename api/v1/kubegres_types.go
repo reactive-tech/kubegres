@@ -27,14 +27,6 @@ import (
 
 // ----------------------- SPEC -------------------------------------------
 
-type KubegresPrimary struct {
-	Resources v1.ResourceRequirements `json:"resources,omitempty"`
-}
-
-type KubegresReplicas struct {
-	Resources v1.ResourceRequirements `json:"resources,omitempty"`
-}
-
 type KubegresDatabase struct {
 	Size             string  `json:"size,omitempty"`
 	VolumeMount      string  `json:"volumeMount,omitempty"`

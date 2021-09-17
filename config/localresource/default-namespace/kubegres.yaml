@@ -11,7 +11,13 @@ spec:
 
   #imagePullSecrets:
   #  - name: my-private-docker-repo-secret
-
+  # resources:
+  #     limits:
+  #       memory: "4Gi"
+  #       cpu: "1"
+  #     requests:
+  #       memory: "2Gi"
+  #       cpu: "1"
   database:
     size: 200Mi
     #storageClassName: standard

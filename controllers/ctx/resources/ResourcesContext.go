@@ -22,6 +22,7 @@ package resources
 
 import (
 	"context"
+
 	"github.com/go-logr/logr"
 	"k8s.io/client-go/tools/record"
 	postgresV1 "reactive-tech.io/kubegres/api/v1"
@@ -149,6 +150,7 @@ func addStatefulSetSpecEnforcers(rc *ResourcesContext) {
 	customConfigSpecEnforcer := statefulset_spec.CreateCustomConfigSpecEnforcer(rc.CustomConfigSpecHelper)
 	affinityConfigSpecEnforcer := statefulset_spec.CreateAffinitySpecEnforcer(rc.KubegresContext)
 	tolerationsConfigSpecEnforcer := statefulset_spec.CreateTolerationsSpecEnforcer(rc.KubegresContext)
+	resourcesConfigSpecEnforcer := statefulset_spec.CreateResourcesSpecEnforcer(rc.KubegresContext)
 
 	rc.StatefulSetsSpecsEnforcer = statefulset_spec.CreateStatefulSetsSpecsEnforcer(rc.KubegresContext)
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&imageSpecEnforcer)
@@ -157,6 +159,7 @@ func addStatefulSetSpecEnforcers(rc *ResourcesContext) {
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&customConfigSpecEnforcer)
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&affinityConfigSpecEnforcer)
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&tolerationsConfigSpecEnforcer)
+	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&resourcesConfigSpecEnforcer)
 
 	rc.AllStatefulSetsSpecEnforcer = statefulset_spec.CreateAllStatefulSetsSpecEnforcer(rc.KubegresContext, rc.ResourcesStates, rc.BlockingOperation, rc.StatefulSetsSpecsEnforcer)
 }

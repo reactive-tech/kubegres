@@ -223,6 +223,7 @@ func (in *KubegresSpec) DeepCopyInto(out *KubegresSpec) {
 		*out = make([]corev1.LocalObjectReference, len(*in))
 		copy(*out, *in)
 	}
+	in.Resources.DeepCopyInto(&out.Resources)
 	in.Database.DeepCopyInto(&out.Database)
 	out.Failover = in.Failover
 	out.Backup = in.Backup

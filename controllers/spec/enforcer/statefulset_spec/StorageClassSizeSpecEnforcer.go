@@ -85,6 +85,9 @@ func (r *StorageClassSizeSpecEnforcer) EnforceSpec(statefulSet *apps.StatefulSet
 	}
 
 	r.kubegresContext.Log.Info("Updated Persistence Volume Claim Spec to new size", "PVC name", persistentVolumeClaimName, "New size", newSize)
+
+	statefulSet.Spec.VolumeClaimTemplates[0].Spec.Resources.Requests[core.ResourceStorage] = resource.MustParse(newSize)
+
 	return true, nil
 }
 

@@ -104,9 +104,6 @@ func (r *ResourcesCreatorFromTemplate) CreatePrimaryStatefulSet(statefulSetInsta
 	primaryServiceName := r.kubegresContext.GetServiceResourceName(true)
 	r.initStatefulSet(primaryServiceName, &statefulSetTemplate, statefulSetInstanceIndex)
 	r.customConfigSpecHelper.ConfigureStatefulSet(&statefulSetTemplate)
-	postgresSpec := r.kubegresContext.Kubegres.Spec
-	container := &statefulSetTemplate.Spec.Template.Spec.Containers[0]
-	container.Resources = postgresSpec.Primary.Resources
 	return statefulSetTemplate, nil
 }
 
@@ -131,8 +128,6 @@ func (r *ResourcesCreatorFromTemplate) CreateReplicaStatefulSet(statefulSetInsta
 	initContainer.Env[2].Value = postgresSpec.Database.VolumeMount + "/" + ctx.DefaultDatabaseFolder
 	initContainer.VolumeMounts[0].MountPath = postgresSpec.Database.VolumeMount
 
-	container := &statefulSetTemplate.Spec.Template.Spec.Containers[0]
-	container.Resources = postgresSpec.Replica.Resources
 	return statefulSetTemplate, nil
 }
 

@@ -61,8 +61,6 @@ type KubegresSpec struct {
 	Failover     KubegresFailover  `json:"failover,omitempty"`
 	Backup       KubegresBackUp    `json:"backup,omitempty"`
 	Env          []v1.EnvVar       `json:"env,omitempty"`
-	Primary      KubegresPrimary   `json:"primary,omitempty"`
-	Replica      KubegresReplicas  `json:"replica,omitempty"`
 	Scheduler    KubegresScheduler `json:"scheduler,omitempty"`
 }
 

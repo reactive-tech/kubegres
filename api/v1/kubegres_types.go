@@ -54,6 +54,7 @@ type KubegresSpec struct {
 	Image            string                    `json:"image,omitempty"`
 	Port             int32                     `json:"port,omitempty"`
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	Resources        v1.ResourceRequirements   `json:"resources,omitempty"`
 
 	CustomConfig string           `json:"customConfig,omitempty"`
 	Database     KubegresDatabase `json:"database,omitempty"`

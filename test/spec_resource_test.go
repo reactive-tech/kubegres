@@ -36,7 +36,7 @@ import (
 	"reactive-tech.io/kubegres/test/util/testcases"
 )
 
-var _ = FDescribe("Setting Kubegres spec 'resource'", func() {
+var _ = Describe("Setting Kubegres spec 'resource'", func() {
 
 	var test = SpecResourceTest{}
 
@@ -57,9 +57,9 @@ var _ = FDescribe("Setting Kubegres spec 'resource'", func() {
 		}
 	})
 
-	FContext("GIVEN new Kubegres is created without spec 'resource' and with spec 'replica' set to 3", func() {
+	Context("GIVEN new Kubegres is created without spec 'resource' and with spec 'replica' set to 3", func() {
 
-		FIt("THEN 1 primary and 2 replica should be created with 'resource' to default value ", func() {
+		It("THEN 1 primary and 2 replica should be created with 'resource' to default value ", func() {
 
 			log.Print("START OF: Test 'GIVEN new Kubegres is created without spec 'resource' and with spec 'replica' set to 3'")
 
@@ -78,9 +78,9 @@ var _ = FDescribe("Setting Kubegres spec 'resource'", func() {
 		})
 	})
 
-	FContext("GIVEN new Kubegres is created with spec 'resource' set to a value and spec 'replica' set to 3 and later 'resource' is updated to a new value", func() {
+	Context("GIVEN new Kubegres is created with spec 'resource' set to a value and spec 'replica' set to 3 and later 'resource' is updated to a new value", func() {
 
-		FIt("GIVEN new Kubegres is created with spec 'resource' set to a value and spec 'replica' set to 3 THEN 1 primary and 2 replica should be created with spec 'resource' set the value", func() {
+		It("GIVEN new Kubegres is created with spec 'resource' set to a value and spec 'replica' set to 3 THEN 1 primary and 2 replica should be created with spec 'resource' set the value", func() {
 
 			log.Print("START OF: Test 'GIVEN new Kubegres is created with spec 'resource' set to a value and spec 'replica' set to 3")
 
@@ -102,7 +102,7 @@ var _ = FDescribe("Setting Kubegres spec 'resource'", func() {
 			log.Print("END OF: Test 'GIVEN new Kubegres is created with spec 'resource' set to a value and spec 'replica' set to 3'")
 		})
 
-		FIt("GIVEN existing Kubegres is updated with spec 'resource' set to a new value THEN 1 primary and 2 replica should be re-deployed with spec 'resource' set the new value", func() {
+		It("GIVEN existing Kubegres is updated with spec 'resource' set to a new value THEN 1 primary and 2 replica should be re-deployed with spec 'resource' set the new value", func() {
 
 			log.Print("START OF: Test 'GIVEN existing Kubegres is updated with spec 'resource' set to a new value")
 

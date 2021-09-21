@@ -230,6 +230,9 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 	if len(postgresSpec.Scheduler.Tolerations) > 0 {
 		statefulSetTemplateSpec.Tolerations = postgresSpec.Scheduler.Tolerations
 	}
+	if postgresSpec.Resources.Requests != nil || postgresSpec.Resources.Limits != nil {
+		statefulSetTemplate.Spec.Template.Spec.Containers[0].Resources = postgresSpec.Resources
+	}
 }
 
 // Extract annotations set in Kubegres YAML by

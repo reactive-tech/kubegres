@@ -11,14 +11,19 @@ spec:
 
   #imagePullSecrets:
   #  - name: my-private-docker-repo-secret
-
+  # resources:
+  #     limits:
+  #       memory: "4Gi"
+  #       cpu: "1"
+  #     requests:
+  #       memory: "2Gi"
+  #       cpu: "1"
   database:
     size: 200Mi
     #storageClassName: standard
     #volumeMount: /var/lib/postgres/data
 
   customConfig: mypostgres-conf
-
   #failover:
   #  isDisabled: true
   #  promotePod: "mypostgres-3-0"

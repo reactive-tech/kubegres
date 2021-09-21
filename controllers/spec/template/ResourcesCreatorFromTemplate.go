@@ -21,6 +21,8 @@ limitations under the License.
 package template
 
 import (
+	"strconv"
+
 	apps "k8s.io/api/apps/v1"
 	"k8s.io/api/batch/v1beta1"
 	core "k8s.io/api/core/v1"
@@ -28,7 +30,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	postgresV1 "reactive-tech.io/kubegres/api/v1"
 	"reactive-tech.io/kubegres/controllers/ctx"
-	"strconv"
 )
 
 type ResourcesCreatorFromTemplate struct {
@@ -103,7 +104,6 @@ func (r *ResourcesCreatorFromTemplate) CreatePrimaryStatefulSet(statefulSetInsta
 	primaryServiceName := r.kubegresContext.GetServiceResourceName(true)
 	r.initStatefulSet(primaryServiceName, &statefulSetTemplate, statefulSetInstanceIndex)
 	r.customConfigSpecHelper.ConfigureStatefulSet(&statefulSetTemplate)
-
 	return statefulSetTemplate, nil
 }
 
@@ -229,6 +229,9 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 
 	if len(postgresSpec.Scheduler.Tolerations) > 0 {
 		statefulSetTemplateSpec.Tolerations = postgresSpec.Scheduler.Tolerations
+	}
+	if postgresSpec.Resources.Requests != nil || postgresSpec.Resources.Limits != nil {
+		statefulSetTemplate.Spec.Template.Spec.Containers[0].Resources = postgresSpec.Resources
 	}
 }
 

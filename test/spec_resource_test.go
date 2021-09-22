@@ -57,69 +57,69 @@ var _ = Describe("Setting Kubegres spec 'resource'", func() {
 		}
 	})
 
-	Context("GIVEN new Kubegres is created without spec 'resource' and with spec 'replica' set to 3", func() {
+	Context("GIVEN new Kubegres is created without spec 'resources' and with spec 'replica' set to 3", func() {
 
-		It("THEN 1 primary and 2 replica should be created with 'resource' to default value ", func() {
+		It("THEN 1 primary and 2 replica should be created without 'resources' values ", func() {
 
-			log.Print("START OF: Test 'GIVEN new Kubegres is created without spec 'resource' and with spec 'replica' set to 3'")
+			log.Print("START OF: Test 'GIVEN new Kubegres is created without spec 'resources' and with spec 'replica' set to 3'")
 
-			test.givenNewKubegresSpecIsWithoutResource(3)
+			test.givenNewKubegresSpecIsWithoutResources(3)
 
 			test.whenKubegresIsCreated()
 
-			test.thenStatefulSetStatesShouldBeWithoutResource(1, 2)
+			test.thenStatefulSetStatesShouldBeWithoutResources(1, 2)
 
 			test.thenDeployedKubegresSpecShouldWithoutResource()
 
 			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
 			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
 
-			log.Print("END OF: Test 'GIVEN new Kubegres is created without spec 'resource' and with spec 'replica' set to 3'")
+			log.Print("END OF: Test 'GIVEN new Kubegres is created without spec 'resources' and with spec 'replica' set to 3'")
 		})
 	})
 
-	Context("GIVEN new Kubegres is created with spec 'resource' set to a value and spec 'replica' set to 3 and later 'resource' is updated to a new value", func() {
+	Context("GIVEN new Kubegres is created with spec 'resources' set to a value and spec 'replica' set to 3 and later 'resources' is updated to a new value", func() {
 
-		It("GIVEN new Kubegres is created with spec 'resource' set to a value and spec 'replica' set to 3 THEN 1 primary and 2 replica should be created with spec 'resource' set the value", func() {
+		It("GIVEN new Kubegres is created with spec 'resources' set to a value and spec 'replica' set to 3 THEN 1 primary and 2 replica should be created with spec 'resources' set the value", func() {
 
-			log.Print("START OF: Test 'GIVEN new Kubegres is created with spec 'resource' set to a value and spec 'replica' set to 3")
+			log.Print("START OF: Test 'GIVEN new Kubegres is created with spec 'resources' set to a value and spec 'replica' set to 3")
 
-			resource := test.givenResource("2", "2Gi", "1", "1Gi")
+			resources := test.givenResources("2", "2Gi", "1", "1Gi")
 
-			test.givenNewKubegresSpecIsSetTo(resource, 3)
+			test.givenNewKubegresSpecIsSetTo(resources, 3)
 
 			test.whenKubegresIsCreated()
 
-			test.thenStatefulSetStatesShouldBe(resource, 1, 2)
+			test.thenStatefulSetStatesShouldBe(resources, 1, 2)
 
-			test.thenDeployedKubegresSpecShouldBeSetTo(resource)
+			test.thenDeployedKubegresSpecShouldBeSetTo(resources)
 
 			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
 			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
 
 			test.keepCreatedResourcesForNextTest = true
 
-			log.Print("END OF: Test 'GIVEN new Kubegres is created with spec 'resource' set to a value and spec 'replica' set to 3'")
+			log.Print("END OF: Test 'GIVEN new Kubegres is created with spec 'resources' set to a value and spec 'replica' set to 3'")
 		})
 
-		It("GIVEN existing Kubegres is updated with spec 'resource' set to a new value THEN 1 primary and 2 replica should be re-deployed with spec 'resource' set the new value", func() {
+		It("GIVEN existing Kubegres is updated with spec 'resources' set to a new value THEN 1 primary and 2 replica should be re-deployed with spec 'resources' set the new value", func() {
 
-			log.Print("START OF: Test 'GIVEN existing Kubegres is updated with spec 'resource' set to a new value")
+			log.Print("START OF: Test 'GIVEN existing Kubegres is updated with spec 'resources' set to a new value")
 
-			newResource := test.givenResource("2", "4Gi", "2", "2Gi")
+			newResources := test.givenResources("2", "4Gi", "2", "2Gi")
 
-			test.givenExistingKubegresSpecIsSetTo(newResource)
+			test.givenExistingKubegresSpecIsSetTo(newResources)
 
 			test.whenKubernetesIsUpdated()
 
-			test.thenStatefulSetStatesShouldBe(newResource, 1, 2)
+			test.thenStatefulSetStatesShouldBe(newResources, 1, 2)
 
-			test.thenDeployedKubegresSpecShouldBeSetTo(newResource)
+			test.thenDeployedKubegresSpecShouldBeSetTo(newResources)
 
 			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
 			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
 
-			log.Print("END OF: Test 'GIVEN existing Kubegres is updated with spec 'resource' set to a new value")
+			log.Print("END OF: Test 'GIVEN existing Kubegres is updated with spec 'resources' set to a new value")
 		})
 	})
 
@@ -137,7 +137,7 @@ func (r *SpecResourceTest) whenKubernetesIsUpdated() {
 	r.resourceCreator.UpdateResource(r.kubegresResource, "Kubegres")
 }
 
-func (r *SpecResourceTest) givenResource(cpuLimit, memLimit, cpuReq, memReq string) v12.ResourceRequirements {
+func (r *SpecResourceTest) givenResources(cpuLimit, memLimit, cpuReq, memReq string) v12.ResourceRequirements {
 	return v12.ResourceRequirements{
 		Limits: v12.ResourceList{
 			"cpu":    resource.MustParse(cpuLimit),
@@ -150,19 +150,19 @@ func (r *SpecResourceTest) givenResource(cpuLimit, memLimit, cpuReq, memReq stri
 	}
 }
 
-func (r *SpecResourceTest) givenNewKubegresSpecIsWithoutResource(specNbreReplicas int32) {
+func (r *SpecResourceTest) givenNewKubegresSpecIsWithoutResources(specNbreReplicas int32) {
 	r.kubegresResource = resourceConfigs.LoadKubegresYaml()
 	r.kubegresResource.Spec.Resources = v12.ResourceRequirements{}
 	r.kubegresResource.Spec.Replicas = &specNbreReplicas
 }
 
-func (r *SpecResourceTest) givenNewKubegresSpecIsSetTo(resource v12.ResourceRequirements, specNbreReplicas int32) {
+func (r *SpecResourceTest) givenNewKubegresSpecIsSetTo(resources v12.ResourceRequirements, specNbreReplicas int32) {
 	r.kubegresResource = resourceConfigs.LoadKubegresYaml()
-	r.kubegresResource.Spec.Resources = resource
+	r.kubegresResource.Spec.Resources = resources
 	r.kubegresResource.Spec.Replicas = &specNbreReplicas
 }
 
-func (r *SpecResourceTest) givenExistingKubegresSpecIsSetTo(resource v12.ResourceRequirements) {
+func (r *SpecResourceTest) givenExistingKubegresSpecIsSetTo(resources v12.ResourceRequirements) {
 	var err error
 	r.kubegresResource, err = r.resourceRetriever.GetKubegres()
 
@@ -172,14 +172,14 @@ func (r *SpecResourceTest) givenExistingKubegresSpecIsSetTo(resource v12.Resourc
 		return
 	}
 
-	r.kubegresResource.Spec.Resources = resource
+	r.kubegresResource.Spec.Resources = resources
 }
 
 func (r *SpecResourceTest) whenKubegresIsCreated() {
 	r.resourceCreator.CreateKubegres(r.kubegresResource)
 }
 
-func (r *SpecResourceTest) thenStatefulSetStatesShouldBeWithoutResource(nbrePrimary, nbreReplicas int) bool {
+func (r *SpecResourceTest) thenStatefulSetStatesShouldBeWithoutResources(nbrePrimary, nbreReplicas int) bool {
 	return Eventually(func() bool {
 
 		kubegresResources, err := r.resourceRetriever.GetKubegresResources()
@@ -189,12 +189,12 @@ func (r *SpecResourceTest) thenStatefulSetStatesShouldBeWithoutResource(nbrePrim
 		}
 
 		for _, resource := range kubegresResources.Resources {
-			currentResource := r.kubegresResource.Spec.Resources
-			defaultResource := r.givenDefaultResource()
+			currentResources := resource.StatefulSet.Spec.Template.Spec.Containers[0].Resources
+			emptyResources := v12.ResourceRequirements{}
 
-			if !reflect.DeepEqual(currentResource, defaultResource) {
-				log.Println("StatefulSet '" + resource.StatefulSet.Name + defaultResource.String() + "  ' doesn't have the expected spec 'resource' which should be the default one. " +
-					"Current value: '" + currentResource.String() + "'. Waiting...")
+			if !reflect.DeepEqual(currentResources, emptyResources) {
+				log.Println("StatefulSet '" + resource.StatefulSet.Name + emptyResources.String() + "  ' doesn't have the expected spec 'resources' which should be the default one. " +
+					"Current value: '" + currentResources.String() + "'. Waiting...")
 				return false
 			}
 		}
@@ -213,7 +213,7 @@ func (r *SpecResourceTest) thenStatefulSetStatesShouldBeWithoutResource(nbrePrim
 	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
 }
 
-func (r *SpecResourceTest) thenStatefulSetStatesShouldBe(expectedResource v12.ResourceRequirements, nbrePrimary, nbreReplicas int) bool {
+func (r *SpecResourceTest) thenStatefulSetStatesShouldBe(expectedResources v12.ResourceRequirements, nbrePrimary, nbreReplicas int) bool {
 	return Eventually(func() bool {
 
 		kubegresResources, err := r.resourceRetriever.GetKubegresResources()
@@ -223,11 +223,11 @@ func (r *SpecResourceTest) thenStatefulSetStatesShouldBe(expectedResource v12.Re
 		}
 
 		for _, resource := range kubegresResources.Resources {
-			currentResource := resource.StatefulSet.Spec.Template.Spec.Containers[0].Resources
+			currentResources := resource.StatefulSet.Spec.Template.Spec.Containers[0].Resources
 
-			if !reflect.DeepEqual(currentResource, expectedResource) {
-				log.Println("StatefulSet '" + resource.StatefulSet.Name + "' doesn't have the expected spec 'resource': " + expectedResource.String() + " " +
-					"Current value: '" + currentResource.String() + "'. Waiting...")
+			if !reflect.DeepEqual(currentResources, expectedResources) {
+				log.Println("StatefulSet '" + resource.StatefulSet.Name + "' doesn't have the expected spec 'resources': " + expectedResources.String() + " " +
+					"Current value: '" + currentResources.String() + "'. Waiting...")
 				return false
 			}
 		}
@@ -255,12 +255,12 @@ func (r *SpecResourceTest) thenDeployedKubegresSpecShouldWithoutResource() {
 		Expect(err).Should(Succeed())
 		return
 	}
-	currentResource := r.kubegresResource.Spec.Resources
-	defaultResource := r.givenDefaultResource()
-	Expect(currentResource).Should(Equal(defaultResource))
+	currentResources := r.kubegresResource.Spec.Resources
+	emptyResources := v12.ResourceRequirements{}
+	Expect(currentResources).Should(Equal(emptyResources))
 }
 
-func (r *SpecResourceTest) thenDeployedKubegresSpecShouldBeSetTo(expectedresource v12.ResourceRequirements) {
+func (r *SpecResourceTest) thenDeployedKubegresSpecShouldBeSetTo(expectedResources v12.ResourceRequirements) {
 	var err error
 	r.kubegresResource, err = r.resourceRetriever.GetKubegres()
 
@@ -270,11 +270,6 @@ func (r *SpecResourceTest) thenDeployedKubegresSpecShouldBeSetTo(expectedresourc
 		return
 	}
 
-	currentResource := r.kubegresResource.Spec.Resources
-	Expect(currentResource).Should(Equal(expectedresource))
-}
-
-func (r *SpecResourceTest) givenDefaultResource() v12.ResourceRequirements {
-
-	return v12.ResourceRequirements{Limits: nil, Requests: nil}
+	currentResources := r.kubegresResource.Spec.Resources
+	Expect(currentResources).Should(Equal(expectedResources))
 }

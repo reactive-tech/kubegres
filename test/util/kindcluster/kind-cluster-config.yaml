@@ -1,14 +1,9 @@
-# three node (two workers) cluster config
+# 5 nodes (4 workers) cluster config
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
-- role: control-plane
-  extraPortMappings:
-    - containerPort: 30007
-      hostPort: 30007       # open test-kubegres-primary host port for kind
-    - containerPort: 30008
-      hostPort: 30008       # open test-kubegres-replica host port for kind
-- role: worker
-- role: worker
-- role: worker
-- role: worker
+  - role: control-plane
+  - role: worker
+  - role: worker
+  - role: worker
+  - role: worker

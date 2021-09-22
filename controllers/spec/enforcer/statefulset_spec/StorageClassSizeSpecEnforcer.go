@@ -22,6 +22,7 @@ package statefulset_spec
 
 import (
 	"errors"
+	"fmt"
 	apps "k8s.io/api/apps/v1"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -29,6 +30,7 @@ import (
 	"reactive-tech.io/kubegres/controllers/states"
 	"reactive-tech.io/kubegres/controllers/states/statefulset"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"strconv"
 )
 
 type StorageClassSizeSpecEnforcer struct {
@@ -62,6 +64,12 @@ func (r *StorageClassSizeSpecEnforcer) CheckForSpecDifference(statefulSet *apps.
 
 func (r *StorageClassSizeSpecEnforcer) EnforceSpec(statefulSet *apps.StatefulSet) (wasSpecUpdated bool, err error) {
 
+	// The reason why we have to update PVC rather than updating StatefulSet is because
+	// StatefulSet does not allow updating the following field:
+	// statefulSet.Spec.VolumeClaimTemplates[0].Spec.Resources.Requests[core.ResourceStorage] = resource.MustParse(newSize)
+	// If we update the field above we get the following error:
+	// "Forbidden: updates to Statefulset spec for fields other than 'replicas', 'template', and 'updateStrategy' are forbidden"
+
 	persistentVolumeClaimName, err := r.getPersistentVolumeClaimName(statefulSet)
 	if err != nil {
 		r.kubegresContext.Log.Error(err, "Unable to find StatefulSet's Persistence Volume Claim name", "StatefulSet name", statefulSet.Name)
@@ -86,7 +94,7 @@ func (r *StorageClassSizeSpecEnforcer) EnforceSpec(statefulSet *apps.StatefulSet
 
 	r.kubegresContext.Log.Info("Updated Persistence Volume Claim Spec to new size", "PVC name", persistentVolumeClaimName, "New size", newSize)
 
-	statefulSet.Spec.VolumeClaimTemplates[0].Spec.Resources.Requests[core.ResourceStorage] = resource.MustParse(newSize)
+	r.updateStatefulSetToForceToRestart(statefulSet)
 
 	return true, nil
 }
@@ -132,4 +140,15 @@ func (r *StorageClassSizeSpecEnforcer) getStatefulSetWrapper(statefulSet *apps.S
 	}
 
 	return statefulset.StatefulSetWrapper{}, errors.New("Cannot find statefulSet inside ResourcesStates. StatefulSet name: " + statefulSet.Name)
+}
+
+func (r *StorageClassSizeSpecEnforcer) updateStatefulSetToForceToRestart(statefulSet *apps.StatefulSet) {
+	index := 0
+	sizeChangedCounter := statefulSet.Spec.Template.ObjectMeta.Labels["sizeChangedCounter"]
+
+	if sizeChangedCounter != "" {
+		index, _ = strconv.Atoi(sizeChangedCounter)
+	}
+
+	statefulSet.Spec.Template.ObjectMeta.Labels["sizeChangedCounter"] = fmt.Sprint(index + 1)
 }

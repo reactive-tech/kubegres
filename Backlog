@@ -1,6 +1,5 @@
 By priority:
 #34 : Expand Storage
-#43 : Increase memory of Kubegres controller
 #27 : Additional volumes
 #20 : Delete PVC
 #40 : Wal_level to logical

@@ -1,8 +1,11 @@
-[Kubegres](https://www.kubegres.io/) is a Kubernetes operator allowing to deploy a cluster of PostgreSql pods with data 
+[Kubegres](https://www.kubegres.io/) is a Kubernetes operator allowing to deploy one or many clusters of PostgreSql pods with data 
 replication and failover enabled out-of-the box. It brings simplicity when using PostgreSql considering how complex managing 
 stateful-set's life-cycle and data replication could be with Kubernetes.
 
 **Features**
+
+* It can manage one or many clusters of Postgres instances. Each cluster of Postgres instances is created using a YAML of "kind: Kubegres".  
+  Each cluster is self-contained and is identified by its unique name and namespace as defined in its YAML of "kind: Kubegres". 
 
 * It creates a cluster of PostgreSql servers with [Streaming Replication](https://wiki.postgresql.org/wiki/Streaming_Replication) enabled: it creates a Primary PostgreSql pod and a 
   number of Replica PostgreSql pods and replicates primary's database in real-time to Replica pods.

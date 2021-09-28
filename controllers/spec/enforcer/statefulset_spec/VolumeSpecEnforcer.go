@@ -160,14 +160,15 @@ func (r *VolumeSpecEnforcer) getCurrentCustomVolumeMounts(statefulSet *apps.Stat
 
 func (r *VolumeSpecEnforcer) removeCustomVolumes(statefulSet *apps.StatefulSet) {
 
-	var currentCustomVolumes []v1.Volume
-	copy(currentCustomVolumes, r.getCurrentCustomVolumes(statefulSet))
+	currentCustomVolumes := r.getCurrentCustomVolumes(statefulSet)
+	currentCustomVolumesCopy := make([]v1.Volume, len(currentCustomVolumes))
+	copy(currentCustomVolumesCopy, currentCustomVolumes)
 
 	statefulSetSpec := &statefulSet.Spec.Template.Spec
 
-	for _, customVolume := range currentCustomVolumes {
+	for _, customVolume := range currentCustomVolumesCopy {
 		index := r.getIndexOfVolume(customVolume, statefulSetSpec.Volumes)
-		if index != -1 {
+		if index >= 0 {
 			statefulSetSpec.Volumes = append(statefulSetSpec.Volumes[:index], statefulSetSpec.Volumes[index+1:]...)
 		}
 	}
@@ -186,14 +187,15 @@ func (r *VolumeSpecEnforcer) getIndexOfVolume(volumeToSearch v1.Volume, volumes 
 
 func (r *VolumeSpecEnforcer) removeCustomVolumeMounts(statefulSet *apps.StatefulSet) {
 
-	var currentCustomVolumeMounts []v1.VolumeMount
-	copy(currentCustomVolumeMounts, r.getCurrentCustomVolumeMounts(statefulSet))
+	currentCustomVolumeMounts := r.getCurrentCustomVolumeMounts(statefulSet)
+	currentCustomVolumeMountsCopy := make([]v1.VolumeMount, len(currentCustomVolumeMounts))
+	copy(currentCustomVolumeMountsCopy, currentCustomVolumeMounts)
 
 	container := &statefulSet.Spec.Template.Spec.Containers[0]
 
-	for _, customVolumeMount := range currentCustomVolumeMounts {
+	for _, customVolumeMount := range currentCustomVolumeMountsCopy {
 		index := r.getIndexOfVolumeMount(customVolumeMount, container.VolumeMounts)
-		if index != -1 {
+		if index >= 0 {
 			container.VolumeMounts = append(container.VolumeMounts[:index], container.VolumeMounts[index+1:]...)
 		}
 	}

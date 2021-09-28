@@ -24,6 +24,7 @@ import (
 	apps "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	"reactive-tech.io/kubegres/controllers/ctx"
+	"reflect"
 )
 
 type TolerationsSpecEnforcer struct {
@@ -71,7 +72,7 @@ func (r *TolerationsSpecEnforcer) compare(current []v1.Toleration, expected []v1
 
 	index := 0
 	for _, expectedItem := range expected {
-		if expectedItem != current[index] {
+		if !reflect.DeepEqual(expectedItem, current[index]) {
 			return false
 		}
 		index++

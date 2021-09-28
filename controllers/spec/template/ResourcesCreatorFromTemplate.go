@@ -233,6 +233,18 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 	if postgresSpec.Resources.Requests != nil || postgresSpec.Resources.Limits != nil {
 		statefulSetTemplate.Spec.Template.Spec.Containers[0].Resources = postgresSpec.Resources
 	}
+
+	if postgresSpec.Volume.VolumeClaimTemplates != nil {
+		statefulSetTemplate.Spec.VolumeClaimTemplates = append(statefulSetTemplate.Spec.VolumeClaimTemplates, r.kubegresContext.Kubegres.Spec.Volume.VolumeClaimTemplates...)
+	}
+
+	if postgresSpec.Volume.Volumes != nil {
+		statefulSetTemplate.Spec.Template.Spec.Volumes = append(statefulSetTemplate.Spec.Template.Spec.Volumes, r.kubegresContext.Kubegres.Spec.Volume.Volumes...)
+	}
+
+	if postgresSpec.Volume.VolumeMounts != nil {
+		statefulSetTemplate.Spec.Template.Spec.Containers[0].VolumeMounts = append(statefulSetTemplate.Spec.Template.Spec.Containers[0].VolumeMounts, r.kubegresContext.Kubegres.Spec.Volume.VolumeMounts...)
+	}
 }
 
 // Extract annotations set in Kubegres YAML by

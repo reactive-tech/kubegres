@@ -49,19 +49,25 @@ type KubegresScheduler struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
+type Volume struct {
+	VolumeMounts         []v1.VolumeMount           `json:"volumeMounts,omitempty"`
+	Volumes              []v1.Volume                `json:"volumes,omitempty"`
+	VolumeClaimTemplates []v1.PersistentVolumeClaim `json:"volumeClaimTemplates,omitempty"`
+}
+
 type KubegresSpec struct {
 	Replicas         *int32                    `json:"replicas,omitempty"`
 	Image            string                    `json:"image,omitempty"`
 	Port             int32                     `json:"port,omitempty"`
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	CustomConfig     string                    `json:"customConfig,omitempty"`
+	Database         KubegresDatabase          `json:"database,omitempty"`
+	Failover         KubegresFailover          `json:"failover,omitempty"`
+	Backup           KubegresBackUp            `json:"backup,omitempty"`
+	Env              []v1.EnvVar               `json:"env,omitempty"`
+	Scheduler        KubegresScheduler         `json:"scheduler,omitempty"`
 	Resources        v1.ResourceRequirements   `json:"resources,omitempty"`
-
-	CustomConfig string            `json:"customConfig,omitempty"`
-	Database     KubegresDatabase  `json:"database,omitempty"`
-	Failover     KubegresFailover  `json:"failover,omitempty"`
-	Backup       KubegresBackUp    `json:"backup,omitempty"`
-	Env          []v1.EnvVar       `json:"env,omitempty"`
-	Scheduler    KubegresScheduler `json:"scheduler,omitempty"`
+	Volume           Volume                    `json:"volume,omitempty"`
 }
 
 // ----------------------- STATUS -----------------------------------------

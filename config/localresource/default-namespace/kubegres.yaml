@@ -9,6 +9,22 @@ spec:
   image: postgres:13.2
   #port: 5432
 
+  database:
+    size: 200Mi
+    #storageClassName: standard
+    #volumeMount: /var/lib/postgres/data
+
+  customConfig: mypostgres-conf
+
+  #failover:
+  #  isDisabled: true
+  #  promotePod: "mypostgres-3-0"
+
+  #backup:
+  #  schedule: "*/1 * * * *"
+  #  pvcName: postgres-db-mypostgres-2-0
+  #  volumeMount: /tmp/mypostgres
+
   #imagePullSecrets:
   #  - name: my-private-docker-repo-secret
   # resources:
@@ -18,20 +34,6 @@ spec:
   #     requests:
   #       memory: "2Gi"
   #       cpu: "1"
-  database:
-    size: 200Mi
-    #storageClassName: standard
-    #volumeMount: /var/lib/postgres/data
-
-  customConfig: mypostgres-conf
-  #failover:
-  #  isDisabled: true
-  #  promotePod: "mypostgres-3-0"
-
-  #backup:
-  #  schedule: "*/1 * * * *"
-  #  pvcName: postgres-db-mypostgres-2-0
-  #  volumeMount: /tmp/mypostgres
 
   #scheduler:
   #
@@ -52,6 +54,30 @@ spec:
   #    - key: group
   #      operator: Equal
   #      value: critical
+
+  # volume:
+  #
+  #    volumeMounts:
+  #      - mountPath: /dev/shm
+  #        name: dshm
+  #      - mountPath: /dev/anything
+  #        name: anyMount
+  #
+  #    volumes:
+  #      - name: dshm
+  #        emptyDir:
+  #          medium: Memory
+  #          sizeLimit: "600Mi"
+  #
+  #    volumeClaimTemplates:
+  #      - metadata:
+  #          name: anyMount
+  #        spec:
+  #          accessModes: [ "ReadWriteOnce" ]
+  #          storageClassName: standard
+  #          resources:
+  #            requests:
+  #            storage: 1Gi
 
   env:
     - name: POSTGRES_PASSWORD

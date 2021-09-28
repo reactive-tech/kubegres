@@ -87,14 +87,14 @@ func (r *CustomConfigSpecHelper) ConfigureStatefulSet(statefulSet *v1.StatefulSe
 	return hasStatefulSetChanged, differenceDetails
 }
 
-func (r *CustomConfigSpecHelper) updateVolumeMountNameIfChanged(volumeMountName, configMapDataKey string, statefulSet *v1.StatefulSet) (updated bool) {
+func (r *CustomConfigSpecHelper) updateVolumeMountNameIfChanged(volumeName, configMapDataKey string, statefulSet *v1.StatefulSet) (updated bool) {
 
 	volumeMounts := statefulSet.Spec.Template.Spec.Containers[0].VolumeMounts
 
 	for i := 0; i < len(volumeMounts); i++ {
 		volumeMount := volumeMounts[i]
-		if volumeMount.SubPath == configMapDataKey && volumeMount.Name != volumeMountName {
-			statefulSet.Spec.Template.Spec.Containers[0].VolumeMounts[i].Name = volumeMountName
+		if volumeMount.SubPath == configMapDataKey && volumeMount.Name != volumeName {
+			statefulSet.Spec.Template.Spec.Containers[0].VolumeMounts[i].Name = volumeName
 			updated = true
 		}
 	}
@@ -117,7 +117,7 @@ func (r *CustomConfigSpecHelper) getVolumeMountIndex(configMapDataKey string, st
 
 func (r *CustomConfigSpecHelper) getCustomConfigMapVolume(volumes []core.Volume) *core.Volume {
 	for _, volume := range volumes {
-		if volume.Name == states.CustomConfigType {
+		if volume.Name == ctx.CustomConfigMapVolumeName {
 			return &volume
 		}
 	}
@@ -142,7 +142,7 @@ func (r *CustomConfigSpecHelper) deleteCustomConfigMapVolumeIfExist(statefulSetT
 	newVolumes := make([]core.Volume, 0)
 
 	for _, volume := range statefulSetTemplateSpec.Volumes {
-		if volume.Name != states.CustomConfigType {
+		if volume.Name != ctx.CustomConfigMapVolumeName {
 			newVolumes = append(newVolumes, volume)
 		}
 	}
@@ -153,7 +153,7 @@ func (r *CustomConfigSpecHelper) deleteCustomConfigMapVolumeIfExist(statefulSetT
 func (r *CustomConfigSpecHelper) createConfigMapVolume() core.Volume {
 	defMode := defaultMode
 	return core.Volume{
-		Name: states.CustomConfigType,
+		Name: ctx.CustomConfigMapVolumeName,
 		VolumeSource: core.VolumeSource{
 			ConfigMap: &core.ConfigMapVolumeSource{
 				DefaultMode: &defMode,

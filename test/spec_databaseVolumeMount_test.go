@@ -57,7 +57,7 @@ var _ = Describe("Setting Kubegres specs 'database.volumeMount'", func() {
 
 	Context("GIVEN new Kubegres is created without spec 'database.volumeMount' and with spec 'replica' set to 3", func() {
 
-		It("THEN 1 primary and 2 replica should be created with 'database.volumeMount' set to the value of the const 'KubegresContext.DefaultContainerVolumeMount' and a normal event should be logged", func() {
+		It("THEN 1 primary and 2 replica should be created with 'database.volumeMount' set to the value of the const 'KubegresContext.DefaultDatabaseVolumeMount' and a normal event should be logged", func() {
 
 			log.Print("START OF: Test 'GIVEN new Kubegres is created without spec 'database.volumeMount' and with spec 'replica' set to 3'")
 
@@ -65,9 +65,9 @@ var _ = Describe("Setting Kubegres specs 'database.volumeMount'", func() {
 
 			test.whenKubegresIsCreated()
 
-			test.thenPodsStatesShouldBe(ctx.DefaultContainerVolumeMount, 1, 2)
+			test.thenPodsStatesShouldBe(ctx.DefaultDatabaseVolumeMount, 1, 2)
 
-			test.thenDeployedKubegresSpecShouldBeSetTo(ctx.DefaultContainerVolumeMount)
+			test.thenDeployedKubegresSpecShouldBeSetTo(ctx.DefaultDatabaseVolumeMount)
 
 			test.thenEventShouldBeLoggedSayingDatabaseVolumeMountWasSetToDefaultValue()
 
@@ -163,7 +163,7 @@ func (r *SpecDatabaseVolumeMountTest) thenEventShouldBeLoggedSayingDatabaseVolum
 	expectedErrorEvent := util.EventRecord{
 		Eventtype: v12.EventTypeNormal,
 		Reason:    "DefaultSpecValue",
-		Message:   "A default value was set for a field in Kubegres YAML spec. 'spec.database.volumeMount': New value: " + ctx.DefaultContainerVolumeMount,
+		Message:   "A default value was set for a field in Kubegres YAML spec. 'spec.database.volumeMount': New value: " + ctx.DefaultDatabaseVolumeMount,
 	}
 	Eventually(func() bool {
 		_, err := r.resourceRetriever.GetKubegres()

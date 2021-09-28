@@ -28,8 +28,6 @@ import (
 )
 
 const (
-	BaseConfigType                    = "base-config"
-	CustomConfigType                  = "custom-config"
 	ConfigMapDataKeyPostgresConf      = "postgres.conf"
 	ConfigMapDataKeyPrimaryInitScript = "primary_init_script.sh"
 	ConfigMapDataKeyPgHbaConf         = "pg_hba.conf"
@@ -46,7 +44,7 @@ type ConfigStates struct {
 	kubegresContext ctx.KubegresContext
 }
 
-// Stores as string the config-type which is either 'base-config' or 'custom-config'
+// Stores as string the volume-name for each config-type which can be either 'base-config' or 'custom-config'
 type ConfigLocations struct {
 	PostgreConf       string
 	PrimaryInitScript string
@@ -67,10 +65,10 @@ func loadConfigStates(kubegresContext ctx.KubegresContext) (ConfigStates, error)
 
 func (r *ConfigStates) loadStates() (err error) {
 
-	r.ConfigLocations.PostgreConf = BaseConfigType
-	r.ConfigLocations.PrimaryInitScript = BaseConfigType
-	r.ConfigLocations.BackUpScript = BaseConfigType
-	r.ConfigLocations.PgHbaConf = BaseConfigType
+	r.ConfigLocations.PostgreConf = ctx.BaseConfigMapVolumeName
+	r.ConfigLocations.PrimaryInitScript = ctx.BaseConfigMapVolumeName
+	r.ConfigLocations.BackUpScript = ctx.BaseConfigMapVolumeName
+	r.ConfigLocations.PgHbaConf = ctx.BaseConfigMapVolumeName
 
 	baseConfigMap, err := r.getBaseDeployedConfigMap()
 	if err != nil {
@@ -95,19 +93,19 @@ func (r *ConfigStates) loadStates() (err error) {
 		r.IsCustomConfigDeployed = true
 
 		if customConfigMap.Data[ConfigMapDataKeyPostgresConf] != "" {
-			r.ConfigLocations.PostgreConf = CustomConfigType
+			r.ConfigLocations.PostgreConf = ctx.CustomConfigMapVolumeName
 		}
 
 		if customConfigMap.Data[ConfigMapDataKeyPrimaryInitScript] != "" {
-			r.ConfigLocations.PrimaryInitScript = CustomConfigType
+			r.ConfigLocations.PrimaryInitScript = ctx.CustomConfigMapVolumeName
 		}
 
 		if customConfigMap.Data[ConfigMapDataKeyBackUpScript] != "" {
-			r.ConfigLocations.BackUpScript = CustomConfigType
+			r.ConfigLocations.BackUpScript = ctx.CustomConfigMapVolumeName
 		}
 
 		if customConfigMap.Data[ConfigMapDataKeyPgHbaConf] != "" {
-			r.ConfigLocations.PgHbaConf = CustomConfigType
+			r.ConfigLocations.PgHbaConf = ctx.CustomConfigMapVolumeName
 		}
 	}
 

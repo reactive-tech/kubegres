@@ -27,6 +27,7 @@ import (
 	"reactive-tech.io/kubegres/controllers/ctx/status"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strconv"
+	"strings"
 )
 
 type KubegresContext struct {
@@ -38,14 +39,16 @@ type KubegresContext struct {
 }
 
 const (
-	PrimaryRoleName    = "primary"
-	KindKubegres       = "Kubegres"
-	DeploymentOwnerKey = ".metadata.controller"
-
+	PrimaryRoleName                        = "primary"
+	KindKubegres                           = "Kubegres"
+	DeploymentOwnerKey                     = ".metadata.controller"
+	DatabaseVolumeName                     = "postgres-db"
+	BaseConfigMapVolumeName                = "base-config"
+	CustomConfigMapVolumeName              = "custom-config"
 	BaseConfigMapName                      = "base-kubegres-config"
 	CronJobNamePrefix                      = "backup-"
 	DefaultContainerPortNumber             = 5432
-	DefaultContainerVolumeMount            = "/var/lib/postgresql/data"
+	DefaultDatabaseVolumeMount             = "/var/lib/postgresql/data"
 	DefaultDatabaseFolder                  = "pgdata"
 	EnvVarNamePgData                       = "PGDATA"
 	EnvVarNameOfPostgresSuperUserPsw       = "POSTGRES_PASSWORD"
@@ -61,4 +64,11 @@ func (r *KubegresContext) GetServiceResourceName(isPrimary bool) string {
 
 func (r *KubegresContext) GetStatefulSetResourceName(instanceIndex int32) string {
 	return r.Kubegres.Name + "-" + strconv.Itoa(int(instanceIndex))
+}
+
+func (r *KubegresContext) IsReservedVolumeName(volumeName string) bool {
+	return volumeName == DatabaseVolumeName ||
+		volumeName == BaseConfigMapVolumeName ||
+		volumeName == CustomConfigMapVolumeName ||
+		strings.Contains(volumeName, "kube-api")
 }

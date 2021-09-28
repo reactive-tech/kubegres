@@ -55,7 +55,7 @@ func (r *UndefinedSpecValuesChecker) apply() error {
 
 	if kubegresSpec.Database.VolumeMount == emptyStr {
 		wasSpecChanged = true
-		kubegresSpec.Database.VolumeMount = ctx.DefaultContainerVolumeMount
+		kubegresSpec.Database.VolumeMount = ctx.DefaultDatabaseVolumeMount
 		r.createLog("spec.database.volumeMount", kubegresSpec.Database.VolumeMount)
 	}
 

@@ -22,10 +22,13 @@ package checker
 
 import (
 	"errors"
+	apps "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
 	postgresV1 "reactive-tech.io/kubegres/api/v1"
 	"reactive-tech.io/kubegres/controllers/ctx"
 	"reactive-tech.io/kubegres/controllers/states"
 	"reactive-tech.io/kubegres/controllers/states/statefulset"
+	"reflect"
 )
 
 type SpecChecker struct {
@@ -55,16 +58,25 @@ func (r *SpecChecker) CheckSpec() (SpecCheckResult, error) {
 
 		primaryVolumeMount := primaryStatefulSetSpec.Template.Spec.Containers[0].VolumeMounts[0].MountPath
 		if spec.Database.VolumeMount != primaryVolumeMount {
+
 			specCheckResult.HasSpecFatalError = true
-			specCheckResult.FatalErrorMessage = r.createErrMsgSpecCannotBeChanged("spec.database.volumeMount", primaryVolumeMount, spec.Database.VolumeMount, "Otherwise, the cluster of PostgreSql servers risk of being inconsistent.")
+			specCheckResult.FatalErrorMessage = r.createErrMsgSpecCannotBeChanged("spec.database.volumeMount",
+				primaryVolumeMount, spec.Database.VolumeMount,
+				"Otherwise, the cluster of PostgreSql servers risk of being inconsistent.")
+
 			r.kubegresContext.Kubegres.Spec.Database.VolumeMount = primaryVolumeMount
 			r.updateKubegresSpec("spec.database.volumeMount", primaryVolumeMount)
 		}
 
 		primaryStorageClassName := primaryStatefulSetSpec.VolumeClaimTemplates[0].Spec.StorageClassName
 		if *spec.Database.StorageClassName != *primaryStorageClassName {
+
 			specCheckResult.HasSpecFatalError = true
-			specCheckResult.FatalErrorMessage = r.createErrMsgSpecCannotBeChanged("spec.database.storageClassName", *primaryStorageClassName, *spec.Database.StorageClassName, "Otherwise, the cluster of PostgreSql servers risk of being inconsistent.")
+			specCheckResult.FatalErrorMessage = r.createErrMsgSpecCannotBeChanged("spec.database.storageClassName",
+				*primaryStorageClassName,
+				*spec.Database.StorageClassName,
+				"Otherwise, the cluster of PostgreSql servers risk of being inconsistent.")
+
 			r.kubegresContext.Kubegres.Spec.Database.StorageClassName = primaryStorageClassName
 			r.updateKubegresSpec("spec.database.storageClassName", *primaryStorageClassName)
 		}
@@ -72,8 +84,13 @@ func (r *SpecChecker) CheckSpec() (SpecCheckResult, error) {
 		storageQuantity := primaryStatefulSetSpec.VolumeClaimTemplates[0].Spec.Resources.Requests["storage"]
 		primaryStorageSize := storageQuantity.String()
 		if spec.Database.Size != primaryStorageSize && !r.doesStorageClassAllowVolumeExpansion() {
+
 			specCheckResult.HasSpecFatalError = true
-			specCheckResult.FatalErrorMessage = r.createErrMsgSpecCannotBeChanged("spec.database.size", primaryStorageSize, spec.Database.Size, "The StorageClass does not allow volume expansion. The option AllowVolumeExpansion is set to false.")
+			specCheckResult.FatalErrorMessage = r.createErrMsgSpecCannotBeChanged("spec.database.size",
+				primaryStorageSize,
+				spec.Database.Size,
+				"The StorageClass does not allow volume expansion. The option AllowVolumeExpansion is set to false.")
+
 			spec.Database.Size = primaryStorageSize
 			r.updateKubegresSpec("spec.database.size", primaryStorageSize)
 		}
@@ -85,7 +102,9 @@ func (r *SpecChecker) CheckSpec() (SpecCheckResult, error) {
 
 	if !r.dbStorageClassDeployed() {
 		specCheckResult.HasSpecFatalError = true
-		specCheckResult.FatalErrorMessage = r.logSpecErrMsg("In the Resources Spec the value of 'spec.database.storageClassName' has a StorageClass name which is not deployed. Please deploy this StorageClass, otherwise this operator cannot work correctly.")
+		specCheckResult.FatalErrorMessage = r.logSpecErrMsg("In the Resources Spec the value of " +
+			"'spec.database.storageClassName' has a StorageClass name which is not deployed. Please deploy this StorageClass, " +
+			"otherwise this operator cannot work correctly.")
 	}
 
 	if spec.Database.Size == emptyStr {
@@ -95,7 +114,9 @@ func (r *SpecChecker) CheckSpec() (SpecCheckResult, error) {
 
 	if r.isCustomConfigNotDeployed(spec) {
 		specCheckResult.HasSpecFatalError = true
-		specCheckResult.FatalErrorMessage = r.logSpecErrMsg("In the Resources Spec the value of 'spec.customConfig' has a configMap name which is not deployed. Please deploy this configMap otherwise this operator cannot work correctly.")
+		specCheckResult.FatalErrorMessage = r.logSpecErrMsg("In the Resources Spec the value of " +
+			"'spec.customConfig' has a configMap name which is not deployed. Please deploy this configMap otherwise this " +
+			"operator cannot work correctly.")
 	}
 
 	if !r.doesEnvVarExist(ctx.EnvVarNameOfPostgresSuperUserPsw) {
@@ -132,8 +153,47 @@ func (r *SpecChecker) CheckSpec() (SpecCheckResult, error) {
 
 		if spec.Backup.PvcName != emptyStr && !r.isBackUpPvcDeployed() {
 			specCheckResult.HasSpecFatalError = true
-			specCheckResult.FatalErrorMessage = r.logSpecErrMsg("In the Resources Spec the value of 'spec.Backup.PvcName' has a PersistentVolumeClaim name which is not deployed. Please deploy this PersistentVolumeClaim, otherwise this operator cannot work correctly.")
+			specCheckResult.FatalErrorMessage = r.logSpecErrMsg("In the Resources Spec the value of " +
+				"'spec.Backup.PvcName' has a PersistentVolumeClaim name which is not deployed. Please deploy this " +
+				"PersistentVolumeClaim, otherwise this operator cannot work correctly.")
 		}
+	}
+
+	reservedVolumeName := r.doCustomVolumeClaimTemplatesHaveReservedName()
+	if reservedVolumeName != "" {
+		specCheckResult.HasSpecFatalError = true
+		specCheckResult.FatalErrorMessage = r.logSpecErrMsg("In the Resources Spec the value of " +
+			"'spec.Volume.VolumeClaimTemplates' has an entry with a volume name which is a reserved name: " + reservedVolumeName + " . " +
+			"That name cannot be used and it is reserved for Kubegres internal usages. Please change that name in the YAML.")
+	}
+
+	reservedVolumeName = r.doCustomVolumesHaveReservedName()
+	if reservedVolumeName != "" {
+		specCheckResult.HasSpecFatalError = true
+		specCheckResult.FatalErrorMessage = r.logSpecErrMsg("In the Resources Spec the value of " +
+			"'spec.Volume.Volumes' has an entry with a volume name which is a reserved name: " + reservedVolumeName + " . " +
+			"That name cannot be used and it is reserved for Kubegres internal usages. Please change that name in the YAML.")
+	}
+
+	reservedVolumeName = r.doCustomVolumeMountsHaveReservedName()
+	if reservedVolumeName != "" {
+		specCheckResult.HasSpecFatalError = true
+		specCheckResult.FatalErrorMessage = r.logSpecErrMsg("In the Resources Spec the value of " +
+			"'spec.Volume.VolumeMounts' has an entry with a volume name which is a reserved name: " + reservedVolumeName + " . " +
+			"That name cannot be used and it is reserved for Kubegres internal usages. Please change that name in the YAML.")
+	}
+
+	if r.doCustomVolumeMountsHaveReservedPath() {
+		specCheckResult.HasSpecFatalError = true
+		specCheckResult.FatalErrorMessage = r.logSpecErrMsg("In the Resources Spec the value of 'spec.Volume.VolumeMounts' " +
+			"has an entry with a 'mountPath' value which is reserved for the Postgres database: " + r.kubegresContext.Kubegres.Spec.Database.VolumeMount + " . " +
+			"That value cannot be used and it is reserved for Kubegres internal usages. Please change that value in the YAML.")
+	}
+
+	if r.hasCustomVolumeClaimTemplatesChanged(primaryStatefulSetSpec) {
+		specCheckResult.HasSpecFatalError = true
+		specCheckResult.FatalErrorMessage = r.logSpecErrMsg("In the Resources Spec, the array 'spec.Volume.VolumeClaimTemplates' " +
+			"has changed. Kubernetes does not allow to update that field in StatefulSet specification. Please rollback your changes in the YAML.")
 	}
 
 	return specCheckResult, nil
@@ -201,4 +261,77 @@ func (r *SpecChecker) doesStorageClassAllowVolumeExpansion() bool {
 		return false
 	}
 	return storageClass.AllowVolumeExpansion != nil && *storageClass.AllowVolumeExpansion
+}
+
+func (r *SpecChecker) doCustomVolumeClaimTemplatesHaveReservedName() string {
+	for _, customVolumeClaimTemplate := range r.kubegresContext.Kubegres.Spec.Volume.VolumeClaimTemplates {
+		if r.kubegresContext.IsReservedVolumeName(customVolumeClaimTemplate.Name) {
+			return customVolumeClaimTemplate.Name
+		}
+	}
+	return ""
+}
+
+func (r *SpecChecker) doCustomVolumesHaveReservedName() string {
+	for _, customVolume := range r.kubegresContext.Kubegres.Spec.Volume.Volumes {
+		if r.kubegresContext.IsReservedVolumeName(customVolume.Name) {
+			return customVolume.Name
+		}
+	}
+	return ""
+}
+
+func (r *SpecChecker) doCustomVolumeMountsHaveReservedName() string {
+	for _, customVolumeMount := range r.kubegresContext.Kubegres.Spec.Volume.VolumeMounts {
+		if r.kubegresContext.IsReservedVolumeName(customVolumeMount.Name) {
+			return customVolumeMount.Name
+		}
+	}
+	return ""
+}
+
+func (r *SpecChecker) doCustomVolumeMountsHaveReservedPath() bool {
+	for _, customVolumeMount := range r.kubegresContext.Kubegres.Spec.Volume.VolumeMounts {
+		if customVolumeMount.MountPath == r.kubegresContext.Kubegres.Spec.Database.VolumeMount {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *SpecChecker) hasCustomVolumeClaimTemplatesChanged(primaryStatefulSetSpec apps.StatefulSetSpec) bool {
+
+	currentVolumeClaimTemplates := primaryStatefulSetSpec.VolumeClaimTemplates
+	var currentCustomVolumeClaimTemplates []v1.PersistentVolumeClaim
+
+	for _, volumeClaimTemplate := range currentVolumeClaimTemplates {
+		if !r.kubegresContext.IsReservedVolumeName(volumeClaimTemplate.Name) {
+			currentCustomVolumeClaimTemplates = append(currentCustomVolumeClaimTemplates, volumeClaimTemplate)
+		}
+	}
+
+	expectedCustomVolumeClaimTemplates := r.kubegresContext.Kubegres.Spec.Volume.VolumeClaimTemplates
+	if len(currentCustomVolumeClaimTemplates) != len(expectedCustomVolumeClaimTemplates) {
+		return true
+	}
+
+	for _, expectedCustomVolumeClaimTemplate := range expectedCustomVolumeClaimTemplates {
+		if !r.doesExpectedVolumeClaimTemplateExist(expectedCustomVolumeClaimTemplate, currentCustomVolumeClaimTemplates) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (r *SpecChecker) doesExpectedVolumeClaimTemplateExist(
+	expectedCustomVolumeClaimTemplate v1.PersistentVolumeClaim,
+	currentCustomVolumeClaimTemplates []v1.PersistentVolumeClaim) bool {
+
+	for _, currentCustomVolumeClaimTemplate := range currentCustomVolumeClaimTemplates {
+		if reflect.DeepEqual(expectedCustomVolumeClaimTemplate, currentCustomVolumeClaimTemplate) {
+			return true
+		}
+	}
+	return false
 }

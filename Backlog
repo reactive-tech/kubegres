@@ -1,8 +1,11 @@
 By priority:
-#34 : Expand Storage
 #27 : Additional volumes
 #20 : Delete PVC
 #40 : Wal_level to logical
+#? : Add a field to allow restarting StatefulSets and Pods via the YAML of "Kind: Kubegres"?
 #7  : Allow major version upgrade using pg_upgrade
 #35 : Restore database from a PV backup
 #10 : Deploy Kubegres with a HELM chart
+
+Blocked:
+#34 : Expand Storage (waiting on the Kubernetes feature: https://github.com/kubernetes/enhancements/pull/2842)

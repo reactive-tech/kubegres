@@ -161,6 +161,10 @@ func (r *VolumeSpecEnforcer) getCurrentCustomVolumeMounts(statefulSet *apps.Stat
 func (r *VolumeSpecEnforcer) removeCustomVolumes(statefulSet *apps.StatefulSet) {
 
 	currentCustomVolumes := r.getCurrentCustomVolumes(statefulSet)
+	if len(currentCustomVolumes) == 0 {
+		return
+	}
+
 	currentCustomVolumesCopy := make([]v1.Volume, len(currentCustomVolumes))
 	copy(currentCustomVolumesCopy, currentCustomVolumes)
 
@@ -188,6 +192,10 @@ func (r *VolumeSpecEnforcer) getIndexOfVolume(volumeToSearch v1.Volume, volumes 
 func (r *VolumeSpecEnforcer) removeCustomVolumeMounts(statefulSet *apps.StatefulSet) {
 
 	currentCustomVolumeMounts := r.getCurrentCustomVolumeMounts(statefulSet)
+	if len(currentCustomVolumeMounts) == 0 {
+		return
+	}
+
 	currentCustomVolumeMountsCopy := make([]v1.VolumeMount, len(currentCustomVolumeMounts))
 	copy(currentCustomVolumeMountsCopy, currentCustomVolumeMounts)
 

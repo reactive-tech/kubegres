@@ -2,6 +2,7 @@ By priority:
 #27 : Additional volumes
 #20 : Delete PVC
 #40 : Wal_level to logical
+#46: Define Service Type for Primary and Replica
 #? : Add a field to allow restarting StatefulSets and Pods via the YAML of "Kind: Kubegres"?
 #7  : Allow major version upgrade using pg_upgrade
 #35 : Restore database from a PV backup

@@ -1,12 +1,21 @@
-By priority:
-#27 : Additional volumes
-#20 : Delete PVC
-#40 : Wal_level to logical
-#46: Define Service Type for Primary and Replica
-#? : Add a field to allow restarting StatefulSets and Pods via the YAML of "Kind: Kubegres"?
-#7  : Allow major version upgrade using pg_upgrade
-#35 : Restore database from a PV backup
-#10 : Deploy Kubegres with a HELM chart
+Scheduled for end of September:
+- #34: Disable Expand Storage feature and create a new issue for it
+- investigate #36 (backup issue)
+
+Scheduled for 1st week of November:
+- Build controller with Kubebuilder v3.1.0
+- Remove warning for CronJob which was updated from beta to stable since Kubernetes 1.21
+- #20 : Delete PVC
+- #40 : Wal_level to logical
+
+Scheduled for 1st week of December:
+- #46: Define Service Type for Primary and Replica
+- #? : Add a field to allow restarting StatefulSets and Pods via the YAML of "Kind: Kubegres"?
+- #7  : Allow major version upgrade using pg_upgrade
+
+Scheduled for 1st week of January:
+- #35 : Restore database from a PV backup
+- #10 : Deploy Kubegres with a HELM chart
 
 Blocked:
 #34 : Expand Storage (waiting on the Kubernetes feature: https://github.com/kubernetes/enhancements/pull/2842)

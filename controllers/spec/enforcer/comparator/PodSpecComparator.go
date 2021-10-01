@@ -36,12 +36,22 @@ func (r *PodSpecComparator) IsSpecUpToDate() bool {
 }
 
 func (r *PodSpecComparator) isImageUpToDate() bool {
+
+	if len(r.Pod.Spec.Containers) == 0 {
+		return false
+	}
+
 	current := r.Pod.Spec.Containers[0].Image
 	expected := r.PostgresSpec.Image
 	return current == expected
 }
 
 func (r *PodSpecComparator) isPortUpToDate() bool {
+
+	if len(r.Pod.Spec.Containers) == 0 {
+		return false
+	}
+
 	current := r.Pod.Spec.Containers[0].Ports[0].ContainerPort
 	expected := r.PostgresSpec.Port
 	return current == expected

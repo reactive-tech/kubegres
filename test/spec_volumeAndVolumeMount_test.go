@@ -55,35 +55,65 @@ var _ = Describe("Setting Kubegres specs 'volume.volume' and 'volume.volumeMount
 			test.keepCreatedResourcesForNextTest = false
 		}
 	})
-	/*
-		Context("GIVEN new Kubegres is created without spec 'database.volumeMount' and with spec 'replica' set to 3", func() {
 
-			It("THEN 1 primary and 2 replica should be created with 'database.volumeMount' set to the value of the const 'KubegresContext.DefaultDatabaseVolumeMount' and a normal event should be logged", func() {
+	Context("GIVEN new Kubegres is created with a 'volume.volume' and 'volume.volumeMount' which have a reserved name", func() {
 
-				log.Print("START OF: Test 'GIVEN new Kubegres is created without spec 'database.volumeMount' and with spec 'replica' set to 3'")
+		It("THEN 2 error events should be logged as it is not possible to use a reserved name", func() {
 
-				test.givenNewKubegresSpecIsSetTo("", 3)
+			log.Print("START OF: Test 'GIVEN new Kubegres is created with a 'volume.volume' and 'volume.volumeMount' " +
+				"which have a reserved name'")
 
-				test.whenKubegresIsCreated()
+			reservedVolumeName := ctx.DatabaseVolumeName
 
-				test.thenPodsStatesShouldBe(ctx.DefaultDatabaseVolumeMount, 1, 2)
+			cacheVolume := test.givenVolumeWithEmptyDir(reservedVolumeName)
+			customVolumes := []v12.Volume{cacheVolume}
 
-				test.thenDeployedKubegresSpecShouldBeSetTo(ctx.DefaultDatabaseVolumeMount)
+			cacheVolumeMount := test.givenVolumeMount(reservedVolumeName, "/cache")
+			customVolumeMounts := []v12.VolumeMount{cacheVolumeMount}
 
-				test.thenEventShouldBeLoggedSayingDatabaseVolumeMountWasSetToDefaultValue()
+			test.givenNewKubegresSpecIsSetTo(customVolumes, customVolumeMounts, 3)
 
-				test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
-				test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
+			test.whenKubegresIsCreated()
 
-				log.Print("END OF: Test 'GIVEN new Kubegres is created without spec 'database.volumeMount' and with spec 'replica' set to 3'")
-			})
-		})*/
+			test.thenErrorEventShouldBeLoggedAboutVolumeName()
+			test.thenErrorEventShouldBeLoggedAboutVolumeMountName()
+
+			log.Print("END OF: Test 'GIVEN new Kubegres is created with a 'volume.volume' and 'volume.volumeMount' " +
+				"which have a reserved name'")
+		})
+	})
+
+	Context("GIVEN new Kubegres is created with a 'volume.volumeMount' which has a mountPath set to the path of "+
+		"Postgres database folder", func() {
+
+		It("THEN an error event should be logged as it is not possible to use Postgres database as a mountPath", func() {
+
+			log.Print("START OF: Test 'GIVEN new Kubegres is created with a 'volume.volumeMount' which has a mountPath " +
+				"set to the path of Postgres database folder'")
+
+			cacheVolume := test.givenVolumeWithEmptyDir("cache-volume")
+			customVolumes := []v12.Volume{cacheVolume}
+
+			postgresDatabasePath := test.kubegresResource.Spec.Database.VolumeMount
+			cacheVolumeMount := test.givenVolumeMount("cache-volume", postgresDatabasePath)
+			customVolumeMounts := []v12.VolumeMount{cacheVolumeMount}
+
+			test.givenNewKubegresSpecIsSetTo(customVolumes, customVolumeMounts, 3)
+
+			test.whenKubegresIsCreated()
+
+			test.thenErrorEventShouldBeLoggedAboutVolumeMountPath()
+
+			log.Print("END OF: Test 'GIVEN new Kubegres is created with a 'volume.volumeMount' which has a mountPath " +
+				"set to the path of Postgres database folder'")
+		})
+	})
 
 	Context("GIVEN new Kubegres is created with specs 'volume.volume' and 'volume.volumeMount' and later "+
-		"we update them, and later add additional volumes and then we delete them", func() {
+		"we update them and add additional volumes and finally we delete them", func() {
 
 		It("GIVEN new Kubegres is created with a new custom 'volume.volume' and 'volume.volumeMount' AND spec 'replica' "+
-			"set to 3 THEN 1 primary and 2 replica should be created with one custom volume and volumeMount in Pods", func() {
+			"set to 3 THEN 1 primary and 2 replica should be created with one custom volume and volumeMount in StatefulSets", func() {
 
 			log.Print("GIVEN new Kubegres is created with a new custom 'volume.volume' and 'volume.volumeMount' and spec 'replica' set to 3")
 
@@ -97,9 +127,9 @@ var _ = Describe("Setting Kubegres specs 'volume.volume' and 'volume.volumeMount
 
 			test.whenKubegresIsCreated()
 
-			test.thenPodsStatesShouldBe(customVolumes, customVolumeMounts, 1, 2)
+			test.thenStatefulSetsStatesShouldBe(customVolumes, customVolumeMounts, 1, 2)
 
-			//test.thenDeployedKubegresSpecShouldBeSetTo("/tmp/folder1")
+			test.thenDeployedKubegresSpecShouldBeSetTo(customVolumes, customVolumeMounts)
 
 			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
 			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
@@ -110,10 +140,10 @@ var _ = Describe("Setting Kubegres specs 'volume.volume' and 'volume.volumeMount
 				"and spec 'replica' set to 3'")
 		})
 
-		It("GIVEN existing Kubegres is updated by updating by updating and adding custom 'volume.volume' and 'volume.volumeMount' THEN "+
-			"Pods should be updated too", func() {
+		It("GIVEN existing Kubegres is updated by updating by adding new and updating existing custom 'volume.volume' and 'volume.volumeMount' THEN "+
+			"StatefulSets should be updated too", func() {
 
-			log.Print("START OF: Test 'GIVEN existing Kubegres is updated by updating and adding custom 'volume.volume' and 'volume.volumeMount'")
+			log.Print("START OF: Test 'GIVEN existing Kubegres is updated by adding new and updating existing custom 'volume.volume' and 'volume.volumeMount'")
 
 			shmVolume := test.givenVolumeWithMemory("dshm", "300Mi")
 			cacheVolume := test.givenVolumeWithEmptyDir("cache-volume")
@@ -134,20 +164,20 @@ var _ = Describe("Setting Kubegres specs 'volume.volume' and 'volume.volumeMount
 			cacheVolumeMount = test.givenVolumeMount("cache-volume", "/cache")
 			expectedCustomVolumeMounts := []v12.VolumeMount{shmVolumeMount, cacheVolumeMount}
 
-			test.thenPodsStatesShouldBe(expectedCustomVolumes, expectedCustomVolumeMounts, 1, 2)
+			test.thenStatefulSetsStatesShouldBe(expectedCustomVolumes, expectedCustomVolumeMounts, 1, 2)
 
-			//test.thenDeployedKubegresSpecShouldBeSetTo("/tmp/folder1")
+			test.thenDeployedKubegresSpecShouldBeSetTo(expectedCustomVolumes, expectedCustomVolumeMounts)
 
 			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
 			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
 
 			test.keepCreatedResourcesForNextTest = true
 
-			log.Print("END OF: Test 'GIVEN existing Kubegres is updated by updating and adding custom 'volume.volume' and 'volume.volumeMount'")
+			log.Print("END OF: Test 'GIVEN existing Kubegres is updated by adding new and updating existing custom 'volume.volume' and 'volume.volumeMount'")
 		})
 
 		It("GIVEN existing Kubegres is updated with the removal of one custom 'volume.volume' and 'volume.volumeMount' "+
-			"THEN Pods should be updated too", func() {
+			"THEN StatefulSets should be updated too", func() {
 
 			log.Print("START OF: Test 'GIVEN existing Kubegres is updated with the removal of one custom 'volume.volume' and 'volume.volumeMount'")
 
@@ -167,9 +197,9 @@ var _ = Describe("Setting Kubegres specs 'volume.volume' and 'volume.volumeMount
 			cacheVolumeMount := test.givenVolumeMount("cache-volume", "/cache")
 			expectedCustomVolumeMounts := []v12.VolumeMount{cacheVolumeMount}
 
-			test.thenPodsStatesShouldBe(expectedCustomVolumes, expectedCustomVolumeMounts, 1, 2)
+			test.thenStatefulSetsStatesShouldBe(expectedCustomVolumes, expectedCustomVolumeMounts, 1, 2)
 
-			//test.thenDeployedKubegresSpecShouldBeSetTo("/tmp/folder1")
+			test.thenDeployedKubegresSpecShouldBeSetTo(expectedCustomVolumes, expectedCustomVolumeMounts)
 
 			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
 			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
@@ -180,7 +210,7 @@ var _ = Describe("Setting Kubegres specs 'volume.volume' and 'volume.volumeMount
 		})
 
 		It("GIVEN existing Kubegres is updated with the removal of all custom 'volume.volume' and 'volume.volumeMount' "+
-			"THEN Pods should be updated too", func() {
+			"THEN StatefulSets should be updated too", func() {
 
 			log.Print("START OF: Test 'GIVEN existing Kubegres is updated with the removal of all custom 'volume.volume' and 'volume.volumeMount'")
 
@@ -196,9 +226,9 @@ var _ = Describe("Setting Kubegres specs 'volume.volume' and 'volume.volumeMount
 
 			expectedCustomVolumes := []v12.Volume{}
 			expectedCustomVolumeMounts := []v12.VolumeMount{}
-			test.thenPodsStatesShouldBe(expectedCustomVolumes, expectedCustomVolumeMounts, 1, 2)
+			test.thenStatefulSetsStatesShouldBe(expectedCustomVolumes, expectedCustomVolumeMounts, 1, 2)
 
-			//test.thenDeployedKubegresSpecShouldBeSetTo("/tmp/folder1")
+			test.thenDeployedKubegresSpecShouldBeSetTo(expectedCustomVolumes, expectedCustomVolumeMounts)
 
 			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
 			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
@@ -349,12 +379,13 @@ func (r *SpecVolumeAndVolumeMountTest) whenKubernetesIsUpdated() {
 	r.resourceCreator.UpdateResource(r.kubegresResource, "Kubegres")
 }
 
-func (r *SpecVolumeAndVolumeMountTest) thenEventShouldBeLoggedSayingDatabaseVolumeMountWasSetToDefaultValue() {
-
+func (r *SpecVolumeAndVolumeMountTest) thenErrorEventShouldBeLoggedAboutVolumeName() {
 	expectedErrorEvent := util.EventRecord{
-		Eventtype: v12.EventTypeNormal,
-		Reason:    "DefaultSpecValue",
-		Message:   "A default value was set for a field in Kubegres YAML spec. 'spec.database.volumeMount': New value: " + ctx.DefaultDatabaseVolumeMount,
+		Eventtype: v12.EventTypeWarning,
+		Reason:    "SpecCheckErr",
+		Message: "In the Resources Spec the value of 'spec.Volume.Volumes' has an entry with a volume name " +
+			"which is a reserved name: " + ctx.DatabaseVolumeName + " . That name cannot be used and it is reserved for " +
+			"Kubegres internal usages. Please change that name in the YAML.",
 	}
 	Eventually(func() bool {
 		_, err := r.resourceRetriever.GetKubegres()
@@ -366,7 +397,43 @@ func (r *SpecVolumeAndVolumeMountTest) thenEventShouldBeLoggedSayingDatabaseVolu
 	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
 }
 
-func (r *SpecVolumeAndVolumeMountTest) thenPodsStatesShouldBe(
+func (r *SpecVolumeAndVolumeMountTest) thenErrorEventShouldBeLoggedAboutVolumeMountName() {
+	expectedErrorEvent := util.EventRecord{
+		Eventtype: v12.EventTypeWarning,
+		Reason:    "SpecCheckErr",
+		Message: "In the Resources Spec the value of 'spec.Volume.VolumeMounts' has an entry with a volume name " +
+			"which is a reserved name: " + ctx.DatabaseVolumeName + " . That name cannot be used and it is reserved for " +
+			"Kubegres internal usages. Please change that name in the YAML.",
+	}
+	Eventually(func() bool {
+		_, err := r.resourceRetriever.GetKubegres()
+		if err != nil {
+			return false
+		}
+		return eventRecorderTest.CheckEventExist(expectedErrorEvent)
+
+	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
+}
+
+func (r *SpecVolumeAndVolumeMountTest) thenErrorEventShouldBeLoggedAboutVolumeMountPath() {
+	expectedErrorEvent := util.EventRecord{
+		Eventtype: v12.EventTypeWarning,
+		Reason:    "SpecCheckErr",
+		Message: "In the Resources Spec the value of 'spec.Volume.VolumeMounts' has an entry with a 'mountPath' value " +
+			"which is reserved for the Postgres database: " + r.kubegresResource.Spec.Database.VolumeMount + " . " +
+			"That value cannot be used and it is reserved for Kubegres internal usages. Please change that value in the YAML.",
+	}
+	Eventually(func() bool {
+		_, err := r.resourceRetriever.GetKubegres()
+		if err != nil {
+			return false
+		}
+		return eventRecorderTest.CheckEventExist(expectedErrorEvent)
+
+	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
+}
+
+func (r *SpecVolumeAndVolumeMountTest) thenStatefulSetsStatesShouldBe(
 	expectedCustomVolumes []v12.Volume,
 	expectedCustomVolumeMounts []v12.VolumeMount,
 	nbrePrimary,
@@ -385,31 +452,31 @@ func (r *SpecVolumeAndVolumeMountTest) thenPodsStatesShouldBe(
 		for _, resource := range kubegresResources.Resources {
 
 			for _, customVolume := range expectedCustomVolumes {
-				if !r.doesCustomVolumeExistsInPod(customVolume, resource.Pod.Spec.Volumes) {
-					log.Println("Pod '" + resource.Pod.Name + "' doesn't have the expected custom volume with name: '" + customVolume.Name + "'. Waiting...")
+				if !r.doesCustomVolumeExistsInStatefulSet(customVolume, resource.StatefulSet.Spec.Template.Spec.Volumes) {
+					log.Println("StatefulSet '" + resource.StatefulSet.Name + "' doesn't have the expected custom volume with name: '" + customVolume.Name + "'. Waiting...")
 					return false
 				}
 			}
 
-			for _, volumeInPod := range resource.Pod.Spec.Volumes {
-				if r.isCustomVolume(volumeInPod, kubegresContext) &&
-					!r.isPodVolumeExpectedCustomVolume(volumeInPod, expectedCustomVolumes) {
-					log.Println("Pod '" + resource.Pod.Name + "' still has custom volume with name: '" + volumeInPod.Name + "'. Waiting...")
+			for _, volumeInStatefulSet := range resource.StatefulSet.Spec.Template.Spec.Volumes {
+				if r.isCustomVolume(volumeInStatefulSet, kubegresContext) &&
+					!r.isVolumeAnExpectedCustomVolume(volumeInStatefulSet, expectedCustomVolumes) {
+					log.Println("StatefulSet '" + resource.StatefulSet.Name + "' still has custom volume with name: '" + volumeInStatefulSet.Name + "'. Waiting...")
 					return false
 				}
 			}
 
 			for _, customVolumeMount := range expectedCustomVolumeMounts {
-				if !r.doesCustomVolumeMountExistsInPod(customVolumeMount, resource.Pod.Spec.Containers[0].VolumeMounts) {
-					log.Println("Pod '" + resource.Pod.Name + "' doesn't have the expected custom volumeMount with name: '" + customVolumeMount.Name + "'. Waiting...")
+				if !r.doesCustomVolumeMountExistsInStatefulSet(customVolumeMount, resource.StatefulSet.Spec.Template.Spec.Containers[0].VolumeMounts) {
+					log.Println("StatefulSet '" + resource.StatefulSet.Name + "' doesn't have the expected custom volumeMount with name: '" + customVolumeMount.Name + "'. Waiting...")
 					return false
 				}
 			}
 
-			for _, volumeMountInPod := range resource.Pod.Spec.Containers[0].VolumeMounts {
-				if r.isCustomVolumeMount(volumeMountInPod, kubegresContext) &&
-					!r.isPodVolumeMountExpectedCustomVolumeMount(volumeMountInPod, expectedCustomVolumeMounts) {
-					log.Println("Pod '" + resource.Pod.Name + "' still has custom volumeMount with name: '" + volumeMountInPod.Name + "'. Waiting...")
+			for _, volumeMountInStatefulSet := range resource.StatefulSet.Spec.Template.Spec.Containers[0].VolumeMounts {
+				if r.isCustomVolumeMount(volumeMountInStatefulSet, kubegresContext) &&
+					!r.isVolumeMountAnExpectedCustomVolumeMount(volumeMountInStatefulSet, expectedCustomVolumeMounts) {
+					log.Println("StatefulSet '" + resource.StatefulSet.Name + "' still has custom volumeMount with name: '" + volumeMountInStatefulSet.Name + "'. Waiting...")
 					return false
 				}
 			}
@@ -420,7 +487,7 @@ func (r *SpecVolumeAndVolumeMountTest) thenPodsStatesShouldBe(
 			kubegresResources.NbreDeployedReplicas == nbreReplicas {
 
 			time.Sleep(resourceConfigs.TestRetryInterval)
-			log.Println("Deployed and Ready Pod check successful")
+			log.Println("Deployed and Ready StatefulSet check successful")
 			return true
 		}
 
@@ -429,51 +496,10 @@ func (r *SpecVolumeAndVolumeMountTest) thenPodsStatesShouldBe(
 	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
 }
 
-func (r *SpecVolumeAndVolumeMountTest) isCustomVolume(volumeInPod v12.Volume, kubegresContext ctx.KubegresContext) bool {
-	return !kubegresContext.IsReservedVolumeName(volumeInPod.Name)
-}
+func (r *SpecVolumeAndVolumeMountTest) thenDeployedKubegresSpecShouldBeSetTo(
+	expectedCustomVolumes []v12.Volume,
+	expectedCustomVolumeMounts []v12.VolumeMount) {
 
-func (r *SpecVolumeAndVolumeMountTest) isCustomVolumeMount(volumeMountInPod v12.VolumeMount, kubegresContext ctx.KubegresContext) bool {
-	return !kubegresContext.IsReservedVolumeName(volumeMountInPod.Name)
-}
-
-func (r *SpecVolumeAndVolumeMountTest) doesCustomVolumeExistsInPod(customVolume v12.Volume, podVolumes []v12.Volume) bool {
-	for _, podVolume := range podVolumes {
-		if reflect.DeepEqual(podVolume, customVolume) {
-			return true
-		}
-	}
-	return false
-}
-
-func (r *SpecVolumeAndVolumeMountTest) isPodVolumeExpectedCustomVolume(customVolumeInPod v12.Volume, expectedCustomVolumes []v12.Volume) bool {
-	for _, expectedCustomVolume := range expectedCustomVolumes {
-		if reflect.DeepEqual(expectedCustomVolume, customVolumeInPod) {
-			return true
-		}
-	}
-	return false
-}
-
-func (r *SpecVolumeAndVolumeMountTest) isPodVolumeMountExpectedCustomVolumeMount(customVolumeMountInPod v12.VolumeMount, expectedCustomVolumeMounts []v12.VolumeMount) bool {
-	for _, expectedCustomVolumeMount := range expectedCustomVolumeMounts {
-		if reflect.DeepEqual(expectedCustomVolumeMount, customVolumeMountInPod) {
-			return true
-		}
-	}
-	return false
-}
-
-func (r *SpecVolumeAndVolumeMountTest) doesCustomVolumeMountExistsInPod(customVolumeMount v12.VolumeMount, podVolumeMounts []v12.VolumeMount) bool {
-	for _, podVolumeMount := range podVolumeMounts {
-		if reflect.DeepEqual(podVolumeMount, customVolumeMount) {
-			return true
-		}
-	}
-	return false
-}
-
-func (r *SpecVolumeAndVolumeMountTest) thenDeployedKubegresSpecShouldBeSetTo(databaseVolumeMount string) {
 	var err error
 	r.kubegresResource, err = r.resourceRetriever.GetKubegres()
 
@@ -483,25 +509,54 @@ func (r *SpecVolumeAndVolumeMountTest) thenDeployedKubegresSpecShouldBeSetTo(dat
 		return
 	}
 
-	Expect(r.kubegresResource.Spec.Database.VolumeMount).Should(Equal(databaseVolumeMount))
+	if len(expectedCustomVolumes) == 0 && len(expectedCustomVolumeMounts) == 0 {
+		return
+	}
+
+	Expect(r.kubegresResource.Spec.Volume.Volumes).Should(Equal(expectedCustomVolumes))
+	Expect(r.kubegresResource.Spec.Volume.VolumeMounts).Should(Equal(expectedCustomVolumeMounts))
 }
 
-/*
-func (r *SpecVolumeAndVolumeMountTest) thenErrorEventShouldBeLoggedSayingCannotChangeDatabaseVolumeMount(currentValue, newValue string) {
-	expectedErrorEvent := util.EventRecord{
-		Eventtype: v12.EventTypeWarning,
-		Reason:    "SpecCheckErr",
-		Message: "In the Resources Spec the value of 'spec.database.volumeMount' cannot be changed from '" + currentValue + "' to '" + newValue + "' after Pods were created. " +
-			"Otherwise, the cluster of PostgreSql servers risk of being inconsistent. " +
-			"We roll-backed Kubegres spec to the currently working value '" + currentValue + "'. " +
-			"If you know what you are doing, you can manually update that spec in every StatefulSet of your PostgreSql cluster and then Kubegres will automatically update itself.",
-	}
-	Eventually(func() bool {
-		_, err := r.resourceRetriever.GetKubegres()
-		if err != nil {
-			return false
-		}
-		return eventRecorderTest.CheckEventExist(expectedErrorEvent)
+func (r *SpecVolumeAndVolumeMountTest) isCustomVolume(volume v12.Volume, kubegresContext ctx.KubegresContext) bool {
+	return !kubegresContext.IsReservedVolumeName(volume.Name)
+}
 
-	}, time.Second*10, time.Second*5).Should(BeTrue())
-}*/
+func (r *SpecVolumeAndVolumeMountTest) isCustomVolumeMount(volumeMount v12.VolumeMount, kubegresContext ctx.KubegresContext) bool {
+	return !kubegresContext.IsReservedVolumeName(volumeMount.Name)
+}
+
+func (r *SpecVolumeAndVolumeMountTest) doesCustomVolumeExistsInStatefulSet(customVolume v12.Volume, statefulSetVolumes []v12.Volume) bool {
+	for _, statefulSetVolume := range statefulSetVolumes {
+		if reflect.DeepEqual(statefulSetVolume, customVolume) {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *SpecVolumeAndVolumeMountTest) isVolumeAnExpectedCustomVolume(volumeToCheck v12.Volume, expectedCustomVolumes []v12.Volume) bool {
+	for _, expectedCustomVolume := range expectedCustomVolumes {
+		if reflect.DeepEqual(expectedCustomVolume, volumeToCheck) {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *SpecVolumeAndVolumeMountTest) isVolumeMountAnExpectedCustomVolumeMount(volumeMountToCheck v12.VolumeMount, expectedCustomVolumeMounts []v12.VolumeMount) bool {
+	for _, expectedCustomVolumeMount := range expectedCustomVolumeMounts {
+		if reflect.DeepEqual(expectedCustomVolumeMount, volumeMountToCheck) {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *SpecVolumeAndVolumeMountTest) doesCustomVolumeMountExistsInStatefulSet(customVolumeMount v12.VolumeMount, statefulSetVolumeMounts []v12.VolumeMount) bool {
+	for _, statefulSetVolumeMount := range statefulSetVolumeMounts {
+		if reflect.DeepEqual(statefulSetVolumeMount, customVolumeMount) {
+			return true
+		}
+	}
+	return false
+}

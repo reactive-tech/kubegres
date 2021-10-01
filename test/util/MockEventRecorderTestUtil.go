@@ -47,6 +47,10 @@ func (r *MockEventRecorderTestUtil) CheckEventExist(eventRecordToSearch EventRec
 	return false
 }
 
+func (r *MockEventRecorderTestUtil) RemoveAllEvents() {
+	r.eventRecords = []EventRecord{}
+}
+
 func (r *MockEventRecorderTestUtil) Event(object runtime.Object, eventtype, reason, message string) {
 	r.Eventf(object, eventtype, reason, message)
 }

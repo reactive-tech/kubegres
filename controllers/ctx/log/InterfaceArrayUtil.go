@@ -52,9 +52,16 @@ func interfaceToStr(keyAndValue interface{}) string {
 
 	keysAndValuesStr := ""
 	comma := ""
-	for i := 0; i < keysAndValuesSlice.Len(); i += 2 {
+	keysAndValuesLength := keysAndValuesSlice.Len()
+
+	for i := 0; i < keysAndValuesLength; i += 2 {
 		key := keysAndValuesSlice.Index(i).Interface()
-		value := keysAndValuesSlice.Index(i + 1).Interface()
+
+		var value interface{}
+		if (i + 1) < keysAndValuesLength {
+			value = keysAndValuesSlice.Index(i + 1).Interface()
+		}
+
 		keysAndValuesStr += comma + fmt.Sprintf("'%s'", key) + ": " + fmt.Sprintf("%v", value)
 		comma = ", "
 	}

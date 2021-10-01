@@ -49,10 +49,15 @@ type KubegresScheduler struct {
 	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
 }
 
+type VolumeClaimTemplate struct {
+	Name string                       `json:"name,omitempty"`
+	Spec v1.PersistentVolumeClaimSpec `json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`
+}
+
 type Volume struct {
-	VolumeMounts         []v1.VolumeMount           `json:"volumeMounts,omitempty"`
-	Volumes              []v1.Volume                `json:"volumes,omitempty"`
-	VolumeClaimTemplates []v1.PersistentVolumeClaim `json:"volumeClaimTemplates,omitempty"`
+	VolumeMounts         []v1.VolumeMount      `json:"volumeMounts,omitempty"`
+	Volumes              []v1.Volume           `json:"volumes,omitempty"`
+	VolumeClaimTemplates []VolumeClaimTemplate `json:"volumeClaimTemplates,omitempty"`
 }
 
 type KubegresSpec struct {

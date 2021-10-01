@@ -45,7 +45,7 @@ vet: ## Run go vet against code (it check the constructs in the code).
 	go vet ./...
 
 test: build ## Run tests.
-	go test $(shell pwd)/test -run $(shell pwd)/test/suite_test.go -v -test.timeout 6000s
+	go test $(shell pwd)/test -run $(shell pwd)/test/suite_test.go -v -test.timeout 10000s
 
 #ENVTEST_ASSETS_DIR=$(shell pwd)/testbin
 #test: manifests generate fmt vet ## Run tests.

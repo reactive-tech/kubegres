@@ -235,7 +235,14 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 	}
 
 	if postgresSpec.Volume.VolumeClaimTemplates != nil {
-		statefulSetTemplate.Spec.VolumeClaimTemplates = append(statefulSetTemplate.Spec.VolumeClaimTemplates, r.kubegresContext.Kubegres.Spec.Volume.VolumeClaimTemplates...)
+
+		for _, volumeClaimTemplate := range postgresSpec.Volume.VolumeClaimTemplates {
+			persistentVolumeClaim := core.PersistentVolumeClaim{}
+			persistentVolumeClaim.Name = volumeClaimTemplate.Name
+			persistentVolumeClaim.Namespace = r.kubegresContext.Kubegres.Namespace
+			persistentVolumeClaim.Spec = volumeClaimTemplate.Spec
+			statefulSetTemplate.Spec.VolumeClaimTemplates = append(statefulSetTemplate.Spec.VolumeClaimTemplates, persistentVolumeClaim)
+		}
 	}
 
 	if postgresSpec.Volume.Volumes != nil {

@@ -81,8 +81,8 @@ func (r *SpecChecker) CheckSpec() (SpecCheckResult, error) {
 			r.updateKubegresSpec("spec.database.storageClassName", *primaryStorageClassName)
 		}
 
-		storageQuantity := primaryStatefulSetSpec.VolumeClaimTemplates[0].Spec.Resources.Requests["storage"]
-		primaryStorageSize := storageQuantity.String()
+		primaryStorageSizeQuantity := primaryStatefulSetSpec.VolumeClaimTemplates[0].Spec.Resources.Requests[v1.ResourceStorage]
+		primaryStorageSize := primaryStorageSizeQuantity.String()
 		if spec.Database.Size != primaryStorageSize && !r.doesStorageClassAllowVolumeExpansion() {
 
 			specCheckResult.HasSpecFatalError = true
@@ -93,6 +93,12 @@ func (r *SpecChecker) CheckSpec() (SpecCheckResult, error) {
 
 			spec.Database.Size = primaryStorageSize
 			r.updateKubegresSpec("spec.database.size", primaryStorageSize)
+		}
+
+		if r.hasCustomVolumeClaimTemplatesChanged(primaryStatefulSetSpec) {
+			specCheckResult.HasSpecFatalError = true
+			specCheckResult.FatalErrorMessage = r.logSpecErrMsg("In the Resources Spec, the array 'spec.Volume.VolumeClaimTemplates' " +
+				"has changed. Kubernetes does not allow to update that field in StatefulSet specification. Please rollback your changes in the YAML.")
 		}
 
 		if specCheckResult.HasSpecFatalError {
@@ -188,12 +194,6 @@ func (r *SpecChecker) CheckSpec() (SpecCheckResult, error) {
 		specCheckResult.FatalErrorMessage = r.logSpecErrMsg("In the Resources Spec the value of 'spec.Volume.VolumeMounts' " +
 			"has an entry with a 'mountPath' value which is reserved for the Postgres database: " + r.kubegresContext.Kubegres.Spec.Database.VolumeMount + " . " +
 			"That value cannot be used and it is reserved for Kubegres internal usages. Please change that value in the YAML.")
-	}
-
-	if r.hasCustomVolumeClaimTemplatesChanged(primaryStatefulSetSpec) {
-		specCheckResult.HasSpecFatalError = true
-		specCheckResult.FatalErrorMessage = r.logSpecErrMsg("In the Resources Spec, the array 'spec.Volume.VolumeClaimTemplates' " +
-			"has changed. Kubernetes does not allow to update that field in StatefulSet specification. Please rollback your changes in the YAML.")
 	}
 
 	return specCheckResult, nil
@@ -301,35 +301,31 @@ func (r *SpecChecker) doCustomVolumeMountsHaveReservedPath() bool {
 
 func (r *SpecChecker) hasCustomVolumeClaimTemplatesChanged(primaryStatefulSetSpec apps.StatefulSetSpec) bool {
 
-	currentVolumeClaimTemplates := primaryStatefulSetSpec.VolumeClaimTemplates
-	var currentCustomVolumeClaimTemplates []v1.PersistentVolumeClaim
+	customVolumeClaimTemplatesCount := 0
+	for _, currentVolumeClaimTemplate := range primaryStatefulSetSpec.VolumeClaimTemplates {
 
-	for _, volumeClaimTemplate := range currentVolumeClaimTemplates {
-		if !r.kubegresContext.IsReservedVolumeName(volumeClaimTemplate.Name) {
-			currentCustomVolumeClaimTemplates = append(currentCustomVolumeClaimTemplates, volumeClaimTemplate)
+		if !r.kubegresContext.IsReservedVolumeName(currentVolumeClaimTemplate.Name) {
+			customVolumeClaimTemplatesCount++
+			if !r.doesCurrentVolumeClaimTemplateExistInExpectedSpec(currentVolumeClaimTemplate) {
+				return true
+			}
 		}
 	}
 
-	expectedCustomVolumeClaimTemplates := r.kubegresContext.Kubegres.Spec.Volume.VolumeClaimTemplates
-	if len(currentCustomVolumeClaimTemplates) != len(expectedCustomVolumeClaimTemplates) {
+	if customVolumeClaimTemplatesCount != len(r.kubegresContext.Kubegres.Spec.Volume.VolumeClaimTemplates) {
 		return true
-	}
-
-	for _, expectedCustomVolumeClaimTemplate := range expectedCustomVolumeClaimTemplates {
-		if !r.doesExpectedVolumeClaimTemplateExist(expectedCustomVolumeClaimTemplate, currentCustomVolumeClaimTemplates) {
-			return true
-		}
 	}
 
 	return false
 }
 
-func (r *SpecChecker) doesExpectedVolumeClaimTemplateExist(
-	expectedCustomVolumeClaimTemplate v1.PersistentVolumeClaim,
-	currentCustomVolumeClaimTemplates []v1.PersistentVolumeClaim) bool {
+func (r *SpecChecker) doesCurrentVolumeClaimTemplateExistInExpectedSpec(currentCustomVolumeClaimTemplate v1.PersistentVolumeClaim) bool {
 
-	for _, currentCustomVolumeClaimTemplate := range currentCustomVolumeClaimTemplates {
-		if reflect.DeepEqual(expectedCustomVolumeClaimTemplate, currentCustomVolumeClaimTemplate) {
+	for _, expectedCustomVolumeClaimTemplate := range r.kubegresContext.Kubegres.Spec.Volume.VolumeClaimTemplates {
+
+		if expectedCustomVolumeClaimTemplate.Name == currentCustomVolumeClaimTemplate.Name &&
+			reflect.DeepEqual(expectedCustomVolumeClaimTemplate.Spec.StorageClassName, currentCustomVolumeClaimTemplate.Spec.StorageClassName) &&
+			reflect.DeepEqual(expectedCustomVolumeClaimTemplate.Spec.Resources, currentCustomVolumeClaimTemplate.Spec.Resources) {
 			return true
 		}
 	}

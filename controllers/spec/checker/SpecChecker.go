@@ -93,6 +93,18 @@ func (r *SpecChecker) CheckSpec() (SpecCheckResult, error) {
 
 			spec.Database.Size = primaryStorageSize
 			r.updateKubegresSpec("spec.database.size", primaryStorageSize)
+
+		// TODO: condition to remove when Kubernetes allows updating storage size in StatefulSet (see https://github.com/kubernetes/enhancements/pull/2842)
+		} else if spec.Database.Size != primaryStorageSize {
+			specCheckResult.HasSpecFatalError = true
+			specCheckResult.FatalErrorMessage = r.createErrMsgSpecCannotBeChanged("spec.database.size",
+				primaryStorageSize,
+				spec.Database.Size,
+				"The database size cannot be modified after the creation of the Postgres cluster. "+
+					"We are rolling back that value to its previous value.")
+
+			spec.Database.Size = primaryStorageSize
+			r.updateKubegresSpec("spec.database.size", primaryStorageSize)
 		}
 
 		if r.hasCustomVolumeClaimTemplatesChanged(primaryStatefulSetSpec) {

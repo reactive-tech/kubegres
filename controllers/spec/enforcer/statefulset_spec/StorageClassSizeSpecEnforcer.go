@@ -48,16 +48,18 @@ func (r *StorageClassSizeSpecEnforcer) GetSpecName() string {
 
 func (r *StorageClassSizeSpecEnforcer) CheckForSpecDifference(statefulSet *apps.StatefulSet) StatefulSetSpecDifference {
 
-	current := statefulSet.Spec.VolumeClaimTemplates[0].Spec.Resources.Requests[core.ResourceStorage]
-	expected := resource.MustParse(r.kubegresContext.Kubegres.Spec.Database.Size)
+	// TODO: codes to re-enable when Kubernetes allows updating storage size in StatefulSet (see https://github.com/kubernetes/enhancements/pull/2842)
+	/*
+		current := statefulSet.Spec.VolumeClaimTemplates[0].Spec.Resources.Requests[core.ResourceStorage]
+		expected := resource.MustParse(r.kubegresContext.Kubegres.Spec.Database.Size)
 
-	if current != expected {
-		return StatefulSetSpecDifference{
-			SpecName: r.GetSpecName(),
-			Current:  current.String(),
-			Expected: expected.String(),
-		}
-	}
+		if current != expected {
+			return StatefulSetSpecDifference{
+				SpecName: r.GetSpecName(),
+				Current:  current.String(),
+				Expected: expected.String(),
+			}
+		}*/
 
 	return StatefulSetSpecDifference{}
 }

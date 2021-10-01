@@ -1,6 +1,5 @@
-Scheduled for end of September:
-- #34: Disable Expand Storage feature and create a new issue for it
-- investigate #36 (backup issue)
+Investigations:
+- #36 : Backup issues
 
 Scheduled for 1st week of November:
 - Build controller with Kubebuilder v3.1.0
@@ -18,4 +17,4 @@ Scheduled for 1st week of January:
 - #10 : Deploy Kubegres with a HELM chart
 
 Blocked:
-#34 : Expand Storage (waiting on the Kubernetes feature: https://github.com/kubernetes/enhancements/pull/2842)
+#49 : Expand Storage (waiting on the Kubernetes feature: https://github.com/kubernetes/enhancements/pull/2842)

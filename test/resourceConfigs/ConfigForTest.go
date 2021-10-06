@@ -69,4 +69,7 @@ const (
 
 	CustomConfigMapWithPrimaryInitScriptResourceName = "config-with-primary-init-script"
 	CustomConfigMapWithPrimaryInitScriptYamlFile     = "resourceConfigs/customConfig/configMap_with_primary_init_script.yaml"
+
+	CustomConfigMapWithPostgresConfAndWalLevelSetToLogicalResourceName = "config-with-postgres-conf-wal-level-to-logical"
+	CustomConfigMapWithPostgresConfAndWalLevelSetToLogicalYamlFile     = "resourceConfigs/customConfig/configMap_with_postgres_conf_and_wal_level_to_logical.yaml"
 )

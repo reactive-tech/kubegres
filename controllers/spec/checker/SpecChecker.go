@@ -94,7 +94,7 @@ func (r *SpecChecker) CheckSpec() (SpecCheckResult, error) {
 			spec.Database.Size = primaryStorageSize
 			r.updateKubegresSpec("spec.database.size", primaryStorageSize)
 
-		// TODO: condition to remove when Kubernetes allows updating storage size in StatefulSet (see https://github.com/kubernetes/enhancements/pull/2842)
+			// TODO: condition to remove when Kubernetes allows updating storage size in StatefulSet (see https://github.com/kubernetes/enhancements/pull/2842)
 		} else if spec.Database.Size != primaryStorageSize {
 			specCheckResult.HasSpecFatalError = true
 			specCheckResult.FatalErrorMessage = r.createErrMsgSpecCannotBeChanged("spec.database.size",

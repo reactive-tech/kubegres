@@ -32,9 +32,9 @@ import (
 	"time"
 )
 
-var _ = Describe("Primary instances is not available, checking recovery works", func() {
+var _ = Describe("We set the wal-level to 'logical' and simulate when Primary instance is not available then recovery/failover works", func() {
 
-	var test = PrimaryFailureAndRecoveryTest{}
+	var test = PostgresConfWalLevelLogicalTest{}
 
 	BeforeEach(func() {
 		//Skip("Temporarily skipping test")
@@ -44,85 +44,20 @@ var _ = Describe("Primary instances is not available, checking recovery works", 
 		test.resourceCreator = util.CreateTestResourceCreator(k8sClientTest, test.resourceRetriever, namespace)
 		test.connectionPrimaryDb = util.InitDbConnectionDbUtil(test.resourceCreator, resourceConfigs.KubegresResourceName, resourceConfigs.ServiceToSqlQueryPrimaryDbNodePort, true)
 		test.connectionReplicaDb = util.InitDbConnectionDbUtil(test.resourceCreator, resourceConfigs.KubegresResourceName, resourceConfigs.ServiceToSqlQueryReplicaDbNodePort, false)
+		test.resourceCreator.CreateConfigMapWithPostgresConfAndWalLevelSetToLogical()
 	})
 
 	AfterEach(func() {
 		test.resourceCreator.DeleteAllTestResources()
 	})
 
-	Context("GIVEN Kubegres with 1 primary and no replicas AND that primary is deleted while its associated PVC is still available", func() {
-
-		It("THEN the primary should be automatically re-created and the existing PVC should be associated to the new primary", func() {
-
-			log.Print("START OF: Test 'GIVEN Kubegres with 1 primary  and no replicas AND that primary is deleted while its associated PVC is still available'")
-
-			test.givenNewKubegresSpecIsSetTo(1)
-
-			test.whenKubegresIsCreated()
-
-			test.thenPodsStatesShouldBe(1, 0)
-
-			expectedNbreUsers := 0
-
-			test.GivenUserAddedInPrimaryDb()
-			expectedNbreUsers++
-
-			test.GivenUserAddedInPrimaryDb()
-			expectedNbreUsers++
-
-			test.whenPrimaryIsDeleted()
-
-			test.thenPodsStatesShouldBe(1, 0)
-
-			test.ThenPrimaryDbContainsExpectedNbreUsers(expectedNbreUsers)
-
-			log.Print("END OF: Test 'GIVEN Kubegres with 1 primary and no replicas AND that primary is deleted while its associated PVC is still available'")
-		})
-	})
-
-	Context("GIVEN Kubegres with 1 primary and no replicas AND that primary is deleted including its associated PVC", func() {
-
-		It("THEN the primary should be automatically re-created and a new PVC should be associated to the new primary", func() {
-
-			log.Print("START OF: Test 'GIVEN Kubegres with 1 primary and no replicas AND that primary is deleted including its associated PVC'")
-
-			test.givenNewKubegresSpecIsSetTo(1)
-
-			test.whenKubegresIsCreated()
-
-			test.thenPodsStatesShouldBe(1, 0)
-
-			expectedNbreUsers := 0
-
-			test.GivenUserAddedInPrimaryDb()
-			expectedNbreUsers++
-
-			test.GivenUserAddedInPrimaryDb()
-			expectedNbreUsers++
-
-			test.whenPrimaryAndItsPVCAreDeleted()
-
-			test.thenPodsStatesShouldBe(1, 0)
-
-			expectedNbreUsers = 0
-			test.ThenPrimaryDbContainsExpectedNbreUsers(expectedNbreUsers)
-
-			test.GivenUserAddedInPrimaryDb()
-			expectedNbreUsers++
-
-			test.ThenPrimaryDbContainsExpectedNbreUsers(expectedNbreUsers)
-
-			log.Print("END OF: Test 'GIVEN Kubegres with 1 primary and no replicas AND that primary is deleted including its associated PVC'")
-		})
-	})
-
-	Context("GIVEN Kubegres with 1 primary and 2 replicas AND primary is deleted", func() {
+	Context("GIVEN Kubegres custom ConfigMap with wal-level set to 'logical' AND with 1 primary and 2 replicas AND primary is deleted", func() {
 
 		It("THEN the failover should take place with a replica becoming primary AND a new replica created AND existing data available", func() {
 
-			log.Print("START OF: Test 'GIVEN Kubegres with 1 primary and 2 replicas AND primary is deleted'")
+			log.Print("START OF: Test 'GIVEN Kubegres custom ConfigMap with wal-level set to 'logical' AND with 1 primary and 2 replicas AND primary is deleted'")
 
-			test.givenNewKubegresSpecIsSetTo(3)
+			test.givenNewKubegresSpecIsSetTo(resourceConfigs.CustomConfigMapWithPostgresConfAndWalLevelSetToLogicalResourceName, 3)
 
 			test.whenKubegresIsCreated()
 
@@ -149,13 +84,13 @@ var _ = Describe("Primary instances is not available, checking recovery works", 
 			test.ThenPrimaryDbContainsExpectedNbreUsers(expectedNbreUsers)
 			test.ThenReplicaDbContainsExpectedNbreUsers(expectedNbreUsers)
 
-			log.Print("END OF: Test 'GIVEN Kubegres with 1 primary and 2 replicas AND primary is deleted'")
+			log.Print("END OF: Test 'GIVEN Kubegres custom ConfigMap with wal-level set to 'logical' AND with 1 primary and 2 replicas AND primary is deleted'")
 		})
 	})
 
 })
 
-type PrimaryFailureAndRecoveryTest struct {
+type PostgresConfWalLevelLogicalTest struct {
 	kubegresResource      *postgresv1.Kubegres
 	connectionPrimaryDb   util.DbConnectionDbUtil
 	connectionReplicaDb   util.DbConnectionDbUtil
@@ -165,16 +100,17 @@ type PrimaryFailureAndRecoveryTest struct {
 	customEnvVariableKey  string
 }
 
-func (r *PrimaryFailureAndRecoveryTest) givenNewKubegresSpecIsSetTo(specNbreReplicas int32) {
+func (r *PostgresConfWalLevelLogicalTest) givenNewKubegresSpecIsSetTo(customConfig string, specNbreReplicas int32) {
 	r.kubegresResource = resourceConfigs.LoadKubegresYaml()
+	r.kubegresResource.Spec.CustomConfig = customConfig
 	r.kubegresResource.Spec.Replicas = &specNbreReplicas
 }
 
-func (r *PrimaryFailureAndRecoveryTest) whenKubegresIsCreated() {
+func (r *PostgresConfWalLevelLogicalTest) whenKubegresIsCreated() {
 	r.resourceCreator.CreateKubegres(r.kubegresResource)
 }
 
-func (r *PrimaryFailureAndRecoveryTest) whenPrimaryIsDeleted() {
+func (r *PostgresConfWalLevelLogicalTest) whenPrimaryIsDeleted() {
 	kubegresResources, err := r.resourceRetriever.GetKubegresResources()
 	if err != nil {
 		Expect(err).Should(Succeed())
@@ -197,7 +133,7 @@ func (r *PrimaryFailureAndRecoveryTest) whenPrimaryIsDeleted() {
 	Expect(nbreDeleted).Should(Equal(1))
 }
 
-func (r *PrimaryFailureAndRecoveryTest) whenPrimaryAndItsPVCAreDeleted() {
+func (r *PostgresConfWalLevelLogicalTest) whenPrimaryAndItsPVCAreDeleted() {
 	kubegresResources, err := r.resourceRetriever.GetKubegresResources()
 	if err != nil {
 		Expect(err).Should(Succeed())
@@ -238,7 +174,7 @@ func (r *PrimaryFailureAndRecoveryTest) whenPrimaryAndItsPVCAreDeleted() {
 	Expect(nbreDeletedPvc).Should(Equal(1))
 }
 
-func (r *PrimaryFailureAndRecoveryTest) wait10Seconds() bool {
+func (r *PostgresConfWalLevelLogicalTest) wait10Seconds() bool {
 
 	waitingAttempts := 0
 
@@ -248,7 +184,7 @@ func (r *PrimaryFailureAndRecoveryTest) wait10Seconds() bool {
 	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
 }
 
-func (r *PrimaryFailureAndRecoveryTest) thenPodsStatesShouldBe(nbrePrimary, nbreReplicas int) bool {
+func (r *PostgresConfWalLevelLogicalTest) thenPodsStatesShouldBe(nbrePrimary, nbreReplicas int) bool {
 	return Eventually(func() bool {
 
 		kubegresResources, err := r.resourceRetriever.GetKubegresResources()
@@ -271,13 +207,13 @@ func (r *PrimaryFailureAndRecoveryTest) thenPodsStatesShouldBe(nbrePrimary, nbre
 	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
 }
 
-func (r *PrimaryFailureAndRecoveryTest) GivenUserAddedInPrimaryDb() {
+func (r *PostgresConfWalLevelLogicalTest) GivenUserAddedInPrimaryDb() {
 	Eventually(func() bool {
 		return r.connectionPrimaryDb.InsertUser()
 	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
 }
 
-func (r *PrimaryFailureAndRecoveryTest) ThenPrimaryDbContainsExpectedNbreUsers(expectedNbreUsers int) {
+func (r *PostgresConfWalLevelLogicalTest) ThenPrimaryDbContainsExpectedNbreUsers(expectedNbreUsers int) {
 	Eventually(func() bool {
 
 		users := r.connectionPrimaryDb.GetUsers()
@@ -294,7 +230,7 @@ func (r *PrimaryFailureAndRecoveryTest) ThenPrimaryDbContainsExpectedNbreUsers(e
 	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
 }
 
-func (r *PrimaryFailureAndRecoveryTest) ThenReplicaDbContainsExpectedNbreUsers(expectedNbreUsers int) {
+func (r *PostgresConfWalLevelLogicalTest) ThenReplicaDbContainsExpectedNbreUsers(expectedNbreUsers int) {
 	Eventually(func() bool {
 
 		users := r.connectionReplicaDb.GetUsers()

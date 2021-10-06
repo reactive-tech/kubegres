@@ -113,28 +113,35 @@ func (r *TestResourceCreator) CreateConfigMapWithAllConfigs() {
 	existingResource := v1.ConfigMap{}
 	resourceToCreate := resourceConfigs2.LoadCustomConfigMapYaml(resourceConfigs2.CustomConfigMapWithAllConfigsYamlFile)
 	resourceToCreate.Namespace = r.namespace
-	r.createResourceFromYaml("Custom ConfigMap empty", resourceConfigs2.CustomConfigMapWithAllConfigsResourceName, &existingResource, &resourceToCreate)
+	r.createResourceFromYaml("Custom ConfigMap with all configs", resourceConfigs2.CustomConfigMapWithAllConfigsResourceName, &existingResource, &resourceToCreate)
 }
 
 func (r *TestResourceCreator) CreateConfigMapWithBackupDatabaseScript() {
 	existingResource := v1.ConfigMap{}
 	resourceToCreate := resourceConfigs2.LoadCustomConfigMapYaml(resourceConfigs2.CustomConfigMapWithBackupDatabaseScriptYamlFile)
 	resourceToCreate.Namespace = r.namespace
-	r.createResourceFromYaml("Custom ConfigMap empty", resourceConfigs2.CustomConfigMapWithBackupDatabaseScriptResourceName, &existingResource, &resourceToCreate)
+	r.createResourceFromYaml("Custom ConfigMap with backup database script", resourceConfigs2.CustomConfigMapWithBackupDatabaseScriptResourceName, &existingResource, &resourceToCreate)
 }
 
 func (r *TestResourceCreator) CreateConfigMapWithPgHbaConf() {
 	existingResource := v1.ConfigMap{}
 	resourceToCreate := resourceConfigs2.LoadCustomConfigMapYaml(resourceConfigs2.CustomConfigMapWithPgHbaConfYamlFile)
 	resourceToCreate.Namespace = r.namespace
-	r.createResourceFromYaml("Custom ConfigMap empty", resourceConfigs2.CustomConfigMapWithPgHbaConfResourceName, &existingResource, &resourceToCreate)
+	r.createResourceFromYaml("Custom ConfigMap with pg-hba configuration resource", resourceConfigs2.CustomConfigMapWithPgHbaConfResourceName, &existingResource, &resourceToCreate)
 }
 
 func (r *TestResourceCreator) CreateConfigMapWithPostgresConf() {
 	existingResource := v1.ConfigMap{}
 	resourceToCreate := resourceConfigs2.LoadCustomConfigMapYaml(resourceConfigs2.CustomConfigMapWithPostgresConfYamlFile)
 	resourceToCreate.Namespace = r.namespace
-	r.createResourceFromYaml("Custom ConfigMap empty", resourceConfigs2.CustomConfigMapWithPostgresConfResourceName, &existingResource, &resourceToCreate)
+	r.createResourceFromYaml("Custom ConfigMap with postgres conf", resourceConfigs2.CustomConfigMapWithPostgresConfResourceName, &existingResource, &resourceToCreate)
+}
+
+func (r *TestResourceCreator) CreateConfigMapWithPostgresConfAndWalLevelSetToLogical() {
+	existingResource := v1.ConfigMap{}
+	resourceToCreate := resourceConfigs2.LoadCustomConfigMapYaml(resourceConfigs2.CustomConfigMapWithPostgresConfAndWalLevelSetToLogicalYamlFile)
+	resourceToCreate.Namespace = r.namespace
+	r.createResourceFromYaml("Custom ConfigMap with postgres conf and wal_level=logical", resourceConfigs2.CustomConfigMapWithPostgresConfAndWalLevelSetToLogicalResourceName, &existingResource, &resourceToCreate)
 }
 
 func (r *TestResourceCreator) CreateNamespace() {

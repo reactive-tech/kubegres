@@ -50,7 +50,7 @@ spec:
         - name: postgres-name-0
           image: postgres:latest
           imagePullPolicy: IfNotPresent
-          args: ["-c", "config_file=/etc/postgres.conf", "-c", "hba_file=/etc/pg_hba.conf", "-c", "wal_level=replica"]
+          args: ["-c", "config_file=/etc/postgres.conf", "-c", "hba_file=/etc/pg_hba.conf"]
 
           ports:
             - containerPort: 5432

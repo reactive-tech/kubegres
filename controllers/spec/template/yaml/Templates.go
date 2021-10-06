@@ -99,8 +99,8 @@ data:
   #
   # Be careful with the value you set for 'listen_addresses' because you could break the operator.
   #
-  # You cannot set a value for the config "wal_level=replica" because it is passed as an argument to the PostgreSql container.
-  # This restriction is part of the design.
+  # By default, PostgreSql set the property 'wal_level' to 'replica'. You can modify the value of 'wal_level' in here.
+  # Kubegres was tested with "wal_level = replica" and "wal_level = logical".
   #
   # If you edit the config in this file, your changes will apply to all Kubegres resources.
   # Alternatively, you can override it for your Kubegres resource. To do so, create a custom configMap and in your
@@ -383,7 +383,7 @@ spec:
         - name: postgres-name-0
           image: postgres:latest
           imagePullPolicy: IfNotPresent
-          args: ["-c", "config_file=/etc/postgres.conf", "-c", "hba_file=/etc/pg_hba.conf", "-c", "wal_level=replica"]
+          args: ["-c", "config_file=/etc/postgres.conf", "-c", "hba_file=/etc/pg_hba.conf"]
 
           ports:
             - containerPort: 5432
@@ -531,7 +531,7 @@ spec:
         - name: postgres-name-1
           image: postgres:latest
           imagePullPolicy: IfNotPresent
-          args: ["-c", "config_file=/etc/postgres.conf", "-c", "hba_file=/etc/pg_hba.conf", "-c", "promote_trigger_file=$(PGDATA)/promote_replica_to_primary.log", "-c", "wal_level=replica"]
+          args: ["-c", "config_file=/etc/postgres.conf", "-c", "hba_file=/etc/pg_hba.conf", "-c", "promote_trigger_file=$(PGDATA)/promote_replica_to_primary.log"]
 
           ports:
             - containerPort: 5432

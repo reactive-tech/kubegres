@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-with-postgres-conf-wal-level-to-logical
+  namespace: default
+  labels:
+    environment: acceptancetesting
+
+data:
+
+  postgres.conf: |
+    # We set the property 'wal_level' to 'logical' which overrides its default value which was 'replica'
+    wal_level = logical
+    listen_addresses = '*'
+    max_wal_senders = 10
+    max_connections = 100
+    shared_buffers = 128MB
+
+    # Logging
+    #log_destination = 'stderr,csvlog'
+    #logging_collector = on
+    #log_directory = 'pg_log'
+    #log_filename= 'postgresql-%Y-%m-%d_%H%M%S.log'

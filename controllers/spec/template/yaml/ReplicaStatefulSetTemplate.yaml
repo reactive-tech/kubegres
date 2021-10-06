@@ -72,7 +72,7 @@ spec:
         - name: postgres-name-1
           image: postgres:latest
           imagePullPolicy: IfNotPresent
-          args: ["-c", "config_file=/etc/postgres.conf", "-c", "hba_file=/etc/pg_hba.conf", "-c", "promote_trigger_file=$(PGDATA)/promote_replica_to_primary.log", "-c", "wal_level=replica"]
+          args: ["-c", "config_file=/etc/postgres.conf", "-c", "hba_file=/etc/pg_hba.conf", "-c", "promote_trigger_file=$(PGDATA)/promote_replica_to_primary.log"]
 
           ports:
             - containerPort: 5432

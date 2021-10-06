@@ -1,7 +1,5 @@
-Investigations:
-- #36 : Backup issues
-
 Scheduled for 1st week of November:
+- Test Kubegres with Postgres 14
 - Build controller with Kubebuilder v3.1.0
 - Remove warning for CronJob which was updated from beta to stable since Kubernetes 1.21
 - #20 : Delete PVC

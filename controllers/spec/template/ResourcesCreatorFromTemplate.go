@@ -131,7 +131,7 @@ func (r *ResourcesCreatorFromTemplate) CreateReplicaStatefulSet(statefulSetInsta
 	return statefulSetTemplate, nil
 }
 
-func (r *ResourcesCreatorFromTemplate) CreateBackUpCronJob() (v1beta1.CronJob, error) {
+func (r *ResourcesCreatorFromTemplate) CreateBackUpCronJob(configMapNameForBackUp string) (v1beta1.CronJob, error) {
 
 	backUpCronJob, err := r.templateFromFiles.LoadBackUpCronJob()
 	if err != nil {
@@ -153,7 +153,7 @@ func (r *ResourcesCreatorFromTemplate) CreateBackUpCronJob() (v1beta1.CronJob, e
 	backUpCronJobSpec := &backUpCronJob.Spec.JobTemplate.Spec.Template.Spec
 
 	backUpCronJobSpec.Volumes[0].PersistentVolumeClaim.ClaimName = backupSpec.PvcName
-	backUpCronJobSpec.Volumes[1].ConfigMap.Name = r.getConfigMapName()
+	backUpCronJobSpec.Volumes[1].ConfigMap.Name = configMapNameForBackUp
 
 	backUpCronJobContainer := &backUpCronJobSpec.Containers[0]
 	backUpCronJobContainer.Image = postgres.Spec.Image
@@ -286,8 +286,4 @@ func (r *ResourcesCreatorFromTemplate) getEnvVar(envName string) core.EnvVar {
 func (r *ResourcesCreatorFromTemplate) doesCustomConfigExist() bool {
 	return r.kubegresContext.Kubegres.Spec.CustomConfig != "" &&
 		r.kubegresContext.Kubegres.Spec.CustomConfig != ctx.BaseConfigMapName
-}
-
-func (r *ResourcesCreatorFromTemplate) getConfigMapName() string {
-	return r.kubegresContext.Kubegres.Spec.CustomConfig
 }

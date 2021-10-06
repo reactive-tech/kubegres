@@ -94,5 +94,6 @@ func (r *ResourcesStatesLogger) logBackUpStates() {
 	r.kubegresContext.Log.Info("BackUp states.",
 		"IsCronJobDeployed", r.resourcesStates.BackUp.IsCronJobDeployed,
 		"IsPvcDeployed", r.resourcesStates.BackUp.IsPvcDeployed,
+		"ConfigMap", r.resourcesStates.BackUp.ConfigMap,
 		"CronJobLastScheduleTime", r.resourcesStates.BackUp.CronJobLastScheduleTime)
 }

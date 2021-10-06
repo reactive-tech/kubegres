@@ -62,13 +62,21 @@ func (r *BackUpCronJobCountSpecEnforcer) EnforceSpec() error {
 		return nil
 	}
 
-	cronJob, err := r.resourcesCreator.CreateBackUpCronJob()
+	configMapNameForBackUp := r.getConfigMapNameForBackUp(r.resourcesStates.Config)
+	cronJob, err := r.resourcesCreator.CreateBackUpCronJob(configMapNameForBackUp)
 	if err != nil {
 		r.kubegresContext.Log.ErrorEvent("BackUpCronJobTemplateErr", err, "Unable to create a BackUp CronJob object from template.")
 		return err
 	}
 
 	return r.deployCronJob(cronJob)
+}
+
+func (r *BackUpCronJobCountSpecEnforcer) getConfigMapNameForBackUp(configStates states.ConfigStates) string {
+	if configStates.ConfigLocations.BackUpScript == ctx.BaseConfigMapVolumeName {
+		return configStates.BaseConfigName
+	}
+	return configStates.CustomConfigName
 }
 
 func (r *BackUpCronJobCountSpecEnforcer) deployCronJob(cronJob v1beta1.CronJob) error {
@@ -121,7 +129,7 @@ func (r *BackUpCronJobCountSpecEnforcer) hasSpecChanged() (hasSpecChanged bool) 
 	}
 
 	currentCustomConfig := cronJobTemplateSpec.Volumes[1].ConfigMap.Name
-	expectedCustomConfig := r.kubegresContext.Kubegres.Spec.CustomConfig
+	expectedCustomConfig := r.getConfigMapNameForBackUp(r.resourcesStates.Config)
 	if currentCustomConfig != expectedCustomConfig {
 		hasSpecChanged = true
 		r.logSpecChange("spec.backup.customConfig")

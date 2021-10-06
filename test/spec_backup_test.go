@@ -52,12 +52,18 @@ var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 		test.resourceRetriever = util.CreateTestResourceRetriever(k8sClientTest, namespace)
 		test.resourceCreator = util.CreateTestResourceCreator(k8sClientTest, test.resourceRetriever, namespace)
 		test.dbQueryTestCases = testcases.InitDbQueryTestCases(test.resourceCreator, resourceConfigs.KubegresResourceName)
+		test.resourceCreator.CreateConfigMapWithBackupDatabaseScript()
+		test.resourceCreator.CreateConfigMapWithPgHbaConf()
 		test.resourceCreator.CreateBackUpPvc()
 		test.resourceCreator.CreateBackUpPvc2()
 	})
 
 	AfterEach(func() {
-		test.resourceCreator.DeleteAllTestResources(resourceConfigs.BackUpPvcResourceName, resourceConfigs.BackUpPvcResourceName2)
+		if !test.keepCreatedResourcesForNextTest {
+			test.resourceCreator.DeleteAllTestResources(resourceConfigs.BackUpPvcResourceName, resourceConfigs.BackUpPvcResourceName2)
+		} else {
+			test.keepCreatedResourcesForNextTest = false
+		}
 	})
 
 	Context("GIVEN new Kubegres is created without spec 'backup' AND with spec 'replica' set to 3", func() {
@@ -178,13 +184,56 @@ var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 
 			test.thenPodsStatesShouldBe(1, 2)
 
-			test.givenExistingKubegresSpecIsSetTo(scheduleBackupEvery2Mins, resourceConfigs.BackUpPvcResourceName2, "/tmp/my-kubegres-2")
+			test.givenExistingKubegresSpecIsSetTo(ctx.BaseConfigMapName, scheduleBackupEvery2Mins, resourceConfigs.BackUpPvcResourceName2, "/tmp/my-kubegres-2")
 
 			test.whenKubernetesIsUpdated()
 
 			test.thenCronJobExistsWithSpec(ctx.BaseConfigMapName, scheduleBackupEvery2Mins, resourceConfigs.BackUpPvcResourceName2, "/tmp/my-kubegres-2")
 
 			log.Print("END OF: Test 'GIVEN new Kubegres is created with backup specs set AND later Kubegres is updated with new values for backup specs'")
+		})
+	})
+
+	Context("GIVEN new Kubegres is created with backup specs set AND later the Kubernetes field 'spec.customConfig' is changed", func() {
+
+		It("the Kubernetes field 'spec.customConfig' is changed to a configMap which does NOT contain 'backup_database.sh' "+
+			"THEN backup CronJob should NOT be updated and should remain with configMap set to the base configMap", func() {
+
+			log.Print("START OF: Test 'GIVEN new Kubegres is created with backup specs AND later the Kubernetes field " +
+				"'spec.customConfig' is changed to a configMap which does NOT contain 'backup_database.sh'")
+
+			test.givenNewKubegresSpecIsSetTo(ctx.BaseConfigMapName, scheduleBackupEveryMin, resourceConfigs.BackUpPvcResourceName, "/tmp/my-kubegres", 3)
+
+			test.whenKubegresIsCreated()
+
+			test.thenPodsStatesShouldBe(1, 2)
+
+			test.givenExistingKubegresSpecIsSetTo(resourceConfigs.CustomConfigMapWithPgHbaConfResourceName, scheduleBackupEveryMin, resourceConfigs.BackUpPvcResourceName, "/tmp/my-kubegres")
+
+			test.whenKubernetesIsUpdated()
+
+			test.thenCronJobExistsWithSpec(ctx.BaseConfigMapName, scheduleBackupEveryMin, resourceConfigs.BackUpPvcResourceName, "/tmp/my-kubegres")
+
+			test.keepCreatedResourcesForNextTest = true
+
+			log.Print("END OF: Test 'GIVEN new Kubegres is created with backup specs AND later the Kubernetes field " +
+				"'spec.customConfig' is changed to a configMap which does NOT contain 'backup_database.sh'")
+		})
+
+		It("the Kubernetes field 'spec.customConfig' is changed to a configMap which contain 'backup_database.sh' "+
+			"THEN backup CronJob should be updated with the configMap name set to the new custom configMap", func() {
+
+			log.Print("START OF: Test 'GIVEN new Kubegres is created with backup specs AND later the Kubernetes field " +
+				"'spec.customConfig' is changed to a configMap which contain 'backup_database.sh'")
+
+			test.givenExistingKubegresSpecIsSetTo(resourceConfigs.CustomConfigMapWithBackupDatabaseScriptResourceName, scheduleBackupEveryMin, resourceConfigs.BackUpPvcResourceName, "/tmp/my-kubegres")
+
+			test.whenKubernetesIsUpdated()
+
+			test.thenCronJobExistsWithSpec(resourceConfigs.CustomConfigMapWithBackupDatabaseScriptResourceName, scheduleBackupEveryMin, resourceConfigs.BackUpPvcResourceName, "/tmp/my-kubegres")
+
+			log.Print("END OF: Test 'GIVEN new Kubegres is created with backup specs AND later the Kubernetes field " +
+				"'spec.customConfig' is changed to a configMap which contain 'backup_database.sh'")
 		})
 	})
 
@@ -200,7 +249,7 @@ var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 
 			test.thenPodsStatesShouldBe(1, 2)
 
-			test.givenExistingKubegresSpecIsSetTo("", "", "")
+			test.givenExistingKubegresSpecIsSetTo(ctx.BaseConfigMapName, "", "", "")
 
 			test.whenKubernetesIsUpdated()
 
@@ -215,11 +264,12 @@ var _ = Describe("Setting Kubegres specs 'backup.*'", func() {
 })
 
 type SpecBackUpTest struct {
-	kubegresResource  *postgresv1.Kubegres
-	dbQueryTestCases  testcases.DbQueryTestCases
-	resourceCreator   util.TestResourceCreator
-	resourceRetriever util.TestResourceRetriever
-	resourceModifier  util.TestResourceModifier
+	keepCreatedResourcesForNextTest bool
+	kubegresResource                *postgresv1.Kubegres
+	dbQueryTestCases                testcases.DbQueryTestCases
+	resourceCreator                 util.TestResourceCreator
+	resourceRetriever               util.TestResourceRetriever
+	resourceModifier                util.TestResourceModifier
 }
 
 func (r *SpecBackUpTest) givenNewKubegresSpecIsSetTo(customConfig, backupSchedule, backupPvcName, backupVolumeMount string, specNbreReplicas int32) {
@@ -242,12 +292,13 @@ func (r *SpecBackUpTest) givenKubegresAnnotationIsSetTo(annotationKey, annotatio
 	r.resourceModifier.AppendAnnotation(annotationKey, annotationValue, r.kubegresResource)
 }
 
-func (r *SpecBackUpTest) givenExistingKubegresSpecIsSetTo(backupSchedule, backupPvcName, backupVolumeMount string) {
+func (r *SpecBackUpTest) givenExistingKubegresSpecIsSetTo(customConfig, backupSchedule, backupPvcName, backupVolumeMount string) {
 	var err error
 	r.kubegresResource, err = r.resourceRetriever.GetKubegres()
 	r.kubegresResource.Spec.Backup.Schedule = backupSchedule
 	r.kubegresResource.Spec.Backup.PvcName = backupPvcName
 	r.kubegresResource.Spec.Backup.VolumeMount = backupVolumeMount
+	r.kubegresResource.Spec.CustomConfig = customConfig
 
 	if err != nil {
 		log.Println("Error while getting Kubegres resource : ", err)

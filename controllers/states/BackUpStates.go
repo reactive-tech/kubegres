@@ -31,6 +31,7 @@ import (
 type BackUpStates struct {
 	IsCronJobDeployed       bool
 	IsPvcDeployed           bool
+	ConfigMap               string
 	CronJobLastScheduleTime string
 	DeployedCronJob         *v1beta1.CronJob
 
@@ -52,6 +53,11 @@ func (r *BackUpStates) loadStates() (err error) {
 
 	if r.DeployedCronJob.Name != "" {
 		r.IsCronJobDeployed = true
+
+		if len(r.DeployedCronJob.Spec.JobTemplate.Spec.Template.Spec.Volumes) >= 2 {
+			r.ConfigMap = r.DeployedCronJob.Spec.JobTemplate.Spec.Template.Spec.Volumes[1].ConfigMap.Name
+		}
+
 		if r.DeployedCronJob.Status.LastScheduleTime != nil {
 			r.CronJobLastScheduleTime = r.DeployedCronJob.Status.LastScheduleTime.String()
 		}

@@ -55,7 +55,7 @@ APIs using CRDs. Kubebuilder is maintained by the official Kubernetes API Machin
 
 [Reactive Tech Limited](https://www.reactive-tech.io/) offers support for organisations using Kubegres. And we prioritise 
 new features requested by organisations paying supports as long the new features would benefit the Open Source community.
-We start the implementation of new features within 24h of the request from organisations paying supports.
+We start working on the implementation of new features within 24h of the request from organisations paying supports.
 
 **Sponsor**
 

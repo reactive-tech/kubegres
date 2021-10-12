@@ -5,7 +5,8 @@ stateful-set's life-cycle and data replication could be with Kubernetes.
 **Features**
 
 * It can manage one or many clusters of Postgres instances. 
-  Each cluster of Postgres instances is created using a YAML of "kind: Kubegres". Each cluster is self-contained and is identified by its unique name and namespace as defined in its YAML of "kind: Kubegres". 
+  Each cluster of Postgres instances is created using a YAML of "kind: Kubegres". Each cluster is self-contained and is 
+  identified by its unique name and namespace.
 
 * It creates a cluster of PostgreSql servers with [Streaming Replication](https://wiki.postgresql.org/wiki/Streaming_Replication) enabled: it creates a Primary PostgreSql pod and a 
   number of Replica PostgreSql pods and replicates primary's database in real-time to Replica pods.
@@ -49,3 +50,14 @@ APIs using CRDs. Kubebuilder is maintained by the official Kubernetes API Machin
 * A webinar about Kubegres was hosted by PostgresConf on 25 May 2021. [Watch the recorded video.](https://postgresconf.org/conferences/2021_Postgres_Conference_Webinars/program/proposals/creating-a-resilient-postgresql-cluster-with-kubegres)
 * The availability of Kubegres was published on [PostgreSql's official website](https://www.postgresql.org/about/news/kubegres-is-available-as-open-source-2197/).
 * Google talked about Kubegres in their [Kubernetes Podcast #146](https://kubernetespodcast.com/episode/146-kubernetes-1.21/).
+
+**Support**
+
+[Reactive Tech Limited](https://www.reactive-tech.io/) offers support for organisations using Kubegres. And we prioritise 
+new features requested by organisations paying supports as long the new features would benefit the Open Source community.
+We start implementing new features within 24h for organisations paying supports.
+
+**Sponsor**
+
+If you would like to help this project by sponsoring it, we can display your company's logo on this GitHub page 
+and on [https://www.kubegres.io](https://www.kubegres.io). More details in the [support page](https://www.kubegres.io/support/).

@@ -46,11 +46,6 @@ Kubernetes and PostgreSql.
 It was developed with the framework [Kubebuilder](https://book.kubebuilder.io/) version 3, an SDK for building Kubernetes 
 APIs using CRDs. Kubebuilder is maintained by the official Kubernetes API Machinery Special Interest Group (SIG).
 
-**Interesting links**
-* A webinar about Kubegres was hosted by PostgresConf on 25 May 2021. [Watch the recorded video.](https://postgresconf.org/conferences/2021_Postgres_Conference_Webinars/program/proposals/creating-a-resilient-postgresql-cluster-with-kubegres)
-* The availability of Kubegres was published on [PostgreSql's official website](https://www.postgresql.org/about/news/kubegres-is-available-as-open-source-2197/).
-* Google talked about Kubegres in their [Kubernetes Podcast #146](https://kubernetespodcast.com/episode/146-kubernetes-1.21/).
-
 **Support**
 
 [Reactive Tech Limited](https://www.reactive-tech.io/) offers support for organisations using Kubegres. And we prioritise 
@@ -62,3 +57,8 @@ More details in the [support page](https://www.kubegres.io/support/).
 
 If you would like to help this project by sponsoring it, we can display your company's logo on this GitHub page 
 and on [https://www.kubegres.io](https://www.kubegres.io). More details in the [sponsor page](https://www.kubegres.io/sponsor/).
+
+**Interesting links**
+* A webinar about Kubegres was hosted by PostgresConf on 25 May 2021. [Watch the recorded video.](https://postgresconf.org/conferences/2021_Postgres_Conference_Webinars/program/proposals/creating-a-resilient-postgresql-cluster-with-kubegres)
+* The availability of Kubegres was published on [PostgreSql's official website](https://www.postgresql.org/about/news/kubegres-is-available-as-open-source-2197/).
+* Google talked about Kubegres in their [Kubernetes Podcast #146](https://kubernetespodcast.com/episode/146-kubernetes-1.21/).

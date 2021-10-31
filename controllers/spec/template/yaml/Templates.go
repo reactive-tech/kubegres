@@ -273,7 +273,11 @@ data:
         echo "$dt - Running: pg_basebackup -R -h $PRIMARY_HOST_NAME -D $PGDATA -P -U replication;";
 
         pg_basebackup -R -h $PRIMARY_HOST_NAME -D $PGDATA -P -U replication;
+
+        if [ $UID == 0 ]
+        then
         chown -R postgres:postgres $PGDATA;
+        fi
 
         echo "$dt - Copy completed";
 

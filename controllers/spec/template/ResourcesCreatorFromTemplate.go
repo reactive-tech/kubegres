@@ -252,6 +252,10 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 	if postgresSpec.Volume.VolumeMounts != nil {
 		statefulSetTemplate.Spec.Template.Spec.Containers[0].VolumeMounts = append(statefulSetTemplate.Spec.Template.Spec.Containers[0].VolumeMounts, r.kubegresContext.Kubegres.Spec.Volume.VolumeMounts...)
 	}
+
+	if postgresSpec.SecurityContext != nil {
+		statefulSetTemplate.Spec.Template.Spec.SecurityContext = postgresSpec.SecurityContext
+	}
 }
 
 // Extract annotations set in Kubegres YAML by

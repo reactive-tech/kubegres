@@ -6,7 +6,7 @@ metadata:
 spec:
 
   replicas: 3
-  image: postgres:13.2
+  image: postgres:14
   #port: 5432
 
   database:
@@ -15,6 +15,10 @@ spec:
     #volumeMount: /var/lib/postgres/data
 
   customConfig: mypostgres-conf
+
+  #securityContext:
+  #  runAsNonRoot: true
+  #  runAsUser: 999
 
   #failover:
   #  isDisabled: true

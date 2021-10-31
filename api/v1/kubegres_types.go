@@ -73,6 +73,7 @@ type KubegresSpec struct {
 	Scheduler        KubegresScheduler         `json:"scheduler,omitempty"`
 	Resources        v1.ResourceRequirements   `json:"resources,omitempty"`
 	Volume           Volume                    `json:"volume,omitempty"`
+	SecurityContext  *v1.PodSecurityContext    `json:"securityContext,omitempty"`
 }
 
 // ----------------------- STATUS -----------------------------------------

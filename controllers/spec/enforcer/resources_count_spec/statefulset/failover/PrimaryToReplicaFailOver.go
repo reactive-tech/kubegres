@@ -71,7 +71,7 @@ func (r *PrimaryToReplicaFailOver) ShouldWeFailOver() bool {
 	if !r.hasPrimaryEverBeenDeployed() {
 		return false
 
-	} else if !r.isThereDeployedReplica() {
+	} else if !r.isThereReadyReplica() {
 		r.logFailoverCannotHappenAsNoReplicaDeployed()
 		return false
 
@@ -136,8 +136,8 @@ func (r *PrimaryToReplicaFailOver) isPrimaryDbReady() bool {
 	return r.resourcesStates.StatefulSets.Primary.IsReady
 }
 
-func (r *PrimaryToReplicaFailOver) isThereDeployedReplica() bool {
-	return r.resourcesStates.StatefulSets.Replicas.NbreDeployed > 0
+func (r *PrimaryToReplicaFailOver) isThereReadyReplica() bool {
+	return r.resourcesStates.StatefulSets.Replicas.NbreReady > 0
 }
 
 func (r *PrimaryToReplicaFailOver) isAutomaticFailoverDisabled() bool {

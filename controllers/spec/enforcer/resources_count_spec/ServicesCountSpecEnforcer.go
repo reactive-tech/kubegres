@@ -46,18 +46,14 @@ func CreateServicesCountSpecEnforcer(kubegresContext ctx.KubegresContext,
 
 func (r *ServicesCountSpecEnforcer) EnforceSpec() error {
 
-	if !r.isPrimaryDbReady() {
-		return nil
-	}
-
-	if !r.isPrimaryServiceDeployed() {
+	if !r.isPrimaryServiceDeployed() && r.isPrimaryDbReady() {
 		err := r.deployPrimaryService()
 		if err != nil {
 			return err
 		}
 	}
 
-	if !r.isReplicaServiceDeployed() && r.areThereReplicaDbsDeployed() {
+	if !r.isReplicaServiceDeployed() && r.isThereReadyReplica() {
 		err := r.deployReplicaService()
 		if err != nil {
 			return err
@@ -79,8 +75,8 @@ func (r *ServicesCountSpecEnforcer) isPrimaryDbReady() bool {
 	return r.resourcesStates.StatefulSets.Primary.IsReady
 }
 
-func (r *ServicesCountSpecEnforcer) areThereReplicaDbsDeployed() bool {
-	return r.resourcesStates.StatefulSets.Replicas.NbreDeployed > 0
+func (r *ServicesCountSpecEnforcer) isThereReadyReplica() bool {
+	return r.resourcesStates.StatefulSets.Replicas.NbreReady > 0
 }
 
 func (r *ServicesCountSpecEnforcer) deployPrimaryService() error {

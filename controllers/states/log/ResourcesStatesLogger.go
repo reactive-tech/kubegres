@@ -44,7 +44,7 @@ func (r *ResourcesStatesLogger) logConfigStates() {
 func (r *ResourcesStatesLogger) logStatefulSetsStates() {
 	statefulSets := r.resourcesStates.StatefulSets
 	r.kubegresContext.Log.Info("All StatefulSets deployment states: ",
-		"Spec expected to deploy", statefulSets.SpecNbreToDeploy,
+		"Spec expected to deploy", statefulSets.SpecExpectedNbreToDeploy,
 		"Nbre Deployed", statefulSets.NbreDeployed)
 
 	r.logStatefulSetWrapper("Primary states", statefulSets.Primary)

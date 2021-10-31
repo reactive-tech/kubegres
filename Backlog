@@ -1,45 +1,47 @@
-Scheduled for 1st week of December:
-- #58: We should be able to add a SSL certificate
-- #52: Allow Kubegres cluster to run on secure Kubernetes environments (add security field "context")
 
-Scheduled for 1st week of January:
-- update local kind
-- Build controller with Kubebuilder v3.2.0
-- Remove warning for CronJob which was updated from beta to stable since Kubernetes 1.21
+- Scheduled for November 2021:
+    - #52 : Allow Kubegres cluster to run on secure Kubernetes environments (add security field "securityContext")
+    - #60 : When the StatefulSet is healthy but the Replica Pod is not, then the replica Pod should be replaced
 
-Scheduled for 1st week of February:
-- #20 : Delete PVC
+- Scheduled for December 2021:
+    - #58 : We should be able to add a SSL certificate
+    - update local kind
+    - Build controller with Kubebuilder v3.2.0
+    - Remove warning for CronJob which was updated from beta to stable since Kubernetes 1.21
 
-Scheduled for 1st week of March:
-- #12 : Reuse PVC (see below) and Primary becomes a Replica
+- Scheduled for May 2022:
+    - #20 : Delete PVC
 
-As part of the available options for the field "failover.pvc", there would be:
-    "keep": the default option currently with Kubegres where PVC are kept but not reused for safety and investigation reasons
-    "delete": the PVC will be deleted
-    "reuse": if the state of the PVC is healthy, it will be reused by the newly created Replica pod. I think that matches with your suggestion?
+- Scheduled for June 2022:
+    - #12 : Reuse PVC (see below) and Primary becomes a Replica
 
-Scheduled for 1st week of April:
-- #?: PG bouncer
+    As part of the available options for the field "failover.pvc", there would be:
+        - "keep": the default option currently with Kubegres where PVC are kept but not reused for safety and investigation reasons
+        - "delete": the PVC will be deleted
+        - "reuse": if the state of the PVC is healthy, it will be reused by the newly created Replica pod. I think that matches with your suggestion?
 
-Scheduled for 1st week of May:
-- #51: add documentation about how to recover backup
-- add use cases documentation, for example how to expand storage manually and how to upgrade Postgres major version.
-- check how to setup log archiving in case of replica does not found a data
+- Scheduled for July 2022:
+    - #?: PG bouncer
 
-Scheduled for 1st week of June:
-- #46: Define Service Type for Primary and Replica
+- Scheduled for August 2022:
+    - #51: add documentation about how to recover backup
+    - add use cases documentation, for example how to expand storage manually and how to upgrade Postgres major version.
+    - check how to setup log archiving in case of replica does not found a data
 
-Scheduled for 1st week of July:
-- #7  : Allow major version upgrade using pg_upgrade
+- Scheduled for September 2022:
+    - #46: Define Service Type for Primary and Replica
 
-Scheduled for 1st week of August:
-- #35 : Restore database from a PV backup
+- Scheduled for October 2022:
+    - #7  : Allow major version upgrade using pg_upgrade
 
-Scheduled for 1st week of September:
-- #10 : Deploy Kubegres with a HELM chart
+- Scheduled for November 2022:
+    - #35 : Restore database from a PV backup
 
-Scheduled for 1st week of October:
-- #? : Add a field to allow restarting StatefulSets and Pods via the YAML of "Kind: Kubegres"?
+- Scheduled for December 2022:
+    - #10 : Deploy Kubegres with a HELM chart
+
+- Scheduled for January 2023:
+    - #? : Add a field to allow restarting StatefulSets and Pods via the YAML of "Kind: Kubegres"?
 
 Blocked:
 #49 : Expand Storage (waiting on the Kubernetes feature: https://github.com/kubernetes/enhancements/pull/2842)

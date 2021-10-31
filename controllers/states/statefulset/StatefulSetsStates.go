@@ -30,47 +30,24 @@ import (
 )
 
 type StatefulSetsStates struct {
-	NbreDeployed     int32
-	Primary          StatefulSetWrapper
-	Replicas         Replicas
-	All              StatefulSetWrappers
-	SpecNbreToDeploy int32
-	kubegresContext  ctx.KubegresContext
+	NbreDeployed             int32
+	SpecExpectedNbreToDeploy int32
+	Primary                  StatefulSetWrapper
+	Replicas                 Replicas
+	All                      StatefulSetWrappers
+	kubegresContext          ctx.KubegresContext
 }
 
 type Replicas struct {
-	All              StatefulSetWrappers
-	NbreDeployed     int32
-	SpecNbreToDeploy int32
-	NbreToDeploy     int32 // zero => no more to deploy; negative => we should deploy less; positive => we should deploy more
+	All          StatefulSetWrappers
+	NbreDeployed int32
+	NbreReady    int32
 }
 
 func LoadStatefulSetsStates(kubegresContext ctx.KubegresContext) (StatefulSetsStates, error) {
 	statefulSetsStates := StatefulSetsStates{kubegresContext: kubegresContext}
 	err := statefulSetsStates.loadStates()
 	return statefulSetsStates, err
-}
-
-func (r *StatefulSetsStates) ShouldMoreReplicaBeDeployed() bool {
-	return r.Replicas.NbreToDeploy > 0
-}
-
-func (r *StatefulSetsStates) ShouldLessReplicaBeDeployed() bool {
-	return r.Replicas.NbreToDeploy < 0
-}
-
-func (r *StatefulSetsStates) GetNbreReplicaToDeploy() int32 {
-	if r.ShouldMoreReplicaBeDeployed() {
-		return r.Replicas.NbreToDeploy
-	}
-	return 0
-}
-
-func (r *StatefulSetsStates) GetNbreReplicaToUndeploy() int32 {
-	if r.ShouldLessReplicaBeDeployed() {
-		return r.Replicas.NbreToDeploy * -1
-	}
-	return 0
 }
 
 func (r *StatefulSetsStates) loadStates() (err error) {
@@ -81,7 +58,7 @@ func (r *StatefulSetsStates) loadStates() (err error) {
 	}
 
 	r.NbreDeployed = int32(len(deployedStatefulSets.Items))
-	r.SpecNbreToDeploy = *r.kubegresContext.Kubegres.Spec.Replicas
+	r.SpecExpectedNbreToDeploy = *r.kubegresContext.Kubegres.Spec.Replicas
 
 	var podsStates PodStates
 	if r.NbreDeployed > 0 {
@@ -97,8 +74,6 @@ func (r *StatefulSetsStates) loadStates() (err error) {
 			return err
 		}
 	}
-
-	r.calculateNbreReplicasToDeploy()
 
 	return nil
 }
@@ -149,8 +124,13 @@ func (r *StatefulSetsStates) setPrimaryStatefulSetStates(statefulSet apps.Statef
 }
 
 func (r *StatefulSetsStates) addReplicaStatefulSetStates(statefulSetWrapper StatefulSetWrapper) {
+
 	r.Replicas.NbreDeployed++
 	r.Replicas.All.Add(statefulSetWrapper)
+
+	if statefulSetWrapper.IsReady {
+		r.Replicas.NbreReady++
+	}
 }
 
 func (r *StatefulSetsStates) getPodByInstanceIndex(instanceIndex int32, podsStates PodStates) PodWrapper {
@@ -194,16 +174,4 @@ func (r *StatefulSetsStates) getInstanceIndexFromSpec(statefulSet apps.StatefulS
 		return 0, err
 	}
 	return int32(instanceIndex), nil
-}
-
-func (r *StatefulSetsStates) calculateNbreReplicasToDeploy() {
-	r.Replicas.SpecNbreToDeploy = r.getSpecNbreReplicasToDeploy()
-	r.Replicas.NbreToDeploy = r.Replicas.SpecNbreToDeploy - r.Replicas.NbreDeployed
-}
-
-func (r *StatefulSetsStates) getSpecNbreReplicasToDeploy() int32 {
-	if r.SpecNbreToDeploy <= 1 {
-		return 0
-	}
-	return r.SpecNbreToDeploy - 1
 }

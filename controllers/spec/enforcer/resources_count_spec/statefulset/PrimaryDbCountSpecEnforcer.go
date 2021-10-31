@@ -119,8 +119,8 @@ func (r *PrimaryDbCountSpecEnforcer) logKubegresFeaturesAreReEnabled() {
 
 func (r *PrimaryDbCountSpecEnforcer) shouldWeDeployNewPrimaryDb() bool {
 
-	shouldWeDeployNewPrimary := r.resourcesStates.StatefulSets.Replicas.NbreDeployed == 0 &&
-		!r.resourcesStates.StatefulSets.Primary.IsDeployed
+	shouldWeDeployNewPrimary := !r.resourcesStates.StatefulSets.Primary.IsDeployed &&
+		r.resourcesStates.StatefulSets.Replicas.NbreDeployed == 0
 
 	if shouldWeDeployNewPrimary {
 		if *r.kubegresContext.Kubegres.Spec.Replicas == 1 || !r.hasPrimaryEverBeenDeployed() {

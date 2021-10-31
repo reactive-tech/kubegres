@@ -21,6 +21,7 @@ limitations under the License.
 package statefulset_spec
 
 import (
+	v1 "k8s.io/api/core/v1"
 	"reflect"
 
 	apps "k8s.io/api/apps/v1"
@@ -43,6 +44,12 @@ func (r *SecurityContextSpecEnforcer) CheckForSpecDifference(statefulSet *apps.S
 
 	current := statefulSet.Spec.Template.Spec.SecurityContext
 	expected := r.kubegresContext.Kubegres.Spec.SecurityContext
+	emptySecurityContext := &v1.PodSecurityContext{}
+
+	if expected == nil && reflect.DeepEqual(current, emptySecurityContext) {
+		return StatefulSetSpecDifference{}
+	}
+
 	if !reflect.DeepEqual(current, expected) {
 		return StatefulSetSpecDifference{
 			SpecName: r.GetSpecName(),

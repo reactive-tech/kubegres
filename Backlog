@@ -1,10 +1,5 @@
 
-- Scheduled for November 2021:
-    - #52 : Allow Kubegres cluster to run on secure Kubernetes environments (add security field "securityContext")
-    - #60 : When the StatefulSet is healthy but the Replica Pod is not, then the replica Pod should be replaced
-
 - Scheduled for December 2021:
-    - #58 : We should be able to add a SSL certificate
     - update local kind
     - Build controller with Kubebuilder v3.2.0
     - Remove warning for CronJob which was updated from beta to stable since Kubernetes 1.21

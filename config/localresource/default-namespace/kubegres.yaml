@@ -6,7 +6,7 @@ metadata:
 spec:
 
   replicas: 3
-  image: postgres:14
+  image: postgres:14.1
   #port: 5432
 
   database:

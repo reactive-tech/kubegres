@@ -16,6 +16,28 @@ spec:
 
   customConfig: mypostgres-conf
 
+  livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - exec pg_isready -U postgres -h $POD_IP
+            failureThreshold: 6
+            initialDelaySeconds: 60
+            periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 10
+  readinessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - exec pg_isready -U postgres -h $POD_IP
+            failureThreshold: 3
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 15
   #securityContext:
   #  runAsNonRoot: true
   #  runAsUser: 999

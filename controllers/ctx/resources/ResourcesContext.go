@@ -153,6 +153,8 @@ func addStatefulSetSpecEnforcers(rc *ResourcesContext) {
 	resourcesSpecEnforcer := statefulset_spec.CreateResourcesSpecEnforcer(rc.KubegresContext)
 	volumeSpecEnforcer := statefulset_spec.CreateVolumeSpecEnforcer(rc.KubegresContext)
 	securityContextSpecEnforcer := statefulset_spec.CreateSecurityContextSpecEnforcer(rc.KubegresContext)
+	livenessProbeSpecEnforcer := statefulset_spec.CreateLivenessProbeSpecEnforcer(rc.KubegresContext)
+	readinessProbeSpecEnforcer := statefulset_spec.CreateReadinessProbeSpecEnforcer(rc.KubegresContext)
 
 	rc.StatefulSetsSpecsEnforcer = statefulset_spec.CreateStatefulSetsSpecsEnforcer(rc.KubegresContext)
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&imageSpecEnforcer)
@@ -164,6 +166,8 @@ func addStatefulSetSpecEnforcers(rc *ResourcesContext) {
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&resourcesSpecEnforcer)
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&volumeSpecEnforcer)
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&securityContextSpecEnforcer)
+	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&livenessProbeSpecEnforcer)
+	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&readinessProbeSpecEnforcer)
 
 	rc.AllStatefulSetsSpecEnforcer = statefulset_spec.CreateAllStatefulSetsSpecEnforcer(rc.KubegresContext, rc.ResourcesStates, rc.BlockingOperation, rc.StatefulSetsSpecsEnforcer)
 }

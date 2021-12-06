@@ -24,9 +24,9 @@ spec:
                 - exec pg_isready -U postgres -h $POD_IP
             failureThreshold: 6
             initialDelaySeconds: 60
-            periodSeconds: 20
+            periodSeconds: 10
             successThreshold: 1
-            timeoutSeconds: 10
+            timeoutSeconds: 5
   readinessProbe:
             exec:
               command:
@@ -34,10 +34,10 @@ spec:
                 - -c
                 - exec pg_isready -U postgres -h $POD_IP
             failureThreshold: 3
-            initialDelaySeconds: 120
-            periodSeconds: 30
+            initialDelaySeconds: 5
+            periodSeconds: 5
             successThreshold: 1
-            timeoutSeconds: 15
+            timeoutSeconds: 3
   #securityContext:
   #  runAsNonRoot: true
   #  runAsUser: 999

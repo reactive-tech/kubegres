@@ -21,9 +21,9 @@ limitations under the License.
 package statefulset_spec
 
 import (
-	"reflect"
-
 	apps "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"reactive-tech.io/kubegres/controllers/ctx"
 )
 
@@ -43,7 +43,8 @@ func (r *ResourcesSpecEnforcer) CheckForSpecDifference(statefulSet *apps.Statefu
 
 	current := statefulSet.Spec.Template.Spec.Containers[0].Resources
 	expected := r.kubegresContext.Kubegres.Spec.Resources
-	if !reflect.DeepEqual(current, expected) {
+
+	if !r.compareResources(current, expected) {
 		return StatefulSetSpecDifference{
 			SpecName: r.GetSpecName(),
 			Current:  current.String(),
@@ -61,4 +62,33 @@ func (r *ResourcesSpecEnforcer) EnforceSpec(statefulSet *apps.StatefulSet) (wasS
 
 func (r *ResourcesSpecEnforcer) OnSpecEnforcedSuccessfully(statefulSet *apps.StatefulSet) error {
 	return nil
+}
+
+func (r *ResourcesSpecEnforcer) compareResources(currentRequirement v1.ResourceRequirements,
+	expectedRequirement v1.ResourceRequirements) bool {
+
+	if !r.compareResourceLists(currentRequirement.Limits, expectedRequirement.Limits) {
+		return false
+	}
+
+	if !r.compareResourceLists(currentRequirement.Requests, expectedRequirement.Requests) {
+		return false
+	}
+
+	return true
+}
+
+func (r *ResourcesSpecEnforcer) compareResourceLists(current v1.ResourceList, expected v1.ResourceList) bool {
+	if len(current) != len(expected) {
+		return false
+	}
+
+	for key, expectedElement := range expected {
+		expectedElementParsed := resource.MustParse(expectedElement.String())
+		currentElement := current[key]
+		if expectedElementParsed != currentElement {
+			return false
+		}
+	}
+	return true
 }

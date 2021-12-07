@@ -75,6 +75,8 @@ func CreateResourcesContext(kubegres *postgresV1.Kubegres,
 	client client.Client,
 	recorder record.EventRecorder) (rc *ResourcesContext, err error) {
 
+	setReplicaFieldToZeroIfNil(kubegres)
+
 	rc = &ResourcesContext{}
 
 	rc.LogWrapper = log.LogWrapper{Kubegres: kubegres, Logger: logger, Recorder: recorder}
@@ -123,6 +125,15 @@ func CreateResourcesContext(kubegres *postgresV1.Kubegres,
 	addBlockingOperationConfigs(rc)
 
 	return rc, nil
+}
+
+func setReplicaFieldToZeroIfNil(kubegres *postgresV1.Kubegres) {
+	if kubegres.Spec.Replicas != nil {
+		return
+	}
+
+	replica := int32(0)
+	kubegres.Spec.Replicas = &replica
 }
 
 func addResourcesCountSpecEnforcers(rc *ResourcesContext) {

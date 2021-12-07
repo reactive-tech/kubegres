@@ -54,11 +54,27 @@ var _ = Describe("Setting Kubegres spec 'replica'", func() {
 		}
 	})
 
-	Context("GIVEN new Kubegres is created without spec 'replica'", func() {
+	Context("GIVEN new Kubegres is created with spec 'replica' set to nil", func() {
 
-		It("THEN an error event should be logged", func() {
+		It("THEN a validation error event should be logged", func() {
 
-			log.Print("START OF: Test 'GIVEN new Kubegres is created without spec 'replica''")
+			log.Print("START OF: Test 'GIVEN new Kubegres is created with spec 'replica' set to nil'")
+
+			test.givenNewKubegresSpecIsSetToNil()
+
+			test.whenKubegresIsCreated()
+
+			test.thenErrorEventShouldBeLogged()
+
+			log.Print("END OF: Test 'GIVEN new Kubegres is created with spec 'replica' set to nil'")
+		})
+	})
+
+	Context("GIVEN new Kubegres is created with spec 'replica' set to 0", func() {
+
+		It("THEN a validation error event should be logged", func() {
+
+			log.Print("START OF: Test 'GIVEN new Kubegres is created with spec 'replica' set to 0'")
 
 			test.givenNewKubegresSpecIsSetTo(0)
 
@@ -66,7 +82,7 @@ var _ = Describe("Setting Kubegres spec 'replica'", func() {
 
 			test.thenErrorEventShouldBeLogged()
 
-			log.Print("END OF: Test 'GIVEN new Kubegres is created without spec 'replica''")
+			log.Print("END OF: Test 'GIVEN new Kubegres is created with spec 'replica' set to 0'")
 		})
 	})
 
@@ -201,6 +217,11 @@ type SpecReplicaTest struct {
 	dbQueryTestCases                testcases.DbQueryTestCases
 	resourceCreator                 util.TestResourceCreator
 	resourceRetriever               util.TestResourceRetriever
+}
+
+func (r *SpecReplicaTest) givenNewKubegresSpecIsSetToNil() {
+	r.kubegresResource = resourceConfigs.LoadKubegresYaml()
+	r.kubegresResource.Spec.Replicas = nil
 }
 
 func (r *SpecReplicaTest) givenNewKubegresSpecIsSetTo(specNbreReplicas int32) {

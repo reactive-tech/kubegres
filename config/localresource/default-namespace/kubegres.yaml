@@ -23,10 +23,10 @@ spec:
         - -c
         - exec pg_isready -U postgres -h $POD_IP
     failureThreshold: 6
-    initialDelaySeconds: 120
-    periodSeconds: 20
+    initialDelaySeconds: 60
+    periodSeconds: 10
     successThreshold: 1
-    timeoutSeconds: 10
+    timeoutSeconds: 5
   readinessProbe:
     exec:
       command:

@@ -23,11 +23,13 @@ package statefulset_spec
 import (
 	apps "k8s.io/api/apps/v1"
 	"reactive-tech.io/kubegres/controllers/ctx"
+	"reactive-tech.io/kubegres/controllers/states"
 	"reflect"
 )
 
 type LivenessProbeSpecEnforcer struct {
 	kubegresContext ctx.KubegresContext
+	resourcesStates states.ResourcesStates
 }
 
 func CreateLivenessProbeSpecEnforcer(kubegresContext ctx.KubegresContext) LivenessProbeSpecEnforcer {
@@ -39,9 +41,12 @@ func (r *LivenessProbeSpecEnforcer) GetSpecName() string {
 }
 
 func (r *LivenessProbeSpecEnforcer) CheckForSpecDifference(statefulSet *apps.StatefulSet) StatefulSetSpecDifference {
-
 	current := statefulSet.Spec.Template.Spec.Containers[0].LivenessProbe
 	expected := r.kubegresContext.Kubegres.Spec.LivenessProbe
+
+	if expected == nil {
+		return StatefulSetSpecDifference{}
+	}
 
 	if !reflect.DeepEqual(current, expected) {
 		return StatefulSetSpecDifference{

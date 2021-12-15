@@ -256,6 +256,14 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 	if postgresSpec.SecurityContext != nil {
 		statefulSetTemplate.Spec.Template.Spec.SecurityContext = postgresSpec.SecurityContext
 	}
+
+	if postgresSpec.LivenessProbe != nil {
+		statefulSetTemplate.Spec.Template.Spec.Containers[0].LivenessProbe = postgresSpec.LivenessProbe
+	}
+
+	if postgresSpec.ReadinessProbe != nil {
+		statefulSetTemplate.Spec.Template.Spec.Containers[0].ReadinessProbe = postgresSpec.ReadinessProbe
+	}
 }
 
 // Extract annotations set in Kubegres YAML by

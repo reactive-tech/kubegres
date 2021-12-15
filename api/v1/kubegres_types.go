@@ -74,6 +74,8 @@ type KubegresSpec struct {
 	Resources        v1.ResourceRequirements   `json:"resources,omitempty"`
 	Volume           Volume                    `json:"volume,omitempty"`
 	SecurityContext  *v1.PodSecurityContext    `json:"securityContext,omitempty"`
+	LivenessProbe    *v1.Probe                 `json:"livenessProbe,omitempty"`
+	ReadinessProbe   *v1.Probe                 `json:"readinessProbe,omitempty"`
 }
 
 // ----------------------- STATUS -----------------------------------------

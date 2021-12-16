@@ -40,7 +40,7 @@ var _ = Describe("Setting Kubegres spec 'readinessProbe'", func() {
 	var test = SpecReadinessProbeTest{}
 
 	BeforeEach(func() {
-		////Skip("Temporarily skipping test")
+		//Skip("Temporarily skipping test")
 
 		namespace := resourceConfigs.DefaultNamespace
 		test.resourceRetriever = util.CreateTestResourceRetriever(k8sClientTest, namespace)

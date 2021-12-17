@@ -145,7 +145,7 @@ func (r *SpecReadinessProbeTest) givenReadinessProbe2() *v12.Probe {
 
 func (r *SpecReadinessProbeTest) givenNewKubegresSpecIsSetTo(readinessProbe *v12.Probe, specNbreReplicas int32) {
 	r.kubegresResource = resourceConfigs.LoadKubegresYaml()
-	r.kubegresResource.Spec.ReadinessProbe = readinessProbe
+	r.kubegresResource.Spec.Probe.ReadinessProbe = readinessProbe
 	r.kubegresResource.Spec.Replicas = &specNbreReplicas
 }
 
@@ -159,7 +159,7 @@ func (r *SpecReadinessProbeTest) givenExistingKubegresSpecIsSetTo(readinessProbe
 		return
 	}
 
-	r.kubegresResource.Spec.ReadinessProbe = readinessProbe
+	r.kubegresResource.Spec.Probe.ReadinessProbe = readinessProbe
 }
 
 func (r *SpecReadinessProbeTest) whenKubegresIsCreated() {
@@ -209,6 +209,6 @@ func (r *SpecReadinessProbeTest) thenDeployedKubegresSpecShouldBeSetTo(expectedP
 		return
 	}
 
-	currentProbe := r.kubegresResource.Spec.ReadinessProbe
+	currentProbe := r.kubegresResource.Spec.Probe.ReadinessProbe
 	Expect(currentProbe).Should(Equal(expectedProbe))
 }

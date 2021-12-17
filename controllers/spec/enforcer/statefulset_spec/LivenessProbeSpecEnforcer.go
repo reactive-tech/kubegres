@@ -42,7 +42,7 @@ func (r *LivenessProbeSpecEnforcer) GetSpecName() string {
 
 func (r *LivenessProbeSpecEnforcer) CheckForSpecDifference(statefulSet *apps.StatefulSet) StatefulSetSpecDifference {
 	current := statefulSet.Spec.Template.Spec.Containers[0].LivenessProbe
-	expected := r.kubegresContext.Kubegres.Spec.LivenessProbe
+	expected := r.kubegresContext.Kubegres.Spec.Probe.LivenessProbe
 
 	if expected == nil {
 		return StatefulSetSpecDifference{}
@@ -60,7 +60,7 @@ func (r *LivenessProbeSpecEnforcer) CheckForSpecDifference(statefulSet *apps.Sta
 }
 
 func (r *LivenessProbeSpecEnforcer) EnforceSpec(statefulSet *apps.StatefulSet) (wasSpecUpdated bool, err error) {
-	statefulSet.Spec.Template.Spec.Containers[0].LivenessProbe = r.kubegresContext.Kubegres.Spec.LivenessProbe
+	statefulSet.Spec.Template.Spec.Containers[0].LivenessProbe = r.kubegresContext.Kubegres.Spec.Probe.LivenessProbe
 	return true, nil
 }
 

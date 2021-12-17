@@ -40,7 +40,7 @@ func (r *ReadinessProbeSpecEnforcer) GetSpecName() string {
 
 func (r *ReadinessProbeSpecEnforcer) CheckForSpecDifference(statefulSet *apps.StatefulSet) StatefulSetSpecDifference {
 	current := statefulSet.Spec.Template.Spec.Containers[0].ReadinessProbe
-	expected := r.kubegresContext.Kubegres.Spec.ReadinessProbe
+	expected := r.kubegresContext.Kubegres.Spec.Probe.ReadinessProbe
 
 	if expected == nil {
 		return StatefulSetSpecDifference{}
@@ -58,7 +58,7 @@ func (r *ReadinessProbeSpecEnforcer) CheckForSpecDifference(statefulSet *apps.St
 }
 
 func (r *ReadinessProbeSpecEnforcer) EnforceSpec(statefulSet *apps.StatefulSet) (wasSpecUpdated bool, err error) {
-	statefulSet.Spec.Template.Spec.Containers[0].ReadinessProbe = r.kubegresContext.Kubegres.Spec.ReadinessProbe
+	statefulSet.Spec.Template.Spec.Containers[0].ReadinessProbe = r.kubegresContext.Kubegres.Spec.Probe.ReadinessProbe
 	return true, nil
 }
 

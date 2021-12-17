@@ -406,11 +406,11 @@ spec:
                 - sh
                 - -c
                 - exec pg_isready -U postgres -h $POD_IP
-            failureThreshold: 6
+            failureThreshold: 10
             initialDelaySeconds: 60
-            periodSeconds: 10
+            periodSeconds: 20
             successThreshold: 1
-            timeoutSeconds: 5
+            timeoutSeconds: 15
 
           readinessProbe:
             exec:
@@ -420,7 +420,7 @@ spec:
                 - exec pg_isready -U postgres -h $POD_IP
             failureThreshold: 3
             initialDelaySeconds: 5
-            periodSeconds: 5
+            periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 3
 
@@ -554,11 +554,11 @@ spec:
                 - sh
                 - -c
                 - exec pg_isready -U postgres -h $POD_IP
-            failureThreshold: 6
+            failureThreshold: 10
             initialDelaySeconds: 60
-            periodSeconds: 10
+            periodSeconds: 20
             successThreshold: 1
-            timeoutSeconds: 5
+            timeoutSeconds: 15
 
           readinessProbe:
             exec:
@@ -568,7 +568,7 @@ spec:
                 - exec pg_isready -U postgres -h $POD_IP
             failureThreshold: 3
             initialDelaySeconds: 5
-            periodSeconds: 5
+            periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 3
 

@@ -60,6 +60,11 @@ type Volume struct {
 	VolumeClaimTemplates []VolumeClaimTemplate `json:"volumeClaimTemplates,omitempty"`
 }
 
+type Probe struct {
+	LivenessProbe  *v1.Probe `json:"livenessProbe,omitempty"`
+	ReadinessProbe *v1.Probe `json:"readinessProbe,omitempty"`
+}
+
 type KubegresSpec struct {
 	Replicas         *int32                    `json:"replicas,omitempty"`
 	Image            string                    `json:"image,omitempty"`
@@ -74,8 +79,7 @@ type KubegresSpec struct {
 	Resources        v1.ResourceRequirements   `json:"resources,omitempty"`
 	Volume           Volume                    `json:"volume,omitempty"`
 	SecurityContext  *v1.PodSecurityContext    `json:"securityContext,omitempty"`
-	LivenessProbe    *v1.Probe                 `json:"livenessProbe,omitempty"`
-	ReadinessProbe   *v1.Probe                 `json:"readinessProbe,omitempty"`
+	Probe            Probe                     `json:"probe,omitempty"`
 }
 
 // ----------------------- STATUS -----------------------------------------

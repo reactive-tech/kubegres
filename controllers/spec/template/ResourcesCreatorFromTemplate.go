@@ -257,12 +257,12 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 		statefulSetTemplate.Spec.Template.Spec.SecurityContext = postgresSpec.SecurityContext
 	}
 
-	if postgresSpec.LivenessProbe != nil {
-		statefulSetTemplate.Spec.Template.Spec.Containers[0].LivenessProbe = postgresSpec.LivenessProbe
+	if postgresSpec.Probe.LivenessProbe != nil {
+		statefulSetTemplate.Spec.Template.Spec.Containers[0].LivenessProbe = postgresSpec.Probe.LivenessProbe
 	}
 
-	if postgresSpec.ReadinessProbe != nil {
-		statefulSetTemplate.Spec.Template.Spec.Containers[0].ReadinessProbe = postgresSpec.ReadinessProbe
+	if postgresSpec.Probe.ReadinessProbe != nil {
+		statefulSetTemplate.Spec.Template.Spec.Containers[0].ReadinessProbe = postgresSpec.Probe.ReadinessProbe
 	}
 }
 

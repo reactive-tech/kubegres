@@ -145,7 +145,7 @@ func (r *SpecLivenessProbeTest) givenLivenessProbe2() *v12.Probe {
 
 func (r *SpecLivenessProbeTest) givenNewKubegresSpecIsSetTo(livenessProbe *v12.Probe, specNbreReplicas int32) {
 	r.kubegresResource = resourceConfigs.LoadKubegresYaml()
-	r.kubegresResource.Spec.LivenessProbe = livenessProbe
+	r.kubegresResource.Spec.Probe.LivenessProbe = livenessProbe
 	r.kubegresResource.Spec.Replicas = &specNbreReplicas
 }
 
@@ -159,7 +159,7 @@ func (r *SpecLivenessProbeTest) givenExistingKubegresSpecIsSetTo(livenessProbe *
 		return
 	}
 
-	r.kubegresResource.Spec.LivenessProbe = livenessProbe
+	r.kubegresResource.Spec.Probe.LivenessProbe = livenessProbe
 }
 
 func (r *SpecLivenessProbeTest) whenKubegresIsCreated() {
@@ -209,6 +209,6 @@ func (r *SpecLivenessProbeTest) thenDeployedKubegresSpecShouldBeSetTo(expectedPr
 		return
 	}
 
-	currentProbe := r.kubegresResource.Spec.LivenessProbe
+	currentProbe := r.kubegresResource.Spec.Probe.LivenessProbe
 	Expect(currentProbe).Should(Equal(expectedProbe))
 }

@@ -26,7 +26,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"reactive-tech.io/kubegres/controllers/ctx"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strconv"
 )
 
 type StatefulSetsStates struct {
@@ -58,7 +57,7 @@ func (r *StatefulSetsStates) loadStates() (err error) {
 	}
 
 	r.NbreDeployed = int32(len(deployedStatefulSets.Items))
-	r.SpecExpectedNbreToDeploy = *r.kubegresContext.Kubegres.Spec.Replicas
+	r.SpecExpectedNbreToDeploy = *r.kubegresContext.Replicas()
 
 	var podsStates PodStates
 	if r.NbreDeployed > 0 {
@@ -85,7 +84,7 @@ func (r *StatefulSetsStates) createAndAppendStatefulSetStates(statefulSet apps.S
 	statefulSetWrapper.IsReady = statefulSet.Status.ReadyReplicas > 0
 	statefulSetWrapper.StatefulSet = statefulSet
 
-	instanceIndex, err := r.getInstanceIndexFromSpec(statefulSet)
+	instanceIndex, err := r.kubegresContext.GetInstanceIndexFromSpec(statefulSet)
 	if err != nil {
 		r.kubegresContext.Log.Error(err, "Unable to get instance index")
 		return err
@@ -164,14 +163,4 @@ func (r *StatefulSetsStates) getDeployedStatefulSets() (*apps.StatefulSetList, e
 	}
 
 	return list, err
-}
-
-func (r *StatefulSetsStates) getInstanceIndexFromSpec(statefulSet apps.StatefulSet) (int32, error) {
-	instanceIndexStr := statefulSet.Spec.Template.Labels["index"]
-	instanceIndex, err := strconv.ParseInt(instanceIndexStr, 10, 32)
-	if err != nil {
-		r.kubegresContext.Log.ErrorEvent("StatefulSetLoadingErr", err, "Unable to convert StatefulSet's label 'index' with value: "+instanceIndexStr+" into an integer. The name of statefulSet with this label is "+statefulSet.Name+".")
-		return 0, err
-	}
-	return int32(instanceIndex), nil
 }

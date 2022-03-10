@@ -206,7 +206,7 @@ func (r *ReplicaDbCountSpecEnforcer) isManualFailoverRequested() bool {
 }
 
 func (r *ReplicaDbCountSpecEnforcer) doesSpecRequireTheDeploymentOfAdditionalReplicas() bool {
-	return *r.kubegresContext.Kubegres.Spec.Replicas > r.kubegresContext.Kubegres.Status.EnforcedReplicas
+	return *r.kubegresContext.Replicas() > r.kubegresContext.Kubegres.Status.EnforcedReplicas
 }
 
 func (r *ReplicaDbCountSpecEnforcer) resetInSpecManualFailover() error {

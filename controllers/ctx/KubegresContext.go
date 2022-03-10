@@ -22,6 +22,7 @@ package ctx
 
 import (
 	"context"
+	apps "k8s.io/api/apps/v1"
 	"reactive-tech.io/kubegres/api/v1"
 	"reactive-tech.io/kubegres/controllers/ctx/log"
 	"reactive-tech.io/kubegres/controllers/ctx/status"
@@ -63,7 +64,12 @@ func (r *KubegresContext) GetServiceResourceName(isPrimary bool) string {
 }
 
 func (r *KubegresContext) GetStatefulSetResourceName(instanceIndex int32) string {
-	return r.Kubegres.Name + "-" + strconv.Itoa(int(instanceIndex))
+	if r.HasNodeSets() && len(r.Kubegres.Spec.NodeSets) >= int(instanceIndex) {
+		nodeSetSpec := r.Kubegres.Spec.NodeSets[instanceIndex-1]
+		return r.Kubegres.Name + "-" + nodeSetSpec.Name
+	} else {
+		return r.Kubegres.Name + "-" + strconv.Itoa(int(instanceIndex))
+	}
 }
 
 func (r *KubegresContext) IsReservedVolumeName(volumeName string) bool {
@@ -71,4 +77,26 @@ func (r *KubegresContext) IsReservedVolumeName(volumeName string) bool {
 		volumeName == BaseConfigMapVolumeName ||
 		volumeName == CustomConfigMapVolumeName ||
 		strings.Contains(volumeName, "kube-api")
+}
+
+func (r *KubegresContext) HasNodeSets() bool {
+	return r.Kubegres.Spec.NodeSets != nil
+}
+
+func (r *KubegresContext) Replicas() *int32 {
+	if r.HasNodeSets() {
+		replicas := int32(len(r.Kubegres.Spec.NodeSets))
+		return &replicas
+	}
+	return r.Kubegres.Spec.Replicas
+}
+
+func (r *KubegresContext) GetInstanceIndexFromSpec(statefulSet apps.StatefulSet) (int32, error) {
+	instanceIndexStr := statefulSet.Spec.Template.Labels["index"]
+	instanceIndex, err := strconv.ParseInt(instanceIndexStr, 10, 32)
+	if err != nil {
+		r.Log.ErrorEvent("StatefulSetLoadingErr", err, "Unable to convert StatefulSet's label 'index' with value: "+instanceIndexStr+" into an integer. The name of statefulSet with this label is "+statefulSet.Name+".")
+		return 0, err
+	}
+	return int32(instanceIndex), nil
 }

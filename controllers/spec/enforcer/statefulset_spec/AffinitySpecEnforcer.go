@@ -22,6 +22,7 @@ package statefulset_spec
 
 import (
 	apps "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
 	"reactive-tech.io/kubegres/controllers/ctx"
 	"reflect"
 )
@@ -39,9 +40,15 @@ func (r *AffinitySpecEnforcer) GetSpecName() string {
 }
 
 func (r *AffinitySpecEnforcer) CheckForSpecDifference(statefulSet *apps.StatefulSet) StatefulSetSpecDifference {
-
 	current := statefulSet.Spec.Template.Spec.Affinity
-	expected := r.kubegresContext.Kubegres.Spec.Scheduler.Affinity
+
+	var expected *v1.Affinity
+	statefulInstanceIndex, _ := r.kubegresContext.GetInstanceIndexFromSpec(*statefulSet)
+	if r.kubegresContext.HasNodeSets() && r.kubegresContext.Kubegres.Spec.NodeSets[statefulInstanceIndex-1].Affinity != nil {
+		expected = r.kubegresContext.Kubegres.Spec.NodeSets[statefulInstanceIndex-1].Affinity
+	} else {
+		expected = r.kubegresContext.Kubegres.Spec.Scheduler.Affinity
+	}
 
 	if !reflect.DeepEqual(current, expected) {
 		return StatefulSetSpecDifference{
@@ -55,7 +62,14 @@ func (r *AffinitySpecEnforcer) CheckForSpecDifference(statefulSet *apps.Stateful
 }
 
 func (r *AffinitySpecEnforcer) EnforceSpec(statefulSet *apps.StatefulSet) (wasSpecUpdated bool, err error) {
-	statefulSet.Spec.Template.Spec.Affinity = r.kubegresContext.Kubegres.Spec.Scheduler.Affinity
+	statefulInstanceIndex, _ := r.kubegresContext.GetInstanceIndexFromSpec(*statefulSet)
+
+	if r.kubegresContext.HasNodeSets() && r.kubegresContext.Kubegres.Spec.NodeSets[statefulInstanceIndex-1].Affinity != nil {
+		statefulSet.Spec.Template.Spec.Affinity = r.kubegresContext.Kubegres.Spec.NodeSets[statefulInstanceIndex-1].Affinity
+	} else {
+		statefulSet.Spec.Template.Spec.Affinity = r.kubegresContext.Kubegres.Spec.Scheduler.Affinity
+	}
+
 	return true, nil
 }
 

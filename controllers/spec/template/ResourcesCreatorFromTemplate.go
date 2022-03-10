@@ -164,7 +164,7 @@ func (r *ResourcesCreatorFromTemplate) CreateBackUpCronJob(configMapNameForBackU
 	backUpCronJobContainer.Env = append(backUpCronJobContainer.Env, r.kubegresContext.Kubegres.Spec.Env...)
 
 	backSourceDbHostName := r.kubegresContext.GetServiceResourceName(false)
-	if *postgres.Spec.Replicas == 1 {
+	if *r.kubegresContext.Replicas() == 1 {
 		backSourceDbHostName = r.kubegresContext.GetServiceResourceName(true)
 	}
 	backUpCronJobContainer.Env[3].Value = backSourceDbHostName
@@ -223,13 +223,26 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 	statefulSetTemplate.Spec.VolumeClaimTemplates[0].Spec.StorageClassName = postgresSpec.Database.StorageClassName
 	statefulSetTemplate.Spec.VolumeClaimTemplates[0].Spec.Resources.Requests = core.ResourceList{core.ResourceStorage: resource.MustParse(postgresSpec.Database.Size)}
 
-	if postgresSpec.Scheduler.Affinity != nil {
-		statefulSetTemplateSpec.Affinity = postgresSpec.Scheduler.Affinity
+	if r.kubegresContext.HasNodeSets() {
+		if postgresSpec.NodeSets[statefulSetInstanceIndex-1].Affinity != nil {
+			statefulSetTemplateSpec.Affinity = postgresSpec.NodeSets[statefulSetInstanceIndex-1].Affinity
+		} else if postgresSpec.Scheduler.Affinity != nil {
+			statefulSetTemplateSpec.Affinity = postgresSpec.Scheduler.Affinity
+		}
+		if len(postgresSpec.NodeSets[statefulSetInstanceIndex-1].Tolerations) > 0 {
+			statefulSetTemplateSpec.Tolerations = postgresSpec.NodeSets[statefulSetInstanceIndex-1].Tolerations
+		} else if len(postgresSpec.Scheduler.Tolerations) > 0 {
+			statefulSetTemplateSpec.Tolerations = postgresSpec.Scheduler.Tolerations
+		}
+	} else {
+		if postgresSpec.Scheduler.Affinity != nil {
+			statefulSetTemplateSpec.Affinity = postgresSpec.Scheduler.Affinity
+		}
+		if len(postgresSpec.Scheduler.Tolerations) > 0 {
+			statefulSetTemplateSpec.Tolerations = postgresSpec.Scheduler.Tolerations
+		}
 	}
 
-	if len(postgresSpec.Scheduler.Tolerations) > 0 {
-		statefulSetTemplateSpec.Tolerations = postgresSpec.Scheduler.Tolerations
-	}
 	if postgresSpec.Resources.Requests != nil || postgresSpec.Resources.Limits != nil {
 		statefulSetTemplate.Spec.Template.Spec.Containers[0].Resources = postgresSpec.Resources
 	}

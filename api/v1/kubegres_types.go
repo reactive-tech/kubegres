@@ -27,6 +27,13 @@ import (
 
 // ----------------------- SPEC -------------------------------------------
 
+type KubegresNodeSet struct {
+	// Name of this set of nodes. Becomes a part of the StatefulSet name.
+	Name        string          `json:"name"`
+	Affinity    *v1.Affinity    `json:"affinity,omitempty"`
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+}
+
 type KubegresDatabase struct {
 	Size             string  `json:"size,omitempty"`
 	VolumeMount      string  `json:"volumeMount,omitempty"`
@@ -67,6 +74,7 @@ type Probe struct {
 
 type KubegresSpec struct {
 	Replicas         *int32                    `json:"replicas,omitempty"`
+	NodeSets         []KubegresNodeSet         `json:"nodeSets,omitempty"`
 	Image            string                    `json:"image,omitempty"`
 	Port             int32                     `json:"port,omitempty"`
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`

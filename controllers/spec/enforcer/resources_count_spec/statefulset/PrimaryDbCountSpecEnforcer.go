@@ -97,7 +97,7 @@ func (r *PrimaryDbCountSpecEnforcer) initialiseStatusEnforcedReplicas() {
 		return
 	}
 
-	specReplicas := *r.kubegresContext.Kubegres.Spec.Replicas
+	specReplicas := *r.kubegresContext.Replicas()
 
 	if specReplicas >= 1 && specReplicas == r.resourcesStates.StatefulSets.NbreDeployed {
 		r.kubegresContext.Status.SetEnforcedReplicas(specReplicas)
@@ -123,7 +123,7 @@ func (r *PrimaryDbCountSpecEnforcer) shouldWeDeployNewPrimaryDb() bool {
 		r.resourcesStates.StatefulSets.Replicas.NbreDeployed == 0
 
 	if shouldWeDeployNewPrimary {
-		if *r.kubegresContext.Kubegres.Spec.Replicas == 1 || !r.hasPrimaryEverBeenDeployed() {
+		if *r.kubegresContext.Replicas() == 1 || !r.hasPrimaryEverBeenDeployed() {
 			return true
 		}
 	}
@@ -207,7 +207,7 @@ func (r *PrimaryDbCountSpecEnforcer) getInstanceIndexIfPrimaryNeedsToBeRecreated
 }
 
 func (r *PrimaryDbCountSpecEnforcer) isThereReplicaToFailOverToInSpec() bool {
-	return *r.kubegresContext.Kubegres.Spec.Replicas > 1
+	return *r.kubegresContext.Replicas() > 1
 }
 
 func (r *PrimaryDbCountSpecEnforcer) wasPrimaryNeverDeployed() bool {

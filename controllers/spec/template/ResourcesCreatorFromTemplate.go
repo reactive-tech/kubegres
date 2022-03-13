@@ -155,6 +155,10 @@ func (r *ResourcesCreatorFromTemplate) CreateBackUpCronJob(configMapNameForBackU
 	backUpCronJobSpec.Volumes[0].PersistentVolumeClaim.ClaimName = backupSpec.PvcName
 	backUpCronJobSpec.Volumes[1].ConfigMap.Name = configMapNameForBackUp
 
+	if postgres.Spec.ImagePullSecrets != nil {
+		backUpCronJobSpec.ImagePullSecrets = append(backUpCronJobSpec.ImagePullSecrets, postgres.Spec.ImagePullSecrets...)
+	}
+
 	backUpCronJobContainer := &backUpCronJobSpec.Containers[0]
 	backUpCronJobContainer.Image = postgres.Spec.Image
 	backUpCronJobContainer.VolumeMounts[0].MountPath = backupSpec.VolumeMount

@@ -76,7 +76,7 @@ func (r *ServicesCountSpecEnforcer) isPrimaryDbReady() bool {
 }
 
 func (r *ServicesCountSpecEnforcer) isThereReadyReplica() bool {
-	return r.resourcesStates.StatefulSets.Replicas.NbreReady > 0
+	return r.resourcesStates.StatefulSets.Replicas.NumberReady > 0
 }
 
 func (r *ServicesCountSpecEnforcer) deployPrimaryService() error {

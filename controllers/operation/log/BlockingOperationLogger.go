@@ -21,7 +21,6 @@ func (r *BlockingOperationLogger) Log() {
 }
 
 func (r *BlockingOperationLogger) logActiveOperation() {
-
 	activeOperation := r.blockingOperation.GetActiveOperation()
 	activeOperationId := activeOperation.OperationId
 	nbreSecondsLeftBeforeTimeOut := r.blockingOperation.GetNbreSecondsLeftBeforeTimeOut()
@@ -37,7 +36,6 @@ func (r *BlockingOperationLogger) logActiveOperation() {
 }
 
 func (r *BlockingOperationLogger) logPreviouslyActiveOperation() {
-
 	previousActiveOperation := r.blockingOperation.GetPreviouslyActiveOperation()
 	operationId := previousActiveOperation.OperationId
 
@@ -51,11 +49,10 @@ func (r *BlockingOperationLogger) logPreviouslyActiveOperation() {
 }
 
 func (r *BlockingOperationLogger) logOperation(operation v1.KubegresBlockingOperation) []interface{} {
-
 	operationId := operation.OperationId
 	stepId := operation.StepId
 	hasTimedOut := operation.HasTimedOut
-	statefulSetInstanceIndex := operation.StatefulSetOperation.InstanceIndex
+	instance := operation.StatefulSetOperation.Instance
 	statefulSetSpecDifferences := operation.StatefulSetSpecUpdateOperation.SpecDifferences
 
 	var keysAndValues []interface{}
@@ -63,8 +60,8 @@ func (r *BlockingOperationLogger) logOperation(operation v1.KubegresBlockingOper
 	keysAndValues = append(keysAndValues, "StepId", stepId)
 	keysAndValues = append(keysAndValues, "HasTimedOut", hasTimedOut)
 
-	if statefulSetInstanceIndex != 0 {
-		keysAndValues = append(keysAndValues, "StatefulSetInstanceIndex", statefulSetInstanceIndex)
+	if instance != "" {
+		keysAndValues = append(keysAndValues, "Instance", instance)
 	}
 
 	if statefulSetSpecDifferences != "" {

@@ -28,6 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"log"
 	postgresv1 "reactive-tech.io/kubegres/api/v1"
+	"reactive-tech.io/kubegres/controllers/ctx"
 	"reactive-tech.io/kubegres/test/resourceConfigs"
 	"reactive-tech.io/kubegres/test/util"
 	"reactive-tech.io/kubegres/test/util/testcases"
@@ -143,7 +144,7 @@ func (r *SpecAffinityTest) givenDefaultAffinity() *v12.Affinity {
 			LabelSelector: &metav1.LabelSelector{
 				MatchExpressions: []metav1.LabelSelectorRequirement{
 					{
-						Key:      "app",
+						Key:      ctx.NameLabelKey,
 						Operator: metav1.LabelSelectorOpIn,
 						Values:   []string{resourceName},
 					},
@@ -170,7 +171,7 @@ func (r *SpecAffinityTest) givenAffinity1() *v12.Affinity {
 			LabelSelector: &metav1.LabelSelector{
 				MatchExpressions: []metav1.LabelSelectorRequirement{
 					{
-						Key:      "app",
+						Key:      ctx.NameLabelKey,
 						Operator: metav1.LabelSelectorOpIn,
 						Values:   []string{resourceName},
 					},
@@ -197,7 +198,7 @@ func (r *SpecAffinityTest) givenAffinity2() *v12.Affinity {
 			LabelSelector: &metav1.LabelSelector{
 				MatchExpressions: []metav1.LabelSelectorRequirement{
 					{
-						Key:      "app",
+						Key:      ctx.NameLabelKey,
 						Operator: metav1.LabelSelectorOpIn,
 						Values:   []string{resourceName},
 					},

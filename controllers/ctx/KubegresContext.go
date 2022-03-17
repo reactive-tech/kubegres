@@ -54,6 +54,9 @@ const (
 	EnvVarNamePgData                       = "PGDATA"
 	EnvVarNameOfPostgresSuperUserPsw       = "POSTGRES_PASSWORD"
 	EnvVarNameOfPostgresReplicationUserPsw = "POSTGRES_REPLICATION_PASSWORD"
+	NameLabelKey                           = "app.kubernetes.io/name"
+	InstanceLabelKey                       = "app.kubernetes.io/instance"
+	ReplicationRoleLabelKey                = "app.kubegres.io/replication-role"
 )
 
 func (r *KubegresContext) GetServiceResourceName(isPrimary bool) string {
@@ -63,13 +66,8 @@ func (r *KubegresContext) GetServiceResourceName(isPrimary bool) string {
 	return r.Kubegres.Name + "-replica"
 }
 
-func (r *KubegresContext) GetStatefulSetResourceName(instanceIndex int32) string {
-	if r.HasNodeSets() && len(r.Kubegres.Spec.NodeSets) >= int(instanceIndex) {
-		nodeSetSpec := r.Kubegres.Spec.NodeSets[instanceIndex-1]
-		return r.Kubegres.Name + "-" + nodeSetSpec.Name
-	} else {
-		return r.Kubegres.Name + "-" + strconv.Itoa(int(instanceIndex))
-	}
+func (r *KubegresContext) GetStatefulSetResourceName(instance string) string {
+	return r.Kubegres.Name + "-" + instance
 }
 
 func (r *KubegresContext) IsReservedVolumeName(volumeName string) bool {
@@ -79,24 +77,37 @@ func (r *KubegresContext) IsReservedVolumeName(volumeName string) bool {
 		strings.Contains(volumeName, "kube-api")
 }
 
-func (r *KubegresContext) HasNodeSets() bool {
-	return r.Kubegres.Spec.NodeSets != nil
+func (r *KubegresContext) ReplicasCount() int32 {
+	if r.Kubegres.Spec.NodeSets == nil {
+		return *r.Kubegres.Spec.Replicas
+	}
+	return int32(len(r.Kubegres.Spec.NodeSets))
 }
 
-func (r *KubegresContext) Replicas() *int32 {
-	if r.HasNodeSets() {
-		replicas := int32(len(r.Kubegres.Spec.NodeSets))
-		return &replicas
+func (r *KubegresContext) GetNodeSetsFromSpec() []v1.KubegresNodeSet {
+	if r.Kubegres.Spec.NodeSets == nil {
+		nodeSets := make([]v1.KubegresNodeSet, *r.Kubegres.Spec.Replicas)
+		for i := int32(0); i < *r.Kubegres.Spec.Replicas; i += 1 {
+			nodeSets[i] = v1.KubegresNodeSet{
+				Name: strconv.Itoa(int(i)),
+			}
+		}
+		return nodeSets
 	}
-	return r.Kubegres.Spec.Replicas
+	return r.Kubegres.Spec.NodeSets
 }
 
-func (r *KubegresContext) GetInstanceIndexFromSpec(statefulSet apps.StatefulSet) (int32, error) {
-	instanceIndexStr := statefulSet.Spec.Template.Labels["index"]
-	instanceIndex, err := strconv.ParseInt(instanceIndexStr, 10, 32)
-	if err != nil {
-		r.Log.ErrorEvent("StatefulSetLoadingErr", err, "Unable to convert StatefulSet's label 'index' with value: "+instanceIndexStr+" into an integer. The name of statefulSet with this label is "+statefulSet.Name+".")
-		return 0, err
+func (r *KubegresContext) GetInstanceFromStatefulSet(statefulSet apps.StatefulSet) string {
+	return statefulSet.Labels[InstanceLabelKey]
+}
+
+func (r *KubegresContext) GetNodeSetSpecFromInstance(instance string) *v1.KubegresNodeSet {
+	for _, nodeSet := range r.Kubegres.Spec.NodeSets {
+		if nodeSet.Name == instance {
+			return &nodeSet
+		}
 	}
-	return int32(instanceIndex), nil
+	return &v1.KubegresNodeSet{
+		Name: instance,
+	}
 }

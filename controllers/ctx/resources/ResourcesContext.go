@@ -22,7 +22,6 @@ package resources
 
 import (
 	"context"
-
 	"github.com/go-logr/logr"
 	"k8s.io/client-go/tools/record"
 	postgresV1 "reactive-tech.io/kubegres/api/v1"
@@ -75,13 +74,12 @@ func CreateResourcesContext(kubegres *postgresV1.Kubegres,
 	client client.Client,
 	recorder record.EventRecorder) (rc *ResourcesContext, err error) {
 
-	setReplicaFieldToZeroIfNil(kubegres)
+	setReplicasFieldToZeroIfNil(kubegres)
 
 	rc = &ResourcesContext{}
 
 	rc.LogWrapper = log.LogWrapper{Kubegres: kubegres, Logger: logger, Recorder: recorder}
 	rc.LogWrapper.Info("KUBEGRES", "name", kubegres.Name, "Status", kubegres.Status)
-	//rc.LogWrapper.WithName(kubegres.Name)
 
 	rc.KubegresStatusWrapper = &status.KubegresStatusWrapper{
 		Kubegres: kubegres,
@@ -127,7 +125,7 @@ func CreateResourcesContext(kubegres *postgresV1.Kubegres,
 	return rc, nil
 }
 
-func setReplicaFieldToZeroIfNil(kubegres *postgresV1.Kubegres) {
+func setReplicasFieldToZeroIfNil(kubegres *postgresV1.Kubegres) {
 	if kubegres.Spec.Replicas != nil {
 		return
 	}

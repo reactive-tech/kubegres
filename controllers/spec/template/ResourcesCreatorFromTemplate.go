@@ -21,8 +21,6 @@ limitations under the License.
 package template
 
 import (
-	"strconv"
-
 	apps "k8s.io/api/apps/v1"
 	"k8s.io/api/batch/v1beta1"
 	core "k8s.io/api/core/v1"
@@ -54,7 +52,6 @@ func CreateResourcesCreatorFromTemplate(kubegresContext ctx.KubegresContext,
 }
 
 func (r *ResourcesCreatorFromTemplate) CreateBaseConfigMap() (core.ConfigMap, error) {
-
 	baseConfigMap, err := r.templateFromFiles.LoadBaseConfigMap()
 	if err != nil {
 		return core.ConfigMap{}, err
@@ -67,7 +64,6 @@ func (r *ResourcesCreatorFromTemplate) CreateBaseConfigMap() (core.ConfigMap, er
 }
 
 func (r *ResourcesCreatorFromTemplate) CreatePrimaryService() (core.Service, error) {
-
 	primaryService, err := r.templateFromFiles.LoadPrimaryService()
 	if err != nil {
 		return core.Service{}, err
@@ -81,7 +77,6 @@ func (r *ResourcesCreatorFromTemplate) CreatePrimaryService() (core.Service, err
 }
 
 func (r *ResourcesCreatorFromTemplate) CreateReplicaService() (core.Service, error) {
-
 	replicaService, err := r.templateFromFiles.LoadReplicaService()
 	if err != nil {
 		return core.Service{}, err
@@ -94,21 +89,19 @@ func (r *ResourcesCreatorFromTemplate) CreateReplicaService() (core.Service, err
 	return replicaService, nil
 }
 
-func (r *ResourcesCreatorFromTemplate) CreatePrimaryStatefulSet(statefulSetInstanceIndex int32) (apps.StatefulSet, error) {
-
+func (r *ResourcesCreatorFromTemplate) CreatePrimaryStatefulSet(instance string) (apps.StatefulSet, error) {
 	statefulSetTemplate, err := r.templateFromFiles.LoadPrimaryStatefulSet()
 	if err != nil {
 		return apps.StatefulSet{}, err
 	}
 
 	primaryServiceName := r.kubegresContext.GetServiceResourceName(true)
-	r.initStatefulSet(primaryServiceName, &statefulSetTemplate, statefulSetInstanceIndex)
+	r.initStatefulSet(primaryServiceName, instance, &statefulSetTemplate)
 	r.customConfigSpecHelper.ConfigureStatefulSet(&statefulSetTemplate)
 	return statefulSetTemplate, nil
 }
 
-func (r *ResourcesCreatorFromTemplate) CreateReplicaStatefulSet(statefulSetInstanceIndex int32) (apps.StatefulSet, error) {
-
+func (r *ResourcesCreatorFromTemplate) CreateReplicaStatefulSet(instance string) (apps.StatefulSet, error) {
 	statefulSetTemplate, err := r.templateFromFiles.LoadReplicaStatefulSet()
 	if err != nil {
 		return apps.StatefulSet{}, err
@@ -117,7 +110,7 @@ func (r *ResourcesCreatorFromTemplate) CreateReplicaStatefulSet(statefulSetInsta
 	primaryServiceName := r.kubegresContext.GetServiceResourceName(true)
 	replicaServiceName := r.kubegresContext.GetServiceResourceName(false)
 
-	r.initStatefulSet(replicaServiceName, &statefulSetTemplate, statefulSetInstanceIndex)
+	r.initStatefulSet(replicaServiceName, instance, &statefulSetTemplate)
 	r.customConfigSpecHelper.ConfigureStatefulSet(&statefulSetTemplate)
 
 	initContainer := &statefulSetTemplate.Spec.Template.Spec.InitContainers[0]
@@ -132,7 +125,6 @@ func (r *ResourcesCreatorFromTemplate) CreateReplicaStatefulSet(statefulSetInsta
 }
 
 func (r *ResourcesCreatorFromTemplate) CreateBackUpCronJob(configMapNameForBackUp string) (v1beta1.CronJob, error) {
-
 	backUpCronJob, err := r.templateFromFiles.LoadBackUpCronJob()
 	if err != nil {
 		return v1beta1.CronJob{}, err
@@ -164,7 +156,7 @@ func (r *ResourcesCreatorFromTemplate) CreateBackUpCronJob(configMapNameForBackU
 	backUpCronJobContainer.Env = append(backUpCronJobContainer.Env, r.kubegresContext.Kubegres.Spec.Env...)
 
 	backSourceDbHostName := r.kubegresContext.GetServiceResourceName(false)
-	if *r.kubegresContext.Replicas() == 1 {
+	if r.kubegresContext.ReplicasCount() == 1 {
 		backSourceDbHostName = r.kubegresContext.GetServiceResourceName(true)
 	}
 	backUpCronJobContainer.Env[3].Value = backSourceDbHostName
@@ -173,83 +165,70 @@ func (r *ResourcesCreatorFromTemplate) CreateBackUpCronJob(configMapNameForBackU
 }
 
 func (r *ResourcesCreatorFromTemplate) initService(service *core.Service) {
-
 	resourceName := r.kubegresContext.Kubegres.Name
 	service.Namespace = r.kubegresContext.Kubegres.Namespace
 	service.OwnerReferences = r.getOwnerReference()
-	service.Labels["app"] = resourceName
-	service.Spec.Selector["app"] = resourceName
+	service.Labels[ctx.NameLabelKey] = resourceName
+	service.Spec.Selector[ctx.NameLabelKey] = resourceName
 	service.Spec.Ports[0].Port = r.kubegresContext.Kubegres.Spec.Port
 }
 
-func (r *ResourcesCreatorFromTemplate) initStatefulSet(
-	serviceName string,
-	statefulSetTemplate *apps.StatefulSet,
-	statefulSetInstanceIndex int32) {
-
-	instanceIndex := strconv.Itoa(int(statefulSetInstanceIndex))
+func (r *ResourcesCreatorFromTemplate) initStatefulSet(serviceName string, instance string,
+	statefulSetTemplate *apps.StatefulSet) {
 	resourceName := r.kubegresContext.Kubegres.Name
-	statefulSetResourceName := r.kubegresContext.GetStatefulSetResourceName(statefulSetInstanceIndex)
-	postgresSpec := r.kubegresContext.Kubegres.Spec
+	resourceSpec := r.kubegresContext.Kubegres.Spec
+	statefulSetResourceName := r.kubegresContext.GetStatefulSetResourceName(instance)
 
 	statefulSetTemplate.Name = statefulSetResourceName
 	statefulSetTemplate.Namespace = r.kubegresContext.Kubegres.Namespace
 	statefulSetTemplate.Annotations = r.getCustomAnnotations()
-	statefulSetTemplate.Labels["app"] = resourceName
-	statefulSetTemplate.Labels["index"] = instanceIndex
+	statefulSetTemplate.Labels[ctx.NameLabelKey] = resourceName
+	statefulSetTemplate.Labels[ctx.InstanceLabelKey] = instance
 	statefulSetTemplate.OwnerReferences = r.getOwnerReference()
 
 	statefulSetTemplate.Spec.ServiceName = serviceName
-	statefulSetTemplate.Spec.Selector.MatchLabels["app"] = resourceName
-	statefulSetTemplate.Spec.Selector.MatchLabels["index"] = instanceIndex
-	statefulSetTemplate.Spec.Template.Labels["app"] = resourceName
-	statefulSetTemplate.Spec.Template.Labels["index"] = instanceIndex
+	statefulSetTemplate.Spec.Selector.MatchLabels[ctx.NameLabelKey] = resourceName
+	statefulSetTemplate.Spec.Selector.MatchLabels[ctx.InstanceLabelKey] = instance
+	statefulSetTemplate.Spec.Template.Labels[ctx.NameLabelKey] = resourceName
+	statefulSetTemplate.Spec.Template.Labels[ctx.InstanceLabelKey] = instance
 	statefulSetTemplate.Spec.Template.Annotations = r.getCustomAnnotations()
 
 	statefulSetTemplateSpec := &statefulSetTemplate.Spec.Template.Spec
 
-	if postgresSpec.ImagePullSecrets != nil {
-		statefulSetTemplateSpec.ImagePullSecrets = append(statefulSetTemplateSpec.ImagePullSecrets, postgresSpec.ImagePullSecrets...)
+	if resourceSpec.ImagePullSecrets != nil {
+		statefulSetTemplateSpec.ImagePullSecrets = append(statefulSetTemplateSpec.ImagePullSecrets, resourceSpec.ImagePullSecrets...)
 	}
 
 	container := &statefulSetTemplateSpec.Containers[0]
 	container.Name = statefulSetResourceName
-	container.Image = postgresSpec.Image
-	container.Ports[0].ContainerPort = postgresSpec.Port
-	container.VolumeMounts[0].MountPath = postgresSpec.Database.VolumeMount
-	container.Env = append(container.Env, core.EnvVar{Name: ctx.EnvVarNamePgData, Value: postgresSpec.Database.VolumeMount + "/" + ctx.DefaultDatabaseFolder})
+	container.Image = resourceSpec.Image
+	container.Ports[0].ContainerPort = resourceSpec.Port
+	container.VolumeMounts[0].MountPath = resourceSpec.Database.VolumeMount
+	container.Env = append(container.Env, core.EnvVar{Name: ctx.EnvVarNamePgData, Value: resourceSpec.Database.VolumeMount + "/" + ctx.DefaultDatabaseFolder})
 	container.Env = append(container.Env, r.kubegresContext.Kubegres.Spec.Env...)
 
-	statefulSetTemplate.Spec.VolumeClaimTemplates[0].Spec.StorageClassName = postgresSpec.Database.StorageClassName
-	statefulSetTemplate.Spec.VolumeClaimTemplates[0].Spec.Resources.Requests = core.ResourceList{core.ResourceStorage: resource.MustParse(postgresSpec.Database.Size)}
+	statefulSetTemplate.Spec.VolumeClaimTemplates[0].Spec.StorageClassName = resourceSpec.Database.StorageClassName
+	statefulSetTemplate.Spec.VolumeClaimTemplates[0].Spec.Resources.Requests = core.ResourceList{core.ResourceStorage: resource.MustParse(resourceSpec.Database.Size)}
 
-	if r.kubegresContext.HasNodeSets() {
-		if postgresSpec.NodeSets[statefulSetInstanceIndex-1].Affinity != nil {
-			statefulSetTemplateSpec.Affinity = postgresSpec.NodeSets[statefulSetInstanceIndex-1].Affinity
-		} else if postgresSpec.Scheduler.Affinity != nil {
-			statefulSetTemplateSpec.Affinity = postgresSpec.Scheduler.Affinity
-		}
-		if len(postgresSpec.NodeSets[statefulSetInstanceIndex-1].Tolerations) > 0 {
-			statefulSetTemplateSpec.Tolerations = postgresSpec.NodeSets[statefulSetInstanceIndex-1].Tolerations
-		} else if len(postgresSpec.Scheduler.Tolerations) > 0 {
-			statefulSetTemplateSpec.Tolerations = postgresSpec.Scheduler.Tolerations
-		}
-	} else {
-		if postgresSpec.Scheduler.Affinity != nil {
-			statefulSetTemplateSpec.Affinity = postgresSpec.Scheduler.Affinity
-		}
-		if len(postgresSpec.Scheduler.Tolerations) > 0 {
-			statefulSetTemplateSpec.Tolerations = postgresSpec.Scheduler.Tolerations
-		}
+	nodeSpec := r.kubegresContext.GetNodeSetSpecFromInstance(instance)
+	if nodeSpec.Affinity != nil {
+		statefulSetTemplateSpec.Affinity = nodeSpec.Affinity
+	} else if resourceSpec.Scheduler.Affinity != nil {
+		statefulSetTemplateSpec.Affinity = resourceSpec.Scheduler.Affinity
+	}
+	if len(nodeSpec.Tolerations) > 0 {
+		statefulSetTemplateSpec.Tolerations = nodeSpec.Tolerations
+	} else if len(resourceSpec.Scheduler.Tolerations) > 0 {
+		statefulSetTemplateSpec.Tolerations = resourceSpec.Scheduler.Tolerations
 	}
 
-	if postgresSpec.Resources.Requests != nil || postgresSpec.Resources.Limits != nil {
-		statefulSetTemplate.Spec.Template.Spec.Containers[0].Resources = postgresSpec.Resources
+	if resourceSpec.Resources.Requests != nil || resourceSpec.Resources.Limits != nil {
+		statefulSetTemplate.Spec.Template.Spec.Containers[0].Resources = resourceSpec.Resources
 	}
 
-	if postgresSpec.Volume.VolumeClaimTemplates != nil {
+	if resourceSpec.Volume.VolumeClaimTemplates != nil {
 
-		for _, volumeClaimTemplate := range postgresSpec.Volume.VolumeClaimTemplates {
+		for _, volumeClaimTemplate := range resourceSpec.Volume.VolumeClaimTemplates {
 			persistentVolumeClaim := core.PersistentVolumeClaim{}
 			persistentVolumeClaim.Name = volumeClaimTemplate.Name
 			persistentVolumeClaim.Namespace = r.kubegresContext.Kubegres.Namespace
@@ -258,24 +237,24 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 		}
 	}
 
-	if postgresSpec.Volume.Volumes != nil {
+	if resourceSpec.Volume.Volumes != nil {
 		statefulSetTemplate.Spec.Template.Spec.Volumes = append(statefulSetTemplate.Spec.Template.Spec.Volumes, r.kubegresContext.Kubegres.Spec.Volume.Volumes...)
 	}
 
-	if postgresSpec.Volume.VolumeMounts != nil {
+	if resourceSpec.Volume.VolumeMounts != nil {
 		statefulSetTemplate.Spec.Template.Spec.Containers[0].VolumeMounts = append(statefulSetTemplate.Spec.Template.Spec.Containers[0].VolumeMounts, r.kubegresContext.Kubegres.Spec.Volume.VolumeMounts...)
 	}
 
-	if postgresSpec.SecurityContext != nil {
-		statefulSetTemplate.Spec.Template.Spec.SecurityContext = postgresSpec.SecurityContext
+	if resourceSpec.SecurityContext != nil {
+		statefulSetTemplate.Spec.Template.Spec.SecurityContext = resourceSpec.SecurityContext
 	}
 
-	if postgresSpec.Probe.LivenessProbe != nil {
-		statefulSetTemplate.Spec.Template.Spec.Containers[0].LivenessProbe = postgresSpec.Probe.LivenessProbe
+	if resourceSpec.Probe.LivenessProbe != nil {
+		statefulSetTemplate.Spec.Template.Spec.Containers[0].LivenessProbe = resourceSpec.Probe.LivenessProbe
 	}
 
-	if postgresSpec.Probe.ReadinessProbe != nil {
-		statefulSetTemplate.Spec.Template.Spec.Containers[0].ReadinessProbe = postgresSpec.Probe.ReadinessProbe
+	if resourceSpec.Probe.ReadinessProbe != nil {
+		statefulSetTemplate.Spec.Template.Spec.Containers[0].ReadinessProbe = resourceSpec.Probe.ReadinessProbe
 	}
 }
 

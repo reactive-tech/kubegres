@@ -20,39 +20,29 @@ limitations under the License.
 
 package statefulset
 
-import (
-	"strconv"
-)
+type SortByInstance []StatefulSetWrapper
+type ReverseSortByInstance []StatefulSetWrapper
 
-type SortByInstanceIndex []StatefulSetWrapper
-type ReverseSortByInstanceIndex []StatefulSetWrapper
-
-func (f SortByInstanceIndex) Len() int {
+func (f SortByInstance) Len() int {
 	return len(f)
 }
 
-func (f SortByInstanceIndex) Less(i, j int) bool {
-	return getInstanceIndex(f[i]) < getInstanceIndex(f[j])
+func (f SortByInstance) Less(i, j int) bool {
+	return f[i].Instance() < f[j].Instance()
 }
 
-func (f SortByInstanceIndex) Swap(i, j int) {
+func (f SortByInstance) Swap(i, j int) {
 	f[i], f[j] = f[j], f[i]
 }
 
-func (f ReverseSortByInstanceIndex) Len() int {
+func (f ReverseSortByInstance) Len() int {
 	return len(f)
 }
 
-func (f ReverseSortByInstanceIndex) Less(i, j int) bool {
-	return getInstanceIndex(f[i]) > getInstanceIndex(f[j])
+func (f ReverseSortByInstance) Less(i, j int) bool {
+	return f[i].Instance() > f[j].Instance()
 }
 
-func (f ReverseSortByInstanceIndex) Swap(i, j int) {
+func (f ReverseSortByInstance) Swap(i, j int) {
 	f[i], f[j] = f[j], f[i]
-}
-
-func getInstanceIndex(statefulSet StatefulSetWrapper) int32 {
-	instanceIndexStr := statefulSet.StatefulSet.Spec.Template.Labels["index"]
-	instanceIndex, _ := strconv.ParseInt(instanceIndexStr, 10, 32)
-	return int32(instanceIndex)
 }

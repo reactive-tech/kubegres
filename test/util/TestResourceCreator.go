@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"log"
 	postgresv1 "reactive-tech.io/kubegres/api/v1"
+	"reactive-tech.io/kubegres/controllers/ctx"
 	resourceConfigs2 "reactive-tech.io/kubegres/test/resourceConfigs"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"strconv"
@@ -177,7 +178,7 @@ func (r *TestResourceCreator) CreateServiceToSqlQueryDb(kubegresName string, nod
 	resourceToCreate.Spec.Ports[0].NodePort = int32(nodePort)
 	resourceToCreate.Namespace = r.namespace
 	resourceToCreate.Name = serviceResourceName
-	resourceToCreate.Spec.Selector["app"] = kubegresName
+	resourceToCreate.Spec.Selector[ctx.NameLabelKey] = kubegresName
 
 	resourceLabel := "Service " + serviceResourceName + " (nodePort: " + strconv.Itoa(nodePort) + ")"
 
@@ -185,8 +186,8 @@ func (r *TestResourceCreator) CreateServiceToSqlQueryDb(kubegresName string, nod
 }
 
 func (r *TestResourceCreator) DeleteResource(resourceToDelete client.Object, resourceName string) bool {
-	ctx := context.Background()
-	err := r.client.Delete(ctx, resourceToDelete)
+	backgroundContext := context.Background()
+	err := r.client.Delete(backgroundContext, resourceToDelete)
 	if err != nil {
 		log.Println("Error while deleting resource with name: '"+resourceName+"' ", err)
 		return false

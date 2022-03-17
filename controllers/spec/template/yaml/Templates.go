@@ -324,16 +324,14 @@ metadata:
   name: postgres-name
   namespace: default
   labels:
-    app: postgres-name
-    replicationRole: primary
+    app.kubegres.io/replication-role: primary
 spec:
   clusterIP: None
   ports:
     - protocol: TCP
       port: 5432
   selector:
-    app: postgres-name
-    replicationRole: primary
+    app.kubegres.io/replication-role: primary
 `
 PrimaryStatefulSetTemplate = `apiVersion: apps/v1
 kind: StatefulSet
@@ -341,17 +339,13 @@ metadata:
   name: postgres-name-0
   namespace: default
   labels:
-    app: postgres-name
-    index: '1'
-    replicationRole: primary
+    app.kubegres.io/replication-role: primary
 
 spec:
   serviceName: "postgres-name"
   replicas: 1
   selector:
-    matchLabels:
-      app: postgres-name
-      index: '1'
+    matchLabels: {}
 
   volumeClaimTemplates:
     - metadata:
@@ -366,9 +360,7 @@ spec:
   template:
     metadata:
       labels:
-        app: postgres-name
-        index: '1'
-        replicationRole: primary
+        app.kubegres.io/replication-role: primary
 
     spec:
       terminationGracePeriodSeconds: 10
@@ -450,16 +442,14 @@ metadata:
   name: postgres-name-replica
   namespace: default
   labels:
-    app: postgres-name
-    replicationRole: replica
+    app.kubegres.io/replication-role: replica
 spec:
   clusterIP: None
   ports:
     - protocol: TCP
       port: 5432
   selector:
-    app: postgres-name
-    replicationRole: replica
+    app.kubegres.io/replication-role: replica
 `
 ReplicaStatefulSetTemplate = `apiVersion: apps/v1
 kind: StatefulSet
@@ -467,17 +457,13 @@ metadata:
   name: postgres-name-1
   namespace: default
   labels:
-    app: postgres-name
-    index: '2'
-    replicationRole: replica
+    app.kubegres.io/replication-role: replica
 
 spec:
   serviceName: "postgres-replica-name"
   replicas: 1
   selector:
-    matchLabels:
-      app: postgres-name
-      index: '2'
+    matchLabels: {}
 
   volumeClaimTemplates:
     - metadata:
@@ -492,9 +478,7 @@ spec:
   template:
     metadata:
       labels:
-        app: postgres-name
-        index: '2'
-        replicationRole: replica
+        app.kubegres.io/replication-role: replica
 
     spec:
       terminationGracePeriodSeconds: 10

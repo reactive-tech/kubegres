@@ -4,13 +4,11 @@ metadata:
   name: postgres-name
   namespace: default
   labels:
-    app: postgres-name
-    replicationRole: primary
+    app.kubegres.io/replication-role: primary
 spec:
   clusterIP: None
   ports:
     - protocol: TCP
       port: 5432
   selector:
-    app: postgres-name
-    replicationRole: primary
+    app.kubegres.io/replication-role: primary

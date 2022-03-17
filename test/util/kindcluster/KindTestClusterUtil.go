@@ -81,7 +81,7 @@ func (r *KindTestClusterUtil) DeleteCluster() bool {
 
 	log.Println("Running 'kind delete cluster --name " + clusterName + "'")
 
-	var out bytes.Buffer
+	/*var out bytes.Buffer
 	cmdDeleteCluster := &exec.Cmd{
 		Path:   r.kindExecPath,
 		Args:   []string{r.kindExecPath, "delete", "cluster", "--name", clusterName},
@@ -93,7 +93,7 @@ func (r *KindTestClusterUtil) DeleteCluster() bool {
 	if err != nil {
 		log.Fatal("Unable to execute the command 'kind delete cluster --name "+clusterName+"'", err)
 		return false
-	}
+	}*/
 
 	return true
 }

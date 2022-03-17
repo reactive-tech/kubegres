@@ -28,11 +28,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"log"
 	postgresv1 "reactive-tech.io/kubegres/api/v1"
+	"reactive-tech.io/kubegres/controllers/ctx"
 	"reactive-tech.io/kubegres/test/resourceConfigs"
 	"reactive-tech.io/kubegres/test/util"
 	"reactive-tech.io/kubegres/test/util/testcases"
 	"reflect"
-	"strconv"
 	"time"
 )
 
@@ -144,7 +144,7 @@ func (r *SpecNodeSetsAffinityTest) givenDefaultAffinity() *v12.Affinity {
 			LabelSelector: &metav1.LabelSelector{
 				MatchExpressions: []metav1.LabelSelectorRequirement{
 					{
-						Key:      "app",
+						Key:      ctx.NameLabelKey,
 						Operator: metav1.LabelSelectorOpIn,
 						Values:   []string{resourceName},
 					},
@@ -171,7 +171,7 @@ func (r *SpecNodeSetsAffinityTest) givenNodeSetsWithAffinity1() []postgresv1.Kub
 			LabelSelector: &metav1.LabelSelector{
 				MatchExpressions: []metav1.LabelSelectorRequirement{
 					{
-						Key:      "app",
+						Key:      ctx.NameLabelKey,
 						Operator: metav1.LabelSelectorOpIn,
 						Values:   []string{resourceName},
 					},
@@ -209,7 +209,7 @@ func (r *SpecNodeSetsAffinityTest) givenNodeSetsWithAffinity2() []postgresv1.Kub
 			LabelSelector: &metav1.LabelSelector{
 				MatchExpressions: []metav1.LabelSelectorRequirement{
 					{
-						Key:      "app",
+						Key:      ctx.NameLabelKey,
 						Operator: metav1.LabelSelectorOpIn,
 						Values:   []string{resourceName},
 					},
@@ -269,54 +269,6 @@ func (r *SpecNodeSetsAffinityTest) whenKubernetesIsUpdated() {
 	r.resourceCreator.UpdateResource(r.kubegresResource, "Kubegres")
 }
 
-func (r *SpecNodeSetsAffinityTest) thenReplicasErrorEventShouldBeLogged() {
-	expectedErrorEvent := util.EventRecord{
-		Eventtype: v12.EventTypeWarning,
-		Reason:    "SpecCheckErr",
-		Message:   "In the Resources Spec the value of 'spec.replicas' and 'spec.nodeSets' are mutually exclusive. Please set only one of the value otherwise this operator cannot work correctly.",
-	}
-	Eventually(func() bool {
-		_, err := r.resourceRetriever.GetKubegres()
-		if err != nil {
-			return false
-		}
-		return eventRecorderTest.CheckEventExist(expectedErrorEvent)
-
-	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
-}
-
-func (r *SpecNodeSetsAffinityTest) thenNodeSetsErrorEventShouldBeLogged() {
-	expectedErrorEvent := util.EventRecord{
-		Eventtype: v12.EventTypeWarning,
-		Reason:    "SpecCheckErr",
-		Message:   "In the Resources Spec the value of 'spec.replicas' and 'spec.nodeSets' are mutually exclusive. Please set only one of the value otherwise this operator cannot work correctly.",
-	}
-	Eventually(func() bool {
-		_, err := r.resourceRetriever.GetKubegres()
-		if err != nil {
-			return false
-		}
-		return eventRecorderTest.CheckEventExist(expectedErrorEvent)
-
-	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
-}
-
-func (r *SpecNodeSetsAffinityTest) thenMutuallyExclusiveErrorEventShouldBeLogged() {
-	expectedErrorEvent := util.EventRecord{
-		Eventtype: v12.EventTypeWarning,
-		Reason:    "SpecCheckErr",
-		Message:   "In the Resources Spec the value of 'spec.replicas' and 'spec.nodeSets' are mutually exclusive. Please set only one of the value otherwise this operator cannot work correctly.",
-	}
-	Eventually(func() bool {
-		_, err := r.resourceRetriever.GetKubegres()
-		if err != nil {
-			return false
-		}
-		return eventRecorderTest.CheckEventExist(expectedErrorEvent)
-
-	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
-}
-
 func (r *SpecNodeSetsAffinityTest) thenStatefulSetStatesShouldBe(expectedNodeSets []postgresv1.KubegresNodeSet, nbrePrimary, nbreReplicas int) bool {
 	return Eventually(func() bool {
 
@@ -328,8 +280,14 @@ func (r *SpecNodeSetsAffinityTest) thenStatefulSetStatesShouldBe(expectedNodeSet
 
 		for _, resource := range kubegresResources.Resources {
 			currentAffinity := resource.StatefulSet.Spec.Template.Spec.Affinity
-			statefulSetIndex, _ := strconv.ParseInt(resource.Pod.Metadata.Labels["index"], 10, 32)
-			expectedAffinity := expectedNodeSets[statefulSetIndex-1].Affinity
+
+			var expectedAffinity *v12.Affinity
+			instance := resource.Pod.Metadata.Labels[ctx.InstanceLabelKey]
+			for _, nodeSet := range expectedNodeSets {
+				if nodeSet.Name == instance {
+					expectedAffinity = nodeSet.Affinity
+				}
+			}
 			if expectedAffinity == nil {
 				expectedAffinity = r.givenDefaultAffinity()
 			}

@@ -93,7 +93,7 @@ var _ = Describe("Setting Kubegres spec 'nodeSets'", func() {
 
 			log.Print("START OF: Test 'GIVEN new Kubegres is created with spec 'replica' set to a value and 'nodeSets' set to a value'")
 
-			test.givenNewKubegresSpecWithReplicasAndNodeSets()
+			test.givenNewKubegresSpecWithReplicasAndNodeSetsOfDifferentSize()
 
 			test.whenKubegresIsCreated()
 
@@ -204,6 +204,26 @@ var _ = Describe("Setting Kubegres spec 'nodeSets'", func() {
 			log.Print("END OF: Test 'GIVEN existing Kubegres is updated with spec 'nodeSets' set from 3 to 4'")
 		})
 
+		It("GIVEN existing Kubegres is updated with spec 'nodeSets' with one changed node THEN 1 more replica should be re-created", func() {
+
+			log.Print("START OF: Test 'GIVEN existing Kubegres is updated with spec 'nodeSets' with one changed node THEN 1 more replica should be re-created'")
+
+			test.givenExistingKubegresSpecReplicaNodeNameChanged()
+
+			test.whenKubernetesIsUpdated()
+
+			test.thenPodsStatesShouldBeHavingOnePodNamed(1, 3, "my-kubegres-new-node-1-0")
+
+			test.thenDeployedKubegresSpecShouldBeSetTo(4)
+
+			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
+			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
+
+			test.keepCreatedResourcesForNextTest = true
+
+			log.Print("END OF: Test 'GIVEN existing Kubegres is updated with spec 'nodeSets' with one changed node THEN 1 more replica should be re-created'")
+		})
+
 		It("GIVEN existing Kubegres is updated with spec 'nodeSets' set from 4 to 3 THEN 1 replica should be deleted", func() {
 
 			log.Print("START OF: Test 'GIVEN existing Kubegres is updated with spec 'nodeSets' set from 4 to 3'")
@@ -264,7 +284,7 @@ func (r *SpecNodeSetsTest) givenNewKubegresSpecWithEmptyNodeSets() {
 	r.kubegresResource.Spec.NodeSets = []postgresv1.KubegresNodeSet{}
 }
 
-func (r *SpecNodeSetsTest) givenNewKubegresSpecWithReplicasAndNodeSets() {
+func (r *SpecNodeSetsTest) givenNewKubegresSpecWithReplicasAndNodeSetsOfDifferentSize() {
 	replicas := int32(2)
 	r.kubegresResource = resourceConfigs.LoadKubegresYaml()
 	r.kubegresResource.Spec.Replicas = &replicas
@@ -291,6 +311,21 @@ func (r *SpecNodeSetsTest) givenNewKubegresSpecIsSetTo(specNumberOfNodeSets int)
 		r.kubegresResource.Spec.NodeSets[i] = postgresv1.KubegresNodeSet{
 			Name: "node-" + strconv.Itoa(i),
 		}
+	}
+}
+
+func (r *SpecNodeSetsTest) givenExistingKubegresSpecReplicaNodeNameChanged() {
+	var err error
+	r.kubegresResource, err = r.resourceRetriever.GetKubegres()
+
+	if err != nil {
+		log.Println("Error while getting Kubegres resource : ", err)
+		Expect(err).Should(Succeed())
+		return
+	}
+
+	r.kubegresResource.Spec.NodeSets[1] = postgresv1.KubegresNodeSet{
+		Name: "new-node-1",
 	}
 }
 
@@ -384,6 +419,32 @@ func (r *SpecNodeSetsTest) thenPodsStatesShouldBe(numberOfPrimary, numberOfRepli
 			time.Sleep(resourceConfigs.TestRetryInterval)
 			log.Println("Deployed and Ready StatefulSets check successful")
 			return true
+		}
+
+		return false
+
+	}, resourceConfigs.TestTimeout, resourceConfigs.TestRetryInterval).Should(BeTrue())
+}
+
+func (r *SpecNodeSetsTest) thenPodsStatesShouldBeHavingOnePodNamed(numberOfPrimary, numberOfReplicas int, newName string) bool {
+	return Eventually(func() bool {
+
+		pods, err := r.resourceRetriever.GetKubegresResources()
+		if err != nil && !apierrors.IsNotFound(err) {
+			log.Println("ERROR while retrieving Kubegres pods")
+			return false
+		}
+
+		if pods.AreAllReady &&
+			pods.NbreDeployedPrimary == numberOfPrimary &&
+			pods.NbreDeployedReplicas == numberOfReplicas {
+			for _, pod := range pods.Resources {
+				if pod.Pod.Name == newName {
+					time.Sleep(resourceConfigs.TestRetryInterval)
+					log.Println("Deployed and Ready StatefulSets check successful")
+					return true
+				}
+			}
 		}
 
 		return false

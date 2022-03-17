@@ -93,8 +93,8 @@ type KubegresSpec struct {
 // ----------------------- STATUS -----------------------------------------
 
 type KubegresStatefulSetOperation struct {
-	InstanceIndex int32  `json:"instanceIndex,omitempty"`
-	Name          string `json:"name,omitempty"`
+	Instance string `json:"instance,omitempty"`
+	Name     string `json:"name,omitempty"`
 }
 
 type KubegresStatefulSetSpecUpdateOperation struct {
@@ -113,7 +113,7 @@ type KubegresBlockingOperation struct {
 }
 
 type KubegresStatus struct {
-	LastCreatedInstanceIndex  int32                     `json:"lastCreatedInstanceIndex,omitempty"`
+	LastCreatedInstance       string                    `json:"lastCreatedInstance,omitempty"`
 	BlockingOperation         KubegresBlockingOperation `json:"blockingOperation,omitempty"`
 	PreviousBlockingOperation KubegresBlockingOperation `json:"previousBlockingOperation,omitempty"`
 	EnforcedReplicas          int32                     `json:"enforcedReplicas,omitempty"`

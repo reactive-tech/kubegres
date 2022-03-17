@@ -39,7 +39,6 @@ func CreateStatefulSetCountSpecEnforcer(primaryDbCountSpecEnforcer statefulset.P
 }
 
 func (r *StatefulSetCountSpecEnforcer) EnforceSpec() error {
-
 	if err := r.enforcePrimaryDbInstance(); err != nil {
 		return err
 	}

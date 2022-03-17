@@ -3620,9 +3620,8 @@ spec:
                   statefulSetOperation:
                     description: Custom operation fields
                     properties:
-                      instanceIndex:
-                        format: int32
-                        type: integer
+                      instance:
+                        type: string
                       name:
                         type: string
                     type: object
@@ -3640,9 +3639,8 @@ spec:
               enforcedReplicas:
                 format: int32
                 type: integer
-              lastCreatedInstanceIndex:
-                format: int32
-                type: integer
+              lastCreatedInstance:
+                type: string
               previousBlockingOperation:
                 properties:
                   hasTimedOut:
@@ -3652,9 +3650,8 @@ spec:
                   statefulSetOperation:
                     description: Custom operation fields
                     properties:
-                      instanceIndex:
-                        format: int32
-                        type: integer
+                      instance:
+                        type: string
                       name:
                         type: string
                     type: object

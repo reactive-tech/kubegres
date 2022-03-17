@@ -68,7 +68,6 @@ func (r *PrimaryDbCountSpecEnforcer) CreateOperationConfigForPrimaryDbDeploying(
 }
 
 func (r *PrimaryDbCountSpecEnforcer) Enforce() error {
-
 	// Backward compatibility logic where we initialize the field 'EnforcedReplicas'
 	// added in Kubegres' status from version 1.8
 	r.initialiseStatusEnforcedReplicas()
@@ -84,7 +83,6 @@ func (r *PrimaryDbCountSpecEnforcer) Enforce() error {
 
 	if r.primaryToReplicaFailOver.ShouldWeFailOver() {
 		return r.primaryToReplicaFailOver.FailOver()
-
 	} else if r.shouldWeDeployNewPrimaryDb() {
 		return r.deployNewPrimaryStatefulSet()
 	}
@@ -97,9 +95,8 @@ func (r *PrimaryDbCountSpecEnforcer) initialiseStatusEnforcedReplicas() {
 		return
 	}
 
-	specReplicas := *r.kubegresContext.Replicas()
-
-	if specReplicas >= 1 && specReplicas == r.resourcesStates.StatefulSets.NbreDeployed {
+	specReplicas := r.kubegresContext.ReplicasCount()
+	if specReplicas >= 1 && specReplicas == r.resourcesStates.StatefulSets.NumberDeployed {
 		r.kubegresContext.Status.SetEnforcedReplicas(specReplicas)
 	}
 }
@@ -118,12 +115,11 @@ func (r *PrimaryDbCountSpecEnforcer) logKubegresFeaturesAreReEnabled() {
 }
 
 func (r *PrimaryDbCountSpecEnforcer) shouldWeDeployNewPrimaryDb() bool {
-
 	shouldWeDeployNewPrimary := !r.resourcesStates.StatefulSets.Primary.IsDeployed &&
-		r.resourcesStates.StatefulSets.Replicas.NbreDeployed == 0
+		r.resourcesStates.StatefulSets.Replicas.NumberDeployed == 0
 
 	if shouldWeDeployNewPrimary {
-		if *r.kubegresContext.Replicas() == 1 || !r.hasPrimaryEverBeenDeployed() {
+		if r.kubegresContext.ReplicasCount() == 1 || !r.hasPrimaryEverBeenDeployed() {
 			return true
 		}
 	}
@@ -136,26 +132,25 @@ func (r *PrimaryDbCountSpecEnforcer) hasPrimaryEverBeenDeployed() bool {
 }
 
 func (r *PrimaryDbCountSpecEnforcer) deployNewPrimaryStatefulSet() error {
-
 	if r.hasLastPrimaryCountSpecEnforcementAttemptTimedOut() {
 		r.logDeploymentTimedOut()
 		return nil
 	}
 
-	instanceIndex := r.getInstanceIndexIfPrimaryNeedsToBeRecreatedAndThereIsNoReplicaSetUp()
-
-	if instanceIndex == 0 {
-		instanceIndex = r.kubegresContext.Status.GetLastCreatedInstanceIndex() + 1
+	instance := r.getInstanceIfPrimaryNeedsToBeRecreatedAndThereIsNoReplicaSetUp()
+	if instance == "" {
+		instance = r.kubegresContext.GetNodeSetsFromSpec()[0].Name
+		r.kubegresContext.Log.InfoEvent("PrimaryStatefulSetOperationActivation", "Electing new primary.", "Instance", instance)
 	}
 
-	if err := r.activateBlockingOperation(instanceIndex); err != nil {
-		r.kubegresContext.Log.ErrorEvent("PrimaryStatefulSetOperationActivationErr", err, "Error while activating blocking operation for the deployment of a Primary StatefulSet.", "InstanceIndex", instanceIndex)
+	if err := r.activateBlockingOperation(instance); err != nil {
+		r.kubegresContext.Log.ErrorEvent("PrimaryStatefulSetOperationActivationErr", err, "Error while activating blocking operation for the deployment of a Primary StatefulSet.", "Instance", instance)
 		return err
 	}
 
-	primaryStatefulSet, err := r.resourcesCreator.CreatePrimaryStatefulSet(instanceIndex)
+	primaryStatefulSet, err := r.resourcesCreator.CreatePrimaryStatefulSet(instance)
 	if err != nil {
-		r.kubegresContext.Log.ErrorEvent("PrimaryStatefulSetTemplateErr", err, "Error while creating a Primary StatefulSet object from template.", "InstanceIndex", instanceIndex)
+		r.kubegresContext.Log.ErrorEvent("PrimaryStatefulSetTemplateErr", err, "Error while creating a Primary StatefulSet object from template.", "Instance", instance)
 		r.blockingOperation.RemoveActiveOperation()
 		return err
 	}
@@ -168,8 +163,8 @@ func (r *PrimaryDbCountSpecEnforcer) deployNewPrimaryStatefulSet() error {
 
 	r.kubegresContext.Status.SetEnforcedReplicas(r.kubegresContext.Kubegres.Status.EnforcedReplicas + 1)
 
-	if r.kubegresContext.Status.GetLastCreatedInstanceIndex() == 0 {
-		r.kubegresContext.Status.SetLastCreatedInstanceIndex(1)
+	if r.kubegresContext.Status.GetLastCreatedInstance() == "" {
+		r.kubegresContext.Status.SetLastCreatedInstance(instance)
 	}
 
 	r.kubegresContext.Log.InfoEvent("PrimaryStatefulSetDeployment", "Deployed Primary StatefulSet.", "Primary name", primaryStatefulSet.Name)
@@ -190,41 +185,38 @@ func (r *PrimaryDbCountSpecEnforcer) logDeploymentTimedOut() {
 		"Primary DB StatefulSet to fix", primaryStatefulSetName)
 }
 
-func (r *PrimaryDbCountSpecEnforcer) getInstanceIndexIfPrimaryNeedsToBeRecreatedAndThereIsNoReplicaSetUp() int32 {
+func (r *PrimaryDbCountSpecEnforcer) getInstanceIfPrimaryNeedsToBeRecreatedAndThereIsNoReplicaSetUp() string {
 	if r.isThereReplicaToFailOverToInSpec() || r.wasPrimaryNeverDeployed() {
-		return 0
+		return ""
 	}
 
 	primaryPvc := r.getLastDeployedPrimaryPvc()
-
 	if primaryPvc.Name != "" {
 		r.kubegresContext.Log.InfoEvent("RecreatingPrimaryStatefulSet", "We will recreate a new Primary StatefulSet as it is not available. We will reuse existing PVC: '"+primaryPvc.Name+"'")
-		return r.kubegresContext.Status.GetLastCreatedInstanceIndex()
+		return r.kubegresContext.Status.GetLastCreatedInstance()
 	}
 
 	r.kubegresContext.Log.InfoEvent("RecreatingPrimaryStatefulSet", "We will recreate a new Primary StatefulSet as it is not available. We will create a new PVC as the existing one is not available '"+primaryPvc.Name+"'")
-	return 0
+	return ""
 }
 
 func (r *PrimaryDbCountSpecEnforcer) isThereReplicaToFailOverToInSpec() bool {
-	return *r.kubegresContext.Replicas() > 1
+	return r.kubegresContext.ReplicasCount() > 1
 }
 
 func (r *PrimaryDbCountSpecEnforcer) wasPrimaryNeverDeployed() bool {
-	return r.kubegresContext.Status.GetLastCreatedInstanceIndex() == 0
+	return r.kubegresContext.Status.GetLastCreatedInstance() == ""
 }
 
-func (r *PrimaryDbCountSpecEnforcer) activateBlockingOperation(statefulSetInstanceIndex int32) error {
+func (r *PrimaryDbCountSpecEnforcer) activateBlockingOperation(instance string) error {
 	return r.blockingOperation.ActivateOperationOnStatefulSet(operation.OperationIdPrimaryDbCountSpecEnforcement,
-		operation.OperationStepIdPrimaryDbDeploying,
-		statefulSetInstanceIndex)
+		operation.OperationStepIdPrimaryDbDeploying, instance)
 }
 
 func (r *PrimaryDbCountSpecEnforcer) getLastDeployedPrimaryPvc() *v1.PersistentVolumeClaim {
-
-	lastCreatedInstanceIndex := r.kubegresContext.Status.GetLastCreatedInstanceIndex()
 	kubegresName := r.kubegresContext.Kubegres.Name
-	resourceName := "postgres-db-" + kubegresName + "-" + strconv.Itoa(int(lastCreatedInstanceIndex)) + "-0"
+	lastCreatedInstance := r.kubegresContext.Status.GetLastCreatedInstance()
+	resourceName := "postgres-db-" + kubegresName + "-" + lastCreatedInstance + "-0"
 
 	namespace := r.kubegresContext.Kubegres.Namespace
 	resourceKey := client.ObjectKey{Namespace: namespace, Name: resourceName}

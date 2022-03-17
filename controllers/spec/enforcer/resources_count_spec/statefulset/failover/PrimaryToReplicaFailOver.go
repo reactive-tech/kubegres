@@ -67,19 +67,16 @@ func (r *PrimaryToReplicaFailOver) CreateOperationConfigForFailingOver() operati
 }
 
 func (r *PrimaryToReplicaFailOver) ShouldWeFailOver() bool {
-
 	if !r.hasPrimaryEverBeenDeployed() {
 		return false
 
 	} else if !r.isThereReadyReplica() {
 		r.logFailoverCannotHappenAsNoReplicaDeployed()
 		return false
-
 	} else if r.isManualFailoverRequested() {
 		return true
 
 	} else if r.isNewPrimaryRequired() {
-
 		if r.isAutomaticFailoverDisabled() {
 			r.logFailoverCannotHappenAsAutomaticFailoverIsDisabled()
 			return false
@@ -91,7 +88,6 @@ func (r *PrimaryToReplicaFailOver) ShouldWeFailOver() bool {
 }
 
 func (r *PrimaryToReplicaFailOver) FailOver() error {
-
 	if r.blockingOperation.IsActiveOperationIdDifferentOf(operation.OperationIdPrimaryDbCountSpecEnforcement) {
 		return nil
 	}
@@ -137,7 +133,7 @@ func (r *PrimaryToReplicaFailOver) isPrimaryDbReady() bool {
 }
 
 func (r *PrimaryToReplicaFailOver) isThereReadyReplica() bool {
-	return r.resourcesStates.StatefulSets.Replicas.NbreReady > 0
+	return r.resourcesStates.StatefulSets.Replicas.NumberReady > 0
 }
 
 func (r *PrimaryToReplicaFailOver) isAutomaticFailoverDisabled() bool {
@@ -170,29 +166,29 @@ func (r *PrimaryToReplicaFailOver) getPodToManuallyPromote() string {
 	return r.kubegresContext.Kubegres.Spec.Failover.PromotePod
 }
 
-func (r *PrimaryToReplicaFailOver) getInstanceIndexToManuallyPromote() int32 {
+func (r *PrimaryToReplicaFailOver) getInstanceToManuallyPromote() string {
 	podToPromote := r.getPodToManuallyPromote()
 	if podToPromote == "" || podToPromote == r.resourcesStates.StatefulSets.Primary.Pod.Pod.Name {
-		return 0
+		return ""
 	}
 
-	for _, statefulSetWrapper := range r.resourcesStates.StatefulSets.Replicas.All.GetAllSortedByInstanceIndex() {
+	for _, statefulSetWrapper := range r.resourcesStates.StatefulSets.Replicas.All.GetAllSortedByInstance() {
 		if podToPromote == statefulSetWrapper.Pod.Pod.Name {
-			return statefulSetWrapper.InstanceIndex
+			return statefulSetWrapper.Instance()
 		}
 	}
 
 	r.logManualFailoverCannotHappenAsConfigErr()
-	return 0
+	return ""
 }
 
-func (r *PrimaryToReplicaFailOver) getPrimaryInstanceIndex() int32 {
-	return r.resourcesStates.StatefulSets.Primary.InstanceIndex
+func (r *PrimaryToReplicaFailOver) getPrimaryInstance() string {
+	return r.resourcesStates.StatefulSets.Primary.Instance()
 }
 
 func (r *PrimaryToReplicaFailOver) isManualFailoverRequested() bool {
-	return r.getInstanceIndexToManuallyPromote() > 0 &&
-		r.getInstanceIndexToManuallyPromote() != r.getPrimaryInstanceIndex()
+	return r.getInstanceToManuallyPromote() != "" &&
+		r.getInstanceToManuallyPromote() != r.getPrimaryInstance()
 }
 
 func (r *PrimaryToReplicaFailOver) isWaitingBeforeStartingFailOver() bool {
@@ -204,17 +200,12 @@ func (r *PrimaryToReplicaFailOver) isWaitingBeforeStartingFailOver() bool {
 	return previouslyActiveOperation.StepId == operation.OperationStepIdPrimaryDbWaitingBeforeFailingOver
 }
 
-func (r *PrimaryToReplicaFailOver) getStatefulSetByInstanceIndex(newPrimaryInstanceIndex int32) (statefulset.StatefulSetWrapper, error) {
-	return r.resourcesStates.StatefulSets.All.GetByInstanceIndex(newPrimaryInstanceIndex)
-}
-
 func (r *PrimaryToReplicaFailOver) selectReplicaToPromote() (statefulset.StatefulSetWrapper, error) {
-
 	if r.isManualFailoverRequested() {
 		return r.manuallySelectReplicaToPromote()
 	}
 
-	for _, statefulSetWrapper := range r.resourcesStates.StatefulSets.Replicas.All.GetAllSortedByInstanceIndex() {
+	for _, statefulSetWrapper := range r.resourcesStates.StatefulSets.Replicas.All.GetAllSortedByInstance() {
 		if statefulSetWrapper.IsReady {
 			return statefulSetWrapper, nil
 		}
@@ -226,11 +217,11 @@ func (r *PrimaryToReplicaFailOver) selectReplicaToPromote() (statefulset.Statefu
 
 func (r *PrimaryToReplicaFailOver) manuallySelectReplicaToPromote() (statefulset.StatefulSetWrapper, error) {
 
-	replicaInstanceIndexToPromote := r.getInstanceIndexToManuallyPromote()
+	replicaInstanceToPromote := r.getInstanceToManuallyPromote()
 	r.logManualFailoverIsRequested()
 
-	for _, statefulSetWrapper := range r.resourcesStates.StatefulSets.Replicas.All.GetAllSortedByInstanceIndex() {
-		if statefulSetWrapper.IsReady && statefulSetWrapper.InstanceIndex == replicaInstanceIndexToPromote {
+	for _, statefulSetWrapper := range r.resourcesStates.StatefulSets.Replicas.All.GetAllSortedByInstance() {
+		if statefulSetWrapper.IsReady && statefulSetWrapper.Instance() == replicaInstanceToPromote {
 			return statefulSetWrapper, nil
 		}
 	}
@@ -240,9 +231,8 @@ func (r *PrimaryToReplicaFailOver) manuallySelectReplicaToPromote() (statefulset
 }
 
 func (r *PrimaryToReplicaFailOver) promoteReplicaToPrimary(newPrimary statefulset.StatefulSetWrapper) error {
-
-	newPrimary.StatefulSet.Labels["replicationRole"] = ctx.PrimaryRoleName
-	newPrimary.StatefulSet.Spec.Template.Labels["replicationRole"] = ctx.PrimaryRoleName
+	newPrimary.StatefulSet.Labels[ctx.ReplicationRoleLabelKey] = ctx.PrimaryRoleName
+	newPrimary.StatefulSet.Spec.Template.Labels[ctx.ReplicationRoleLabelKey] = ctx.PrimaryRoleName
 	volumeMount := core.VolumeMount{
 		Name:      "base-config",
 		MountPath: "/tmp/promote_replica_to_primary.sh",
@@ -257,7 +247,7 @@ func (r *PrimaryToReplicaFailOver) promoteReplicaToPrimary(newPrimary statefulse
 	if err != nil {
 		r.kubegresContext.Log.ErrorEvent("FailOverOperationActivationErr", err,
 			"Error while activating a blocking operation for the FailOver of a Primary DB.",
-			"InstanceIndex", newPrimary.InstanceIndex)
+			"Instance", newPrimary.Instance)
 		return err
 	}
 
@@ -284,7 +274,7 @@ func (r *PrimaryToReplicaFailOver) waitBeforePromotingReplicaToPrimary(newPrimar
 	if err != nil {
 		r.kubegresContext.Log.ErrorEvent("FailOverOperationActivationErr", err,
 			"Error while activating a blocking operation to wait before starting the FailOver of a Primary DB.",
-			"InstanceIndex", newPrimary.InstanceIndex)
+			"Instance", newPrimary.Instance)
 		return err
 	}
 
@@ -296,13 +286,13 @@ func (r *PrimaryToReplicaFailOver) waitBeforePromotingReplicaToPrimary(newPrimar
 func (r *PrimaryToReplicaFailOver) activateOperationWaitingBeforeFailingOver(newPrimary statefulset.StatefulSetWrapper) error {
 	return r.blockingOperation.ActivateOperationOnStatefulSet(operation.OperationIdPrimaryDbCountSpecEnforcement,
 		operation.OperationStepIdPrimaryDbWaitingBeforeFailingOver,
-		newPrimary.InstanceIndex)
+		newPrimary.Instance())
 }
 
 func (r *PrimaryToReplicaFailOver) activateOperationFailingOver(newPrimary statefulset.StatefulSetWrapper) error {
 	return r.blockingOperation.ActivateOperationOnStatefulSet(operation.OperationIdPrimaryDbCountSpecEnforcement,
 		operation.OperationStepIdPrimaryDbFailingOver,
-		newPrimary.InstanceIndex)
+		newPrimary.Instance())
 }
 
 func (r *PrimaryToReplicaFailOver) deletePrimaryStatefulSet() {
@@ -352,7 +342,7 @@ func (r *PrimaryToReplicaFailOver) logManualFailoverIsRequested() {
 
 func (r *PrimaryToReplicaFailOver) logFailoverCannotHappenAsNoHealthyReplica() string {
 	errorReason := "FailoverCannotHappenAsNotFoundHealthyReplicaErr"
-	errorMsg := "We cannot Failover to a Replica because there are not any Replicas which are ready to serve requests. " +
+	errorMsg := "We cannot Failover to a Replica because there are not any ReplicasCount which are ready to serve requests. " +
 		"Primary has to be fixed manually."
 	r.kubegresContext.Log.ErrorEvent(errorReason, errors.New(""), errorMsg)
 	return errorMsg

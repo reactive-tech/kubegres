@@ -283,16 +283,22 @@ func (r *SpecNodeSetsTolerationsTest) thenStatefulSetStatesShouldBe(expectedNode
 
 		for _, resource := range kubegresResources.Resources {
 			tolerations := resource.StatefulSet.Spec.Template.Spec.Tolerations
-			statefulSetIndex, _ := strconv.ParseInt(resource.Pod.Metadata.Labels["index"], 10, 32)
-			expectedToleration := expectedNodeSets[statefulSetIndex-1].Tolerations
+			instance, _ := resource.Pod.Metadata.Labels["app.kubernetes.io/instance"]
+
+			expectedTolerations := []v12.Toleration{{}}
+			for _, nodeSet := range expectedNodeSets {
+				if nodeSet.Name == instance {
+					expectedTolerations = nodeSet.Tolerations
+				}
+			}
 
 			if len(tolerations) != 1 {
 				log.Println("StatefulSet '" + resource.StatefulSet.Name + "' doesn't have the expected spec 'nodeSets[].toleration' which is nil when it should have a value. " +
 					"Current value: '" + tolerations[0].String() + "'. Waiting...")
 				return false
 
-			} else if tolerations[0] != expectedToleration[0] {
-				log.Println("StatefulSet '" + resource.StatefulSet.Name + "' doesn't have the expected spec nodeSets[].toleration: " + expectedToleration[0].String() + " " +
+			} else if tolerations[0] != expectedTolerations[0] {
+				log.Println("StatefulSet '" + resource.StatefulSet.Name + "' doesn't have the expected spec nodeSets[].toleration: " + expectedTolerations[0].String() + " " +
 					"Current value: '" + tolerations[0].String() + "'. Waiting...")
 				return false
 			}

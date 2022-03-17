@@ -43,9 +43,11 @@ func (r *AffinitySpecEnforcer) CheckForSpecDifference(statefulSet *apps.Stateful
 	current := statefulSet.Spec.Template.Spec.Affinity
 
 	var expected *v1.Affinity
-	statefulInstanceIndex, _ := r.kubegresContext.GetInstanceIndexFromSpec(*statefulSet)
-	if r.kubegresContext.HasNodeSets() && r.kubegresContext.Kubegres.Spec.NodeSets[statefulInstanceIndex-1].Affinity != nil {
-		expected = r.kubegresContext.Kubegres.Spec.NodeSets[statefulInstanceIndex-1].Affinity
+	instance := r.kubegresContext.GetInstanceFromStatefulSet(*statefulSet)
+	nodeSet := r.kubegresContext.GetNodeSetSpecFromInstance(instance)
+
+	if nodeSet.Affinity != nil {
+		expected = nodeSet.Affinity
 	} else {
 		expected = r.kubegresContext.Kubegres.Spec.Scheduler.Affinity
 	}
@@ -62,10 +64,11 @@ func (r *AffinitySpecEnforcer) CheckForSpecDifference(statefulSet *apps.Stateful
 }
 
 func (r *AffinitySpecEnforcer) EnforceSpec(statefulSet *apps.StatefulSet) (wasSpecUpdated bool, err error) {
-	statefulInstanceIndex, _ := r.kubegresContext.GetInstanceIndexFromSpec(*statefulSet)
+	instance := r.kubegresContext.GetInstanceFromStatefulSet(*statefulSet)
+	nodeSet := r.kubegresContext.GetNodeSetSpecFromInstance(instance)
 
-	if r.kubegresContext.HasNodeSets() && r.kubegresContext.Kubegres.Spec.NodeSets[statefulInstanceIndex-1].Affinity != nil {
-		statefulSet.Spec.Template.Spec.Affinity = r.kubegresContext.Kubegres.Spec.NodeSets[statefulInstanceIndex-1].Affinity
+	if nodeSet.Affinity != nil {
+		statefulSet.Spec.Template.Spec.Affinity = nodeSet.Affinity
 	} else {
 		statefulSet.Spec.Template.Spec.Affinity = r.kubegresContext.Kubegres.Spec.Scheduler.Affinity
 	}

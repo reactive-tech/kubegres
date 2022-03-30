@@ -74,13 +74,11 @@ func (r *ReplicaDbCountSpecEnforcer) CreateOperationConfigForReplicaDbUndeployin
 }
 
 func (r *ReplicaDbCountSpecEnforcer) Enforce() error {
-
 	if r.blockingOperation.IsActiveOperationIdDifferentOf(operation.OperationIdReplicaDbCountSpecEnforcement) {
 		return nil
 	}
 
 	if r.hasLastAttemptTimedOut() {
-
 		if r.isPreviouslyFailedAttemptOnReplicaDbFixed() {
 			r.blockingOperation.RemoveActiveOperation()
 			r.logKubegresFeaturesAreReEnabled()
@@ -104,30 +102,27 @@ func (r *ReplicaDbCountSpecEnforcer) Enforce() error {
 		return nil
 	}
 
-	// Check if the number of deployed replicas == spec if not then deploy one
-	nbreNewReplicaToDeploy := r.getExpectedNbreReplicasToDeploy() - r.getNbreDeployedReplicas()
-
-	if nbreNewReplicaToDeploy > 0 {
-
-		if r.isAutomaticFailoverDisabled() &&
-			!isManualFailoverRequested &&
+	// Check if the nodeSets deployed are different from the spec
+	nextInstanceToDeploy := r.getNextInstanceToDeploy()
+	if nextInstanceToDeploy != "" {
+		if r.isAutomaticFailoverDisabled() && !isManualFailoverRequested &&
 			!r.doesSpecRequireTheDeploymentOfAdditionalReplicas() {
-
 			r.logAutomaticFailoverIsDisabled()
 			return nil
 		}
 
-		return r.deployReplicaStatefulSet()
+		return r.deployReplicaStatefulSet(nextInstanceToDeploy)
+	}
 
-	} else if nbreNewReplicaToDeploy < 0 {
-		replicaToUndeploy := r.getReplicaToUndeploy()
+	nextInstanceToUndeploy := r.getNextInstanceToUndeploy()
+	if nextInstanceToUndeploy != "" {
+		replicaToUndeploy := r.getReplicaToUndeploy(nextInstanceToUndeploy)
 		return r.undeployReplicaStatefulSets(replicaToUndeploy)
+	}
 
-	} else if nbreNewReplicaToDeploy == 0 {
-		for _, replicaStatefulSet := range r.getDeployedReplicas() {
-			if !replicaStatefulSet.IsReady {
-				return r.undeployReplicaStatefulSets(replicaStatefulSet)
-			}
+	for _, replicaStatefulSet := range r.getDeployedReplicas() {
+		if !replicaStatefulSet.IsReady {
+			return r.undeployReplicaStatefulSets(replicaStatefulSet)
 		}
 	}
 
@@ -138,21 +133,59 @@ func (r *ReplicaDbCountSpecEnforcer) isReplicaOperationInProgress() bool {
 	return r.blockingOperation.GetActiveOperation().OperationId == operation.OperationIdReplicaDbCountSpecEnforcement
 }
 
+func (r *ReplicaDbCountSpecEnforcer) getNextInstanceToDeploy() string {
+	existingStatefulSets := r.resourcesStates.StatefulSets.Replicas.All.GetAllSortedByInstance()
+	for _, nodeSet := range r.kubegresContext.GetNodeSetsFromSpec() {
+		if nodeSet.Name == r.resourcesStates.StatefulSets.Primary.Instance() {
+			continue
+		}
+
+		found := false
+		for _, instance := range existingStatefulSets {
+			if nodeSet.Name == instance.Instance() {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return nodeSet.Name
+		}
+	}
+	return ""
+}
+
+func (r *ReplicaDbCountSpecEnforcer) getNextInstanceToUndeploy() string {
+	expectedNodeSets := r.kubegresContext.GetNodeSetsFromSpec()
+	for _, statefulSet := range r.resourcesStates.StatefulSets.Replicas.All.GetAllSortedByInstance() {
+		found := false
+		for _, nodeSet := range expectedNodeSets {
+			if nodeSet.Name == statefulSet.Instance() {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return statefulSet.Instance()
+		}
+	}
+	return ""
+}
+
 func (r *ReplicaDbCountSpecEnforcer) getDeployedReplicas() []statefulset.StatefulSetWrapper {
-	return r.resourcesStates.StatefulSets.Replicas.All.GetAllSortedByInstanceIndex()
+	return r.resourcesStates.StatefulSets.Replicas.All.GetAllSortedByInstance()
 }
 
-func (r *ReplicaDbCountSpecEnforcer) getNbreDeployedReplicas() int32 {
-	return r.resourcesStates.StatefulSets.Replicas.NbreDeployed
+func (r *ReplicaDbCountSpecEnforcer) getNumberDeployedReplicas() int32 {
+	return r.resourcesStates.StatefulSets.Replicas.NumberDeployed
 }
 
-func (r *ReplicaDbCountSpecEnforcer) getExpectedNbreReplicasToDeploy() int32 {
-	expectedNbreToDeploy := r.resourcesStates.StatefulSets.SpecExpectedNbreToDeploy
+func (r *ReplicaDbCountSpecEnforcer) getExpectedNumberReplicasToDeploy() int32 {
+	expectedNumberToDeploy := r.resourcesStates.StatefulSets.SpecExpectedNumberToDeploy
 
-	if expectedNbreToDeploy <= 1 {
+	if expectedNumberToDeploy <= 1 {
 		return 0
 	}
-	return expectedNbreToDeploy - 1
+	return expectedNumberToDeploy - 1
 }
 
 func (r *ReplicaDbCountSpecEnforcer) hasLastAttemptTimedOut() bool {
@@ -161,8 +194,8 @@ func (r *ReplicaDbCountSpecEnforcer) hasLastAttemptTimedOut() bool {
 
 func (r *ReplicaDbCountSpecEnforcer) isPreviouslyFailedAttemptOnReplicaDbFixed() bool {
 	activeOperation := r.blockingOperation.GetActiveOperation()
-	replicaInstanceIndex := activeOperation.StatefulSetOperation.InstanceIndex
-	replica, err := r.resourcesStates.StatefulSets.Replicas.All.GetByInstanceIndex(replicaInstanceIndex)
+	instance := activeOperation.StatefulSetOperation.Instance
+	replica, err := r.resourcesStates.StatefulSets.Replicas.All.GetByInstance(instance)
 
 	return err != nil || replica.IsReady
 }
@@ -180,7 +213,7 @@ func (r *ReplicaDbCountSpecEnforcer) logTimedOut() {
 
 	if activeOperation.StepId == operation.OperationStepIdReplicaDbDeploying {
 
-		err := errors.New("Replica DB StatefulSet deployment timed-out")
+		err := errors.New("replica DB StatefulSet deployment timed-out")
 		r.kubegresContext.Log.ErrorEvent("ReplicaStatefulSetDeploymentTimedOutErr", err,
 			"Last deployment attempt of a Replica DB StatefulSet has timed-out after "+operationTimeOutStr+" seconds. "+
 				"The new Replica DB is still NOT ready. It must be fixed manually. "+
@@ -188,7 +221,7 @@ func (r *ReplicaDbCountSpecEnforcer) logTimedOut() {
 			"Replica DB StatefulSet to fix", replicaStatefulSetName)
 
 	} else {
-		err := errors.New("Replica DB StatefulSet un-deployment timed-out")
+		err := errors.New("replica DB StatefulSet un-deployment timed-out")
 		r.kubegresContext.Log.ErrorEvent("ReplicaStatefulSetDeploymentTimedOutErr", err,
 			"Last un-deployment attempt of a Replica DB StatefulSet has timed-out after "+operationTimeOutStr+" seconds. "+
 				"The new Replica DB is still NOT removed. It must be removed manually. "+
@@ -206,7 +239,7 @@ func (r *ReplicaDbCountSpecEnforcer) isManualFailoverRequested() bool {
 }
 
 func (r *ReplicaDbCountSpecEnforcer) doesSpecRequireTheDeploymentOfAdditionalReplicas() bool {
-	return *r.kubegresContext.Kubegres.Spec.Replicas > r.kubegresContext.Kubegres.Status.EnforcedReplicas
+	return r.kubegresContext.ReplicasCount() > r.kubegresContext.Kubegres.Status.EnforcedReplicas
 }
 
 func (r *ReplicaDbCountSpecEnforcer) resetInSpecManualFailover() error {
@@ -220,13 +253,12 @@ func (r *ReplicaDbCountSpecEnforcer) isPrimaryDbReady() bool {
 }
 
 func (r *ReplicaDbCountSpecEnforcer) isReplicaDbReady(operation postgresV1.KubegresBlockingOperation) bool {
-
-	statefulSetInstanceIndex := operation.StatefulSetOperation.InstanceIndex
-	statefulSetWrapper, err := r.resourcesStates.StatefulSets.Replicas.All.GetByInstanceIndex(statefulSetInstanceIndex)
+	instance := operation.StatefulSetOperation.Instance
+	statefulSetWrapper, err := r.resourcesStates.StatefulSets.Replicas.All.GetByInstance(instance)
 	if err != nil {
-		r.kubegresContext.Log.InfoEvent("A replica StatefulSet's instanceIndex does not exist. As a result "+
+		r.kubegresContext.Log.InfoEvent("A replica StatefulSet's instance does not exist. As a result "+
 			"we will return false inside a blocking operation completion checker 'isReplicaDbReady()'",
-			"instanceIndex", statefulSetInstanceIndex)
+			"Instance", instance)
 		return false
 	}
 
@@ -234,24 +266,21 @@ func (r *ReplicaDbCountSpecEnforcer) isReplicaDbReady(operation postgresV1.Kubeg
 }
 
 func (r *ReplicaDbCountSpecEnforcer) isReplicaDbUndeployed(operation postgresV1.KubegresBlockingOperation) bool {
-	statefulSetInstanceIndex := operation.StatefulSetOperation.InstanceIndex
-	_, err := r.resourcesStates.StatefulSets.Replicas.All.GetByInstanceIndex(statefulSetInstanceIndex)
+	instance := operation.StatefulSetOperation.Instance
+	_, err := r.resourcesStates.StatefulSets.Replicas.All.GetByInstance(instance)
 	return err != nil
 }
 
-func (r *ReplicaDbCountSpecEnforcer) deployReplicaStatefulSet() error {
-
-	instanceIndex := r.kubegresContext.Status.GetLastCreatedInstanceIndex() + 1
-
-	err := r.activateBlockingOperationForDeployment(instanceIndex)
+func (r *ReplicaDbCountSpecEnforcer) deployReplicaStatefulSet(instance string) error {
+	err := r.activateBlockingOperationForDeployment(instance)
 	if err != nil {
-		r.kubegresContext.Log.ErrorEvent("ReplicaStatefulSetOperationActivationErr", err, "Error while activating blocking operation for the deployment of a Replica StatefulSet.", "InstanceIndex", instanceIndex)
+		r.kubegresContext.Log.ErrorEvent("ReplicaStatefulSetOperationActivationErr", err, "Error while activating blocking operation for the deployment of a Replica StatefulSet.", "Instance", instance)
 		return err
 	}
 
-	replicaStatefulSet, err := r.resourcesCreator.CreateReplicaStatefulSet(instanceIndex)
+	replicaStatefulSet, err := r.resourcesCreator.CreateReplicaStatefulSet(instance)
 	if err != nil {
-		r.kubegresContext.Log.ErrorEvent("ReplicaStatefulSetTemplateErr", err, "Error while creating a Replica StatefulSet object from template.", "InstanceIndex", instanceIndex)
+		r.kubegresContext.Log.ErrorEvent("ReplicaStatefulSetTemplateErr", err, "Error while creating a Replica StatefulSet object from template.", "Instance", instance)
 		r.blockingOperation.RemoveActiveOperation()
 		return err
 	}
@@ -266,34 +295,33 @@ func (r *ReplicaDbCountSpecEnforcer) deployReplicaStatefulSet() error {
 
 	r.kubegresContext.Status.SetEnforcedReplicas(r.kubegresContext.Kubegres.Status.EnforcedReplicas + 1)
 
-	r.kubegresContext.Status.SetLastCreatedInstanceIndex(instanceIndex)
+	r.kubegresContext.Status.SetLastCreatedInstance(instance)
 	r.kubegresContext.Log.InfoEvent("ReplicaStatefulSetDeployment", "Deployed Replica StatefulSet.", "Replica name", replicaStatefulSet.Name)
 	return nil
 }
 
-func (r *ReplicaDbCountSpecEnforcer) activateBlockingOperationForDeployment(statefulSetInstanceIndex int32) error {
+func (r *ReplicaDbCountSpecEnforcer) activateBlockingOperationForDeployment(instance string) error {
 	return r.blockingOperation.ActivateOperationOnStatefulSet(operation.OperationIdReplicaDbCountSpecEnforcement,
 		operation.OperationStepIdReplicaDbDeploying,
-		statefulSetInstanceIndex)
+		instance)
 }
 
-func (r *ReplicaDbCountSpecEnforcer) activateBlockingOperationForUndeployment(statefulSetInstanceIndex int32) error {
+func (r *ReplicaDbCountSpecEnforcer) activateBlockingOperationForUndeployment(instance string) error {
 	return r.blockingOperation.ActivateOperationOnStatefulSet(operation.OperationIdReplicaDbCountSpecEnforcement,
 		operation.OperationStepIdReplicaDbUndeploying,
-		statefulSetInstanceIndex)
+		instance)
 }
 
 func (r *ReplicaDbCountSpecEnforcer) undeployReplicaStatefulSets(replicaToUndeploy statefulset.StatefulSetWrapper) error {
-
 	if replicaToUndeploy.StatefulSet.Name == "" {
 		return nil
 	}
 
-	r.kubegresContext.Log.Info("We are going to undeploy a Replica statefulSet.", "InstanceIndex", replicaToUndeploy.InstanceIndex)
+	r.kubegresContext.Log.Info("We are going to undeploy a Replica statefulSet.", "Instance", replicaToUndeploy.Instance)
 
-	err := r.activateBlockingOperationForUndeployment(replicaToUndeploy.InstanceIndex)
+	err := r.activateBlockingOperationForUndeployment(replicaToUndeploy.Instance())
 	if err != nil {
-		r.kubegresContext.Log.ErrorEvent("ReplicaStatefulSetOperationActivationErr", err, "Error while activating blocking operation for the undeployment of a Replica StatefulSet.", "InstanceIndex", replicaToUndeploy.InstanceIndex)
+		r.kubegresContext.Log.ErrorEvent("ReplicaStatefulSetOperationActivationErr", err, "Error while activating blocking operation for the undeployment of a Replica StatefulSet.", "Instance", replicaToUndeploy.Instance)
 		return err
 	}
 
@@ -308,9 +336,8 @@ func (r *ReplicaDbCountSpecEnforcer) undeployReplicaStatefulSets(replicaToUndepl
 	return nil
 }
 
-func (r *ReplicaDbCountSpecEnforcer) getReplicaToUndeploy() statefulset.StatefulSetWrapper {
-
-	replicasToUndeploy := r.getReplicasReverseSortedByInstanceIndex()
+func (r *ReplicaDbCountSpecEnforcer) getReplicaToDeploy() statefulset.StatefulSetWrapper {
+	replicasToUndeploy := r.getReplicasReverseSortedByInstance()
 
 	if len(replicasToUndeploy) == 0 {
 		return statefulset.StatefulSetWrapper{}
@@ -319,8 +346,18 @@ func (r *ReplicaDbCountSpecEnforcer) getReplicaToUndeploy() statefulset.Stateful
 	return replicasToUndeploy[0]
 }
 
-func (r *ReplicaDbCountSpecEnforcer) getReplicasReverseSortedByInstanceIndex() []statefulset.StatefulSetWrapper {
-	return r.resourcesStates.StatefulSets.Replicas.All.GetAllReverseSortedByInstanceIndex()
+func (r *ReplicaDbCountSpecEnforcer) getReplicaToUndeploy(instance string) statefulset.StatefulSetWrapper {
+	replicasToUndeploy, err := r.resourcesStates.StatefulSets.Replicas.All.GetByInstance(instance)
+	if err != nil {
+		r.kubegresContext.Log.ErrorEvent("ReplicaStatefulSetDeletionErr", err, "Unable to find StatefulSet to delete.", "Instance", instance)
+		return statefulset.StatefulSetWrapper{}
+	}
+
+	return replicasToUndeploy
+}
+
+func (r *ReplicaDbCountSpecEnforcer) getReplicasReverseSortedByInstance() []statefulset.StatefulSetWrapper {
+	return r.resourcesStates.StatefulSets.Replicas.All.GetAllReverseSortedByInstance()
 }
 
 func (r *ReplicaDbCountSpecEnforcer) deleteStatefulSet(statefulSetToDelete v1.StatefulSet) error {
@@ -339,8 +376,8 @@ func (r *ReplicaDbCountSpecEnforcer) deleteStatefulSet(statefulSetToDelete v1.St
 
 func (r *ReplicaDbCountSpecEnforcer) logAutomaticFailoverIsDisabled() {
 	r.kubegresContext.Log.InfoEvent("AutomaticFailoverIsDisabled",
-		"We need to deploy additional Replica(s) because the number of Replicas deployed is less "+
-			"than the number of required Replicas in the Spec. "+
+		"We need to deploy additional Replica(s) because the number of ReplicasCount deployed is less "+
+			"than the number of required ReplicasCount in the Spec. "+
 			"However, a Replica failover cannot happen because the automatic failover feature is disabled in the YAML. "+
 			"To re-enable automatic failover, either set the field 'failover.isDisabled' to false "+
 			"or remove that field from the YAML.")

@@ -25,7 +25,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"reactive-tech.io/kubegres/controllers/ctx"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strconv"
 )
 
 type PodStates struct {
@@ -34,11 +33,11 @@ type PodStates struct {
 }
 
 type PodWrapper struct {
-	IsDeployed    bool
-	IsReady       bool
-	IsStuck       bool
-	InstanceIndex int32
-	Pod           core.Pod
+	IsDeployed bool
+	IsReady    bool
+	IsStuck    bool
+	Instance   string
+	Pod        core.Pod
 }
 
 func loadPodsStates(kubegresContext ctx.KubegresContext) (PodStates, error) {
@@ -48,23 +47,21 @@ func loadPodsStates(kubegresContext ctx.KubegresContext) (PodStates, error) {
 }
 
 func (r *PodStates) loadStates() (err error) {
-
 	deployedPods, err := r.getDeployedPods()
 	if err != nil {
 		return err
 	}
 
 	for _, pod := range deployedPods.Items {
-
 		isPodReady := r.isPodReady(pod)
 		isPodStuck := r.isPodStuck(pod)
 
 		podWrapper := PodWrapper{
-			IsDeployed:    true,
-			IsReady:       isPodReady && !isPodStuck,
-			IsStuck:       isPodStuck,
-			InstanceIndex: r.getInstanceIndex(pod),
-			Pod:           pod,
+			IsDeployed: true,
+			IsReady:    isPodReady && !isPodStuck,
+			IsStuck:    isPodStuck,
+			Instance:   r.getInstance(pod),
+			Pod:        pod,
 		}
 
 		r.pods = append(r.pods, podWrapper)
@@ -74,11 +71,10 @@ func (r *PodStates) loadStates() (err error) {
 }
 
 func (r *PodStates) getDeployedPods() (*core.PodList, error) {
-
 	list := &core.PodList{}
 	opts := []client.ListOption{
 		client.InNamespace(r.kubegresContext.Kubegres.Namespace),
-		client.MatchingLabels{"app": r.kubegresContext.Kubegres.Name},
+		client.MatchingLabels{ctx.NameLabelKey: r.kubegresContext.Kubegres.Name},
 	}
 	err := r.kubegresContext.Client.List(r.kubegresContext.Ctx, list, opts...)
 
@@ -95,7 +91,6 @@ func (r *PodStates) getDeployedPods() (*core.PodList, error) {
 }
 
 func (r *PodStates) isPodReady(pod core.Pod) bool {
-
 	if len(pod.Status.ContainerStatuses) == 0 {
 		return false
 	}
@@ -104,7 +99,6 @@ func (r *PodStates) isPodReady(pod core.Pod) bool {
 }
 
 func (r *PodStates) isPodStuck(pod core.Pod) bool {
-
 	if len(pod.Status.ContainerStatuses) == 0 ||
 		pod.Status.ContainerStatuses[0].State.Waiting == nil {
 		return false
@@ -119,7 +113,6 @@ func (r *PodStates) isPodStuck(pod core.Pod) bool {
 	return false
 }
 
-func (r *PodStates) getInstanceIndex(pod core.Pod) int32 {
-	instanceIndex, _ := strconv.ParseInt(pod.Labels["index"], 10, 32)
-	return int32(instanceIndex)
+func (r *PodStates) getInstance(pod core.Pod) string {
+	return pod.Labels[ctx.InstanceLabelKey]
 }

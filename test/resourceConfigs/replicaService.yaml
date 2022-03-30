@@ -12,5 +12,4 @@ spec:
       port: 5432
       nodePort: 30008
   selector:
-    app: my-kubegres
-    replicationRole: replica
+    app.kubegres.io/replication-role: replica

@@ -22,6 +22,7 @@ package ctx
 
 import (
 	"context"
+	apps "k8s.io/api/apps/v1"
 	"reactive-tech.io/kubegres/api/v1"
 	"reactive-tech.io/kubegres/controllers/ctx/log"
 	"reactive-tech.io/kubegres/controllers/ctx/status"
@@ -53,6 +54,9 @@ const (
 	EnvVarNamePgData                       = "PGDATA"
 	EnvVarNameOfPostgresSuperUserPsw       = "POSTGRES_PASSWORD"
 	EnvVarNameOfPostgresReplicationUserPsw = "POSTGRES_REPLICATION_PASSWORD"
+	NameLabelKey                           = "app.kubernetes.io/name"
+	InstanceLabelKey                       = "app.kubernetes.io/instance"
+	ReplicationRoleLabelKey                = "app.kubegres.io/replication-role"
 )
 
 func (r *KubegresContext) GetServiceResourceName(isPrimary bool) string {
@@ -62,8 +66,8 @@ func (r *KubegresContext) GetServiceResourceName(isPrimary bool) string {
 	return r.Kubegres.Name + "-replica"
 }
 
-func (r *KubegresContext) GetStatefulSetResourceName(instanceIndex int32) string {
-	return r.Kubegres.Name + "-" + strconv.Itoa(int(instanceIndex))
+func (r *KubegresContext) GetStatefulSetResourceName(instance string) string {
+	return r.Kubegres.Name + "-" + instance
 }
 
 func (r *KubegresContext) IsReservedVolumeName(volumeName string) bool {
@@ -71,4 +75,39 @@ func (r *KubegresContext) IsReservedVolumeName(volumeName string) bool {
 		volumeName == BaseConfigMapVolumeName ||
 		volumeName == CustomConfigMapVolumeName ||
 		strings.Contains(volumeName, "kube-api")
+}
+
+func (r *KubegresContext) ReplicasCount() int32 {
+	if r.Kubegres.Spec.NodeSets == nil {
+		return *r.Kubegres.Spec.Replicas
+	}
+	return int32(len(r.Kubegres.Spec.NodeSets))
+}
+
+func (r *KubegresContext) GetNodeSetsFromSpec() []v1.KubegresNodeSet {
+	if r.Kubegres.Spec.NodeSets == nil {
+		nodeSets := make([]v1.KubegresNodeSet, *r.Kubegres.Spec.Replicas)
+		for i := int32(0); i < *r.Kubegres.Spec.Replicas; i += 1 {
+			nodeSets[i] = v1.KubegresNodeSet{
+				Name: strconv.Itoa(int(i)),
+			}
+		}
+		return nodeSets
+	}
+	return r.Kubegres.Spec.NodeSets
+}
+
+func (r *KubegresContext) GetInstanceFromStatefulSet(statefulSet apps.StatefulSet) string {
+	return statefulSet.Labels[InstanceLabelKey]
+}
+
+func (r *KubegresContext) GetNodeSetSpecFromInstance(instance string) *v1.KubegresNodeSet {
+	for _, nodeSet := range r.Kubegres.Spec.NodeSets {
+		if nodeSet.Name == instance {
+			return &nodeSet
+		}
+	}
+	return &v1.KubegresNodeSet{
+		Name: instance,
+	}
 }

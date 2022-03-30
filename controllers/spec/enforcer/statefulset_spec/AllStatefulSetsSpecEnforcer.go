@@ -88,7 +88,6 @@ func (r *AllStatefulSetsSpecEnforcer) CreateOperationConfigForStatefulSetWaiting
 }
 
 func (r *AllStatefulSetsSpecEnforcer) EnforceSpec() error {
-
 	if !r.isPrimaryDbReady() {
 		return nil
 	}
@@ -97,18 +96,15 @@ func (r *AllStatefulSetsSpecEnforcer) EnforceSpec() error {
 		return nil
 	}
 
-	for _, statefulSetWrapper := range r.getAllReverseSortedByInstanceIndex() {
-
+	for _, statefulSetWrapper := range r.getAllReverseSortedByInstance() {
 		statefulSet := statefulSetWrapper.StatefulSet
-		statefulSetInstanceIndex := statefulSetWrapper.InstanceIndex
+		instance := statefulSetWrapper.Instance()
 		specDifferences := r.specsEnforcers.CheckForSpecDifferences(&statefulSet)
 
-		if r.hasLastSpecUpdateAttemptTimedOut(statefulSetInstanceIndex) {
-
+		if r.hasLastSpecUpdateAttemptTimedOut(instance) {
 			if r.areNewSpecChangesSameAsFailingSpecChanges(specDifferences) {
 				r.logSpecEnforcementTimedOut()
 				return nil
-
 			} else {
 				r.blockingOperation.RemoveActiveOperation()
 				r.logKubegresFeaturesAreReEnabled()
@@ -116,10 +112,8 @@ func (r *AllStatefulSetsSpecEnforcer) EnforceSpec() error {
 		}
 
 		if specDifferences.IsThereDifference() {
-			return r.enforceSpec(statefulSet, statefulSetInstanceIndex, specDifferences)
-
-		} else if r.isStatefulSetSpecUpdating(statefulSetInstanceIndex) {
-
+			return r.enforceSpec(statefulSet, instance, specDifferences)
+		} else if r.isStatefulSetSpecUpdating(instance) {
 			isPodReadyAndSpecUpdated, err := r.verifySpecEnforcementIsAppliedToPod(statefulSetWrapper, specDifferences)
 			if err != nil || !isPodReadyAndSpecUpdated {
 				return err
@@ -134,18 +128,18 @@ func (r *AllStatefulSetsSpecEnforcer) isPrimaryDbReady() bool {
 	return r.resourcesStates.StatefulSets.Primary.IsReady
 }
 
-func (r *AllStatefulSetsSpecEnforcer) getAllReverseSortedByInstanceIndex() []statefulset.StatefulSetWrapper {
-	replicas := r.resourcesStates.StatefulSets.Replicas.All.GetAllReverseSortedByInstanceIndex()
+func (r *AllStatefulSetsSpecEnforcer) getAllReverseSortedByInstance() []statefulset.StatefulSetWrapper {
+	replicas := r.resourcesStates.StatefulSets.Replicas.All.GetAllReverseSortedByInstance()
 	return append(replicas, r.resourcesStates.StatefulSets.Primary)
 }
 
-func (r *AllStatefulSetsSpecEnforcer) hasLastSpecUpdateAttemptTimedOut(statefulSetInstanceIndex int32) bool {
+func (r *AllStatefulSetsSpecEnforcer) hasLastSpecUpdateAttemptTimedOut(instance string) bool {
 	if !r.blockingOperation.HasActiveOperationIdTimedOut(operation.OperationIdStatefulSetSpecEnforcing) {
 		return false
 	}
 
 	activeOperation := r.blockingOperation.GetActiveOperation()
-	return activeOperation.StatefulSetOperation.InstanceIndex == statefulSetInstanceIndex
+	return activeOperation.StatefulSetOperation.Instance == instance
 }
 
 func (r *AllStatefulSetsSpecEnforcer) areNewSpecChangesSameAsFailingSpecChanges(newSpecDiff StatefulSetSpecDifferences) bool {
@@ -174,11 +168,10 @@ func (r *AllStatefulSetsSpecEnforcer) logSpecEnforcementTimedOut() {
 		"One or many of the following specs failed: ", specDifferences)
 }
 
-func (r *AllStatefulSetsSpecEnforcer) enforceSpec(statefulSet apps.StatefulSet,
-	instanceIndex int32,
+func (r *AllStatefulSetsSpecEnforcer) enforceSpec(statefulSet apps.StatefulSet, instance string,
 	specDifferences StatefulSetSpecDifferences) error {
 
-	err := r.activateOperationStepStatefulSetSpecUpdating(instanceIndex, specDifferences)
+	err := r.activateOperationStepStatefulSetSpecUpdating(instance, specDifferences)
 	if err != nil {
 		r.kubegresContext.Log.ErrorEvent("StatefulSetSpecEnforcementOperationActivationErr", err, "Error while activating blocking operation for the enforcement of StatefulSet spec.", "StatefulSet name", statefulSet.Name)
 		return err
@@ -219,7 +212,7 @@ func (r *AllStatefulSetsSpecEnforcer) verifySpecEnforcementIsAppliedToPod(statef
 func (r *AllStatefulSetsSpecEnforcer) handleWhenStuckPod(podWrapper statefulset.PodWrapper,
 	specDifferences StatefulSetSpecDifferences) (err error) {
 
-	err = r.activateOperationStepWaitingUntilPodIsNotStuck(podWrapper.InstanceIndex, specDifferences)
+	err = r.activateOperationStepWaitingUntilPodIsNotStuck(podWrapper.Instance, specDifferences)
 	if err != nil {
 		r.kubegresContext.Log.ErrorEvent("PodSpecEnforcementOperationActivationErr", err,
 			"Error while activating a blocking operation for the enforcement of a Pod's spec. "+
@@ -252,7 +245,7 @@ func (r *AllStatefulSetsSpecEnforcer) handleWhenPodSpecNotUpToDateOrNotReady(pod
 			"Pod name", podWrapper.Pod.Name)
 	}
 
-	err = r.activateOperationStepStatefulSetPodSpecUpdating(podWrapper.InstanceIndex, specDifferences)
+	err = r.activateOperationStepStatefulSetPodSpecUpdating(podWrapper.Instance, specDifferences)
 	if err != nil {
 		r.kubegresContext.Log.ErrorEvent("PodSpecEnforcementOperationActivationErr", err,
 			"Error while activating a blocking operation for the enforcement of a Pod's spec.",
@@ -263,27 +256,26 @@ func (r *AllStatefulSetsSpecEnforcer) handleWhenPodSpecNotUpToDateOrNotReady(pod
 	return nil
 }
 
-func (r *AllStatefulSetsSpecEnforcer) isStatefulSetSpecUpdating(statefulSetInstanceIndex int32) bool {
+func (r *AllStatefulSetsSpecEnforcer) isStatefulSetSpecUpdating(instance string) bool {
 	if !r.blockingOperation.IsActiveOperationInTransition(operation.OperationIdStatefulSetSpecEnforcing) {
 		return false
 	}
 
 	previouslyActiveOperation := r.blockingOperation.GetPreviouslyActiveOperation()
-	return previouslyActiveOperation.StatefulSetOperation.InstanceIndex == statefulSetInstanceIndex
+	return previouslyActiveOperation.StatefulSetOperation.Instance == instance
 }
 
 func (r *AllStatefulSetsSpecEnforcer) isStatefulSetSpecUpdated(operation postgresV1.KubegresBlockingOperation) bool {
-
 	if r.blockingOperation.GetNbreSecondsSinceOperationHasStarted() < 10 {
 		return false
 	}
 
-	statefulSetInstanceIndex := r.getUpdatingInstanceIndex(operation)
-	statefulSetWrapper, err := r.resourcesStates.StatefulSets.All.GetByInstanceIndex(statefulSetInstanceIndex)
+	instance := r.getUpdatingInstance(operation)
+	statefulSetWrapper, err := r.resourcesStates.StatefulSets.All.GetByInstance(instance)
 	if err != nil {
-		r.kubegresContext.Log.InfoEvent("A StatefulSet's instanceIndex does not exist. As a result we will "+
+		r.kubegresContext.Log.InfoEvent("A StatefulSet's instance does not exist. As a result we will "+
 			"return false inside a blocking operation completion checker 'isStatefulSetSpecUpdated()'",
-			"instanceIndex", statefulSetInstanceIndex)
+			"Instance", instance)
 		return false
 	}
 
@@ -292,13 +284,12 @@ func (r *AllStatefulSetsSpecEnforcer) isStatefulSetSpecUpdated(operation postgre
 }
 
 func (r *AllStatefulSetsSpecEnforcer) isStatefulSetPodSpecUpdated(operation postgresV1.KubegresBlockingOperation) bool {
-
-	statefulSetInstanceIndex := r.getUpdatingInstanceIndex(operation)
-	statefulSetWrapper, err := r.resourcesStates.StatefulSets.All.GetByInstanceIndex(statefulSetInstanceIndex)
+	instance := r.getUpdatingInstance(operation)
+	statefulSetWrapper, err := r.resourcesStates.StatefulSets.All.GetByInstance(instance)
 	if err != nil {
-		r.kubegresContext.Log.InfoEvent("A StatefulSet's instanceIndex does not exist. As a result we will "+
+		r.kubegresContext.Log.InfoEvent("A StatefulSet's instance does not exist. As a result we will "+
 			"return false inside a blocking operation completion checker 'isStatefulSetPodSpecUpdated()'",
-			"instanceIndex", statefulSetInstanceIndex)
+			"Instance", instance)
 		return false
 	}
 
@@ -313,13 +304,12 @@ func (r *AllStatefulSetsSpecEnforcer) isStatefulSetPodSpecUpdated(operation post
 }
 
 func (r *AllStatefulSetsSpecEnforcer) isStatefulSetPodNotStuck(operation postgresV1.KubegresBlockingOperation) bool {
-
-	statefulSetInstanceIndex := r.getUpdatingInstanceIndex(operation)
-	statefulSetWrapper, err := r.resourcesStates.StatefulSets.All.GetByInstanceIndex(statefulSetInstanceIndex)
+	instance := r.getUpdatingInstance(operation)
+	statefulSetWrapper, err := r.resourcesStates.StatefulSets.All.GetByInstance(instance)
 	if err != nil {
-		r.kubegresContext.Log.InfoEvent("A StatefulSet's instanceIndex does not exist. As a result we will "+
+		r.kubegresContext.Log.InfoEvent("A StatefulSet's instance does not exist. As a result we will "+
 			"return false inside a blocking operation completion checker 'isStatefulSetPodNotStuck()'",
-			"instanceIndex", statefulSetInstanceIndex)
+			"Instance", instance)
 		return false
 	}
 
@@ -327,33 +317,33 @@ func (r *AllStatefulSetsSpecEnforcer) isStatefulSetPodNotStuck(operation postgre
 	return !podWrapper.IsStuck
 }
 
-func (r *AllStatefulSetsSpecEnforcer) activateOperationStepStatefulSetSpecUpdating(statefulSetInstanceIndex int32,
+func (r *AllStatefulSetsSpecEnforcer) activateOperationStepStatefulSetSpecUpdating(instance string,
 	specDifferences StatefulSetSpecDifferences) error {
 
 	return r.blockingOperation.ActivateOperationOnStatefulSetSpecUpdate(operation.OperationIdStatefulSetSpecEnforcing,
 		operation.OperationStepIdStatefulSetSpecUpdating,
-		statefulSetInstanceIndex,
+		instance,
 		specDifferences.GetSpecDifferencesAsString())
 }
 
-func (r *AllStatefulSetsSpecEnforcer) activateOperationStepStatefulSetPodSpecUpdating(statefulSetInstanceIndex int32,
+func (r *AllStatefulSetsSpecEnforcer) activateOperationStepStatefulSetPodSpecUpdating(instance string,
 	specDifferences StatefulSetSpecDifferences) error {
 
 	return r.blockingOperation.ActivateOperationOnStatefulSetSpecUpdate(operation.OperationIdStatefulSetSpecEnforcing,
 		operation.OperationStepIdStatefulSetPodSpecUpdating,
-		statefulSetInstanceIndex,
+		instance,
 		specDifferences.GetSpecDifferencesAsString())
 }
 
-func (r *AllStatefulSetsSpecEnforcer) activateOperationStepWaitingUntilPodIsNotStuck(statefulSetInstanceIndex int32,
+func (r *AllStatefulSetsSpecEnforcer) activateOperationStepWaitingUntilPodIsNotStuck(instance string,
 	specDifferences StatefulSetSpecDifferences) error {
 
 	return r.blockingOperation.ActivateOperationOnStatefulSetSpecUpdate(operation.OperationIdStatefulSetSpecEnforcing,
 		operation.OperationStepIdStatefulSetWaitingOnStuckPod,
-		statefulSetInstanceIndex,
+		instance,
 		specDifferences.GetSpecDifferencesAsString())
 }
 
-func (r *AllStatefulSetsSpecEnforcer) getUpdatingInstanceIndex(operation postgresV1.KubegresBlockingOperation) int32 {
-	return operation.StatefulSetOperation.InstanceIndex
+func (r *AllStatefulSetsSpecEnforcer) getUpdatingInstance(operation postgresV1.KubegresBlockingOperation) string {
+	return operation.StatefulSetOperation.Instance
 }

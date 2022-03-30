@@ -42,7 +42,6 @@ func LoadResourcesStates(kubegresContext ctx.KubegresContext) (ResourcesStates, 
 }
 
 func (r *ResourcesStates) loadStates() (err error) {
-
 	err = r.loadDbStorageClassStates()
 	if err != nil {
 		return err

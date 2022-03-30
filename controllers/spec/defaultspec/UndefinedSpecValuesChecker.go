@@ -104,7 +104,6 @@ func (r *UndefinedSpecValuesChecker) updateSpec() error {
 }
 
 func (r *UndefinedSpecValuesChecker) createDefaultAffinity() *core.Affinity {
-
 	resourceName := r.kubegresContext.Kubegres.Name
 
 	weightedPodAffinityTerm := core.WeightedPodAffinityTerm{
@@ -113,7 +112,7 @@ func (r *UndefinedSpecValuesChecker) createDefaultAffinity() *core.Affinity {
 			LabelSelector: &metav1.LabelSelector{
 				MatchExpressions: []metav1.LabelSelectorRequirement{
 					{
-						Key:      "app",
+						Key:      ctx.NameLabelKey,
 						Operator: metav1.LabelSelectorOpIn,
 						Values:   []string{resourceName},
 					},

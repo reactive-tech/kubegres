@@ -87,17 +87,17 @@ func (r *BlockingOperation) ActivateOperation(operationId string, stepId string)
 	return r.activateOperation(r.createOperationObj(operationId, stepId))
 }
 
-func (r *BlockingOperation) ActivateOperationOnStatefulSet(operationId string, stepId string, statefulSetInstanceIndex int32) error {
+func (r *BlockingOperation) ActivateOperationOnStatefulSet(operationId string, stepId string, instance string) error {
 	blockingOperation := r.createOperationObj(operationId, stepId)
-	blockingOperation.StatefulSetOperation = r.createStatefulSetOperationObj(statefulSetInstanceIndex)
+	blockingOperation.StatefulSetOperation = r.createStatefulSetOperationObj(instance)
 	return r.activateOperation(blockingOperation)
 }
 
 func (r *BlockingOperation) ActivateOperationOnStatefulSetSpecUpdate(operationId string, stepId string,
-	statefulSetInstanceIndex int32, specDifferences string) error {
+	instance string, specDifferences string) error {
 
 	blockingOperation := r.createOperationObj(operationId, stepId)
-	blockingOperation.StatefulSetOperation = r.createStatefulSetOperationObj(statefulSetInstanceIndex)
+	blockingOperation.StatefulSetOperation = r.createStatefulSetOperationObj(instance)
 	blockingOperation.StatefulSetSpecUpdateOperation = r.createStatefulSetSpecUpdateOperationObj(specDifferences)
 
 	return r.activateOperation(blockingOperation)
@@ -154,10 +154,10 @@ func (r *BlockingOperation) createOperationObj(operationId string, stepId string
 	return v1.KubegresBlockingOperation{OperationId: operationId, StepId: stepId}
 }
 
-func (r *BlockingOperation) createStatefulSetOperationObj(statefulSetInstanceIndex int32) v1.KubegresStatefulSetOperation {
+func (r *BlockingOperation) createStatefulSetOperationObj(instance string) v1.KubegresStatefulSetOperation {
 	return v1.KubegresStatefulSetOperation{
-		InstanceIndex: statefulSetInstanceIndex,
-		Name:          r.kubegresContext.GetStatefulSetResourceName(statefulSetInstanceIndex),
+		Instance: instance,
+		Name:     r.kubegresContext.GetStatefulSetResourceName(instance),
 	}
 }
 

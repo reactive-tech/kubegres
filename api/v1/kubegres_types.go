@@ -27,6 +27,13 @@ import (
 
 // ----------------------- SPEC -------------------------------------------
 
+type KubegresNodeSet struct {
+	// Name of this set of nodes. Becomes a part of the StatefulSet name.
+	Name        string          `json:"name"`
+	Affinity    *v1.Affinity    `json:"affinity,omitempty"`
+	Tolerations []v1.Toleration `json:"tolerations,omitempty"`
+}
+
 type KubegresDatabase struct {
 	Size             string  `json:"size,omitempty"`
 	VolumeMount      string  `json:"volumeMount,omitempty"`
@@ -67,6 +74,7 @@ type Probe struct {
 
 type KubegresSpec struct {
 	Replicas         *int32                    `json:"replicas,omitempty"`
+	NodeSets         []KubegresNodeSet         `json:"nodeSets,omitempty"`
 	Image            string                    `json:"image,omitempty"`
 	Port             int32                     `json:"port,omitempty"`
 	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
@@ -85,8 +93,8 @@ type KubegresSpec struct {
 // ----------------------- STATUS -----------------------------------------
 
 type KubegresStatefulSetOperation struct {
-	InstanceIndex int32  `json:"instanceIndex,omitempty"`
-	Name          string `json:"name,omitempty"`
+	Instance string `json:"instance,omitempty"`
+	Name     string `json:"name,omitempty"`
 }
 
 type KubegresStatefulSetSpecUpdateOperation struct {
@@ -105,7 +113,7 @@ type KubegresBlockingOperation struct {
 }
 
 type KubegresStatus struct {
-	LastCreatedInstanceIndex  int32                     `json:"lastCreatedInstanceIndex,omitempty"`
+	LastCreatedInstance       string                    `json:"lastCreatedInstance,omitempty"`
 	BlockingOperation         KubegresBlockingOperation `json:"blockingOperation,omitempty"`
 	PreviousBlockingOperation KubegresBlockingOperation `json:"previousBlockingOperation,omitempty"`
 	EnforcedReplicas          int32                     `json:"enforcedReplicas,omitempty"`

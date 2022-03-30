@@ -15,13 +15,13 @@ type KubegresStatusWrapper struct {
 	statusFieldsToUpdate map[string]interface{}
 }
 
-func (r *KubegresStatusWrapper) GetLastCreatedInstanceIndex() int32 {
-	return r.Kubegres.Status.LastCreatedInstanceIndex
+func (r *KubegresStatusWrapper) GetLastCreatedInstance() string {
+	return r.Kubegres.Status.LastCreatedInstance
 }
 
-func (r *KubegresStatusWrapper) SetLastCreatedInstanceIndex(value int32) {
-	r.addStatusFieldToUpdate("LastCreatedInstanceIndex", value)
-	r.Kubegres.Status.LastCreatedInstanceIndex = value
+func (r *KubegresStatusWrapper) SetLastCreatedInstance(instance string) {
+	r.addStatusFieldToUpdate("LastCreatedInstance", instance)
+	r.Kubegres.Status.LastCreatedInstance = instance
 }
 
 func (r *KubegresStatusWrapper) GetBlockingOperation() v1.KubegresBlockingOperation {

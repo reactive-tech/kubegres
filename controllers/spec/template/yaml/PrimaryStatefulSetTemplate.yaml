@@ -4,17 +4,13 @@ metadata:
   name: postgres-name-0
   namespace: default
   labels:
-    app: postgres-name
-    index: '1'
-    replicationRole: primary
+    app.kubegres.io/replication-role: primary
 
 spec:
   serviceName: "postgres-name"
   replicas: 1
   selector:
-    matchLabels:
-      app: postgres-name
-      index: '1'
+    matchLabels: {}
 
   volumeClaimTemplates:
     - metadata:
@@ -29,9 +25,7 @@ spec:
   template:
     metadata:
       labels:
-        app: postgres-name
-        index: '1'
-        replicationRole: primary
+        app.kubegres.io/replication-role: primary
 
     spec:
       terminationGracePeriodSeconds: 10

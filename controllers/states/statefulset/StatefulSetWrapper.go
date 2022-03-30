@@ -3,54 +3,54 @@ package statefulset
 import (
 	"errors"
 	"k8s.io/api/apps/v1"
+	"reactive-tech.io/kubegres/controllers/ctx"
 	"sort"
-	"strconv"
 )
 
 type StatefulSetWrapper struct {
-	IsDeployed    bool
-	IsReady       bool
-	InstanceIndex int32
-	StatefulSet   v1.StatefulSet
-	Pod           PodWrapper
+	IsDeployed  bool
+	IsReady     bool
+	StatefulSet v1.StatefulSet
+	Pod         PodWrapper
+}
+
+func (r *StatefulSetWrapper) Instance() string {
+	return r.StatefulSet.Labels[ctx.InstanceLabelKey]
 }
 
 type StatefulSetWrappers struct {
-	statefulSetsSortedByInstanceIndex        []StatefulSetWrapper
-	statefulSetsReverseSortedByInstanceIndex []StatefulSetWrapper
+	statefulSetsSortedByInstance        []StatefulSetWrapper
+	statefulSetsReverseSortedByInstance []StatefulSetWrapper
 }
 
 func (r *StatefulSetWrappers) Add(statefulSetWrapper StatefulSetWrapper) {
+	r.statefulSetsSortedByInstance = append(r.statefulSetsSortedByInstance, statefulSetWrapper)
+	sort.Sort(SortByInstance(r.statefulSetsSortedByInstance))
 
-	r.statefulSetsSortedByInstanceIndex = append(r.statefulSetsSortedByInstanceIndex, statefulSetWrapper)
-	sort.Sort(SortByInstanceIndex(r.statefulSetsSortedByInstanceIndex))
-
-	r.statefulSetsReverseSortedByInstanceIndex = append(r.statefulSetsReverseSortedByInstanceIndex, statefulSetWrapper)
-	sort.Sort(ReverseSortByInstanceIndex(r.statefulSetsReverseSortedByInstanceIndex))
+	r.statefulSetsReverseSortedByInstance = append(r.statefulSetsReverseSortedByInstance, statefulSetWrapper)
+	sort.Sort(ReverseSortByInstance(r.statefulSetsReverseSortedByInstance))
 }
 
-func (r *StatefulSetWrappers) GetAllSortedByInstanceIndex() []StatefulSetWrapper {
-	return r.copy(r.statefulSetsSortedByInstanceIndex)
+func (r *StatefulSetWrappers) GetAllSortedByInstance() []StatefulSetWrapper {
+	return r.copy(r.statefulSetsSortedByInstance)
 }
 
-func (r *StatefulSetWrappers) GetAllReverseSortedByInstanceIndex() []StatefulSetWrapper {
-	return r.copy(r.statefulSetsReverseSortedByInstanceIndex)
+func (r *StatefulSetWrappers) GetAllReverseSortedByInstance() []StatefulSetWrapper {
+	return r.copy(r.statefulSetsReverseSortedByInstance)
 }
 
-func (r *StatefulSetWrappers) GetByInstanceIndex(instanceIndex int32) (StatefulSetWrapper, error) {
-
-	for _, statefulSet := range r.statefulSetsSortedByInstanceIndex {
-		if instanceIndex == statefulSet.InstanceIndex {
+func (r *StatefulSetWrappers) GetByInstance(instance string) (StatefulSetWrapper, error) {
+	for _, statefulSet := range r.statefulSetsSortedByInstance {
+		if instance == statefulSet.Instance() {
 			return statefulSet, nil
 		}
 	}
 
-	return StatefulSetWrapper{}, errors.New("Given StatefulSet's instanceIndex '" + strconv.Itoa(int(instanceIndex)) + "' does not exist.")
+	return StatefulSetWrapper{}, errors.New("Given StatefulSet's instance '" + instance + "' does not exist.")
 }
 
 func (r *StatefulSetWrappers) GetByName(statefulSetName string) (StatefulSetWrapper, error) {
-
-	for _, statefulSet := range r.statefulSetsSortedByInstanceIndex {
+	for _, statefulSet := range r.statefulSetsSortedByInstance {
 		if statefulSetName == statefulSet.StatefulSet.Name {
 			return statefulSet, nil
 		}
@@ -64,15 +64,3 @@ func (r *StatefulSetWrappers) copy(toCopy []StatefulSetWrapper) []StatefulSetWra
 	copy(toCopy, copyAll)
 	return toCopy
 }
-
-/*
-func (r *StatefulSetWrappers) GetByArrayIndex(arrayIndex int32) (StatefulSetWrapper, error) {
-
-	arrayLength := len(r.statefulSets)
-	if arrayIndex < 0 || int(arrayIndex) >= arrayLength {
-		return StatefulSetWrapper{}, errors.New("Given StatefulSet's arrayIndex '" + strconv.Itoa(int(arrayIndex)) + "' does not exist.")
-	}
-
-	return r.statefulSets[arrayIndex], nil
-}
-*/

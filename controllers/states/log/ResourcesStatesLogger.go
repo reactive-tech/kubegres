@@ -44,12 +44,12 @@ func (r *ResourcesStatesLogger) logConfigStates() {
 func (r *ResourcesStatesLogger) logStatefulSetsStates() {
 	statefulSets := r.resourcesStates.StatefulSets
 	r.kubegresContext.Log.Info("All StatefulSets deployment states: ",
-		"Spec expected to deploy", statefulSets.SpecExpectedNbreToDeploy,
-		"Nbre Deployed", statefulSets.NbreDeployed)
+		"Spec expected to deploy", statefulSets.SpecExpectedNumberToDeploy,
+		"Nbre Deployed", statefulSets.NumberDeployed)
 
 	r.logStatefulSetWrapper("Primary states", statefulSets.Primary)
 
-	for _, replicaStatefulSetWrapper := range statefulSets.Replicas.All.GetAllSortedByInstanceIndex() {
+	for _, replicaStatefulSetWrapper := range statefulSets.Replicas.All.GetAllSortedByInstance() {
 		r.logStatefulSetWrapper("Replica states", replicaStatefulSetWrapper)
 	}
 }

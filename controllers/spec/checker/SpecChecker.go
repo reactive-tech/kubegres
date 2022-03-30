@@ -147,9 +147,23 @@ func (r *SpecChecker) CheckSpec() (SpecCheckResult, error) {
 		specCheckResult.FatalErrorMessage = r.createErrMsgSpecUndefined("spec.env.POSTGRES_REPLICATION_PASSWORD")
 	}
 
-	if *spec.Replicas <= 0 {
+	if *spec.Replicas <= 0 && len(spec.NodeSets) == 0 {
 		specCheckResult.HasSpecFatalError = true
 		specCheckResult.FatalErrorMessage = r.createErrMsgSpecUndefined("spec.replicas")
+	}
+
+	if *spec.Replicas > 0 && len(spec.NodeSets) > 0 {
+		specCheckResult.HasSpecFatalError = true
+		specCheckResult.FatalErrorMessage = r.logSpecErrMsg("In the Resources Spec the value of " +
+			"'spec.replicas' and 'spec.nodeSets' are mutually exclusive. " +
+			"Please set only one of the value otherwise this operator cannot work correctly.")
+	}
+
+	for _, nodeSet := range spec.NodeSets {
+		if nodeSet.Name == "" {
+			specCheckResult.HasSpecFatalError = true
+			specCheckResult.FatalErrorMessage = r.createErrMsgSpecUndefined("spec.nodeSets[].Name")
+		}
 	}
 
 	if spec.Image == "" {

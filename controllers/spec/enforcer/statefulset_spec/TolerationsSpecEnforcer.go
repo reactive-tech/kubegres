@@ -40,9 +40,17 @@ func (r *TolerationsSpecEnforcer) GetSpecName() string {
 }
 
 func (r *TolerationsSpecEnforcer) CheckForSpecDifference(statefulSet *apps.StatefulSet) StatefulSetSpecDifference {
-
 	current := statefulSet.Spec.Template.Spec.Tolerations
-	expected := r.kubegresContext.Kubegres.Spec.Scheduler.Tolerations
+
+	var expected []v1.Toleration
+	instance := r.kubegresContext.GetInstanceFromStatefulSet(*statefulSet)
+	nodeSet := r.kubegresContext.GetNodeSetSpecFromInstance(instance)
+
+	if nodeSet.Tolerations != nil {
+		expected = nodeSet.Tolerations
+	} else {
+		expected = r.kubegresContext.Kubegres.Spec.Scheduler.Tolerations
+	}
 
 	if !r.compare(current, expected) {
 		return StatefulSetSpecDifference{
@@ -56,7 +64,15 @@ func (r *TolerationsSpecEnforcer) CheckForSpecDifference(statefulSet *apps.State
 }
 
 func (r *TolerationsSpecEnforcer) EnforceSpec(statefulSet *apps.StatefulSet) (wasSpecUpdated bool, err error) {
-	statefulSet.Spec.Template.Spec.Tolerations = r.kubegresContext.Kubegres.Spec.Scheduler.Tolerations
+	instance := r.kubegresContext.GetInstanceFromStatefulSet(*statefulSet)
+	nodeSet := r.kubegresContext.GetNodeSetSpecFromInstance(instance)
+
+	if nodeSet.Tolerations != nil {
+		statefulSet.Spec.Template.Spec.Tolerations = nodeSet.Tolerations
+	} else {
+		statefulSet.Spec.Template.Spec.Tolerations = r.kubegresContext.Kubegres.Spec.Scheduler.Tolerations
+	}
+
 	return true, nil
 }
 

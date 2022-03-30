@@ -124,17 +124,17 @@ func (r *TestResourceRetriever) GetKubegresPvcByKubegresName(kubegresName string
 	list := &core.PersistentVolumeClaimList{}
 	opts := []client.ListOption{
 		client.InNamespace(r.namespace),
-		client.MatchingLabels{"app": kubegresName},
+		client.MatchingLabels{ctx.NameLabelKey: kubegresName},
 	}
-	ctx := context.Background()
-	err := r.client.List(ctx, list, opts...)
+	backgroundContext := context.Background()
+	err := r.client.List(backgroundContext, list, opts...)
 	return list, err
 }
 
 func (r *TestResourceRetriever) getResource(resourceNameToRetrieve string, resourceToRetrieve client.Object) error {
-	ctx := context.Background()
+	backgroundContext := context.Background()
 	lookupKey := types.NamespacedName{Name: resourceNameToRetrieve, Namespace: r.namespace}
-	return r.client.Get(ctx, lookupKey, resourceToRetrieve)
+	return r.client.Get(backgroundContext, lookupKey, resourceToRetrieve)
 }
 
 /*
@@ -233,12 +233,12 @@ func (r *TestResourceRetriever) GetKubegresResourcesByName(kubegresName string) 
 }
 
 func (r *TestResourceRetriever) getResourcesList(kubegresName string, resourceTypeToRetrieve client.ObjectList) error {
-	ctx := context.Background()
+	backgroundContext := context.Background()
 	opts := []client.ListOption{
 		client.InNamespace(r.namespace),
-		client.MatchingLabels{"app": kubegresName},
+		client.MatchingLabels{ctx.NameLabelKey: kubegresName},
 	}
-	return r.client.List(ctx, resourceTypeToRetrieve, opts...)
+	return r.client.List(backgroundContext, resourceTypeToRetrieve, opts...)
 }
 
 func (r *TestResourceRetriever) isPodReady(pod *core.Pod) bool {
@@ -251,7 +251,7 @@ func (r *TestResourceRetriever) isPodReady(pod *core.Pod) bool {
 }
 
 func (r *TestResourceRetriever) isPrimaryPod(pod *core.Pod) bool {
-	return pod.Labels["replicationRole"] == resourceConfigs.PrimaryReplicationRole
+	return pod.Labels[ctx.ReplicationRoleLabelKey] == resourceConfigs.PrimaryReplicationRole
 }
 
 func (r *TestResourceRetriever) logAndReturnError(resourceType, resourceName string, err error) (TestKubegresResources, error) {

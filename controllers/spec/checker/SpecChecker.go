@@ -67,6 +67,16 @@ func (r *SpecChecker) CheckSpec() (SpecCheckResult, error) {
 			r.kubegresContext.Kubegres.Spec.Database.VolumeMount = primaryVolumeMount
 			r.updateKubegresSpec("spec.database.volumeMount", primaryVolumeMount)
 		}
+		primaryFolder := r.GetEnv(primaryStatefulSetSpec.Template.Spec.Containers[0].Env, "PGDATA")[len(primaryVolumeMount)+1:]
+		if spec.Database.Folder != primaryFolder {
+			specCheckResult.HasSpecFatalError = true
+			specCheckResult.FatalErrorMessage = r.createErrMsgSpecCannotBeChanged("spec.database.folder",
+				primaryFolder, spec.Database.Folder,
+				"Otherwise, the cluster of PostgreSql servers risk of being inconsistent.")
+
+			r.kubegresContext.Kubegres.Spec.Database.Folder = primaryFolder
+			r.updateKubegresSpec("spec.database.folder", primaryFolder)
+		}
 
 		primaryStorageClassName := primaryStatefulSetSpec.VolumeClaimTemplates[0].Spec.StorageClassName
 		if *spec.Database.StorageClassName != *primaryStorageClassName {
@@ -342,4 +352,13 @@ func (r *SpecChecker) doesCurrentVolumeClaimTemplateExistInExpectedSpec(currentC
 		}
 	}
 	return false
+}
+
+func (r *SpecChecker) GetEnv(env []v1.EnvVar, envName string) string {
+	for _, envVar := range env {
+		if envVar.Name == envName {
+			return envVar.Value
+		}
+	}
+	return ""
 }

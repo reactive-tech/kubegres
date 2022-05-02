@@ -125,7 +125,7 @@ func (r *ResourcesCreatorFromTemplate) CreateReplicaStatefulSet(statefulSetInsta
 	initContainer.Image = postgresSpec.Image
 	initContainer.Env[0].Value = primaryServiceName
 	initContainer.Env[1].ValueFrom = r.getEnvVar(ctx.EnvVarNameOfPostgresReplicationUserPsw).ValueFrom
-	initContainer.Env[2].Value = postgresSpec.Database.VolumeMount + "/" + ctx.DefaultDatabaseFolder
+	initContainer.Env[2].Value = postgresSpec.Database.VolumeMount + "/" + postgresSpec.Database.Folder
 	initContainer.VolumeMounts[0].MountPath = postgresSpec.Database.VolumeMount
 
 	return statefulSetTemplate, nil
@@ -217,7 +217,7 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 	container.Image = postgresSpec.Image
 	container.Ports[0].ContainerPort = postgresSpec.Port
 	container.VolumeMounts[0].MountPath = postgresSpec.Database.VolumeMount
-	container.Env = append(container.Env, core.EnvVar{Name: ctx.EnvVarNamePgData, Value: postgresSpec.Database.VolumeMount + "/" + ctx.DefaultDatabaseFolder})
+	container.Env = append(container.Env, core.EnvVar{Name: ctx.EnvVarNamePgData, Value: postgresSpec.Database.VolumeMount + "/" + postgresSpec.Database.Folder})
 	container.Env = append(container.Env, r.kubegresContext.Kubegres.Spec.Env...)
 
 	statefulSetTemplate.Spec.VolumeClaimTemplates[0].Spec.StorageClassName = postgresSpec.Database.StorageClassName

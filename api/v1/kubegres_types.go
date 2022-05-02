@@ -31,6 +31,7 @@ type KubegresDatabase struct {
 	Size             string  `json:"size,omitempty"`
 	VolumeMount      string  `json:"volumeMount,omitempty"`
 	StorageClassName *string `json:"storageClassName,omitempty"`
+	Folder           string  `json:"folder,omitempty"`
 }
 
 type KubegresBackUp struct {

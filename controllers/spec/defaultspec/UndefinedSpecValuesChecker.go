@@ -58,6 +58,11 @@ func (r *UndefinedSpecValuesChecker) apply() error {
 		kubegresSpec.Database.VolumeMount = ctx.DefaultDatabaseVolumeMount
 		r.createLog("spec.database.volumeMount", kubegresSpec.Database.VolumeMount)
 	}
+	if kubegresSpec.Database.Folder == emptyStr {
+		wasSpecChanged = true
+		kubegresSpec.Database.Folder = ctx.DefaultDatabaseFolder
+		r.createLog("spec.database.folder", kubegresSpec.Database.Folder)
+	}
 
 	if kubegresSpec.CustomConfig == emptyStr {
 		wasSpecChanged = true

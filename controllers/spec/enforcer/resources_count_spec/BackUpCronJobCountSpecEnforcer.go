@@ -21,7 +21,7 @@ limitations under the License.
 package resources_count_spec
 
 import (
-	"k8s.io/api/batch/v1beta1"
+	batchv1 "k8s.io/api/batch/v1"
 	"reactive-tech.io/kubegres/controllers/ctx"
 	"reactive-tech.io/kubegres/controllers/spec/template"
 	"reactive-tech.io/kubegres/controllers/states"
@@ -79,7 +79,7 @@ func (r *BackUpCronJobCountSpecEnforcer) getConfigMapNameForBackUp(configStates 
 	return configStates.CustomConfigName
 }
 
-func (r *BackUpCronJobCountSpecEnforcer) deployCronJob(cronJob v1beta1.CronJob) error {
+func (r *BackUpCronJobCountSpecEnforcer) deployCronJob(cronJob batchv1.CronJob) error {
 
 	r.kubegresContext.Log.Info("Deploying BackUp CronJob.", "CronJob name", cronJob.Name)
 

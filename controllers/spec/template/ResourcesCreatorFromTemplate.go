@@ -24,7 +24,7 @@ import (
 	"strconv"
 
 	apps "k8s.io/api/apps/v1"
-	"k8s.io/api/batch/v1beta1"
+	batchv1 "k8s.io/api/batch/v1"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -131,11 +131,11 @@ func (r *ResourcesCreatorFromTemplate) CreateReplicaStatefulSet(statefulSetInsta
 	return statefulSetTemplate, nil
 }
 
-func (r *ResourcesCreatorFromTemplate) CreateBackUpCronJob(configMapNameForBackUp string) (v1beta1.CronJob, error) {
+func (r *ResourcesCreatorFromTemplate) CreateBackUpCronJob(configMapNameForBackUp string) (batchv1.CronJob, error) {
 
 	backUpCronJob, err := r.templateFromFiles.LoadBackUpCronJob()
 	if err != nil {
-		return v1beta1.CronJob{}, err
+		return batchv1.CronJob{}, err
 	}
 
 	postgres := r.kubegresContext.Kubegres

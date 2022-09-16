@@ -21,7 +21,7 @@ limitations under the License.
 package states
 
 import (
-	"k8s.io/api/batch/v1beta1"
+	batchv1 "k8s.io/api/batch/v1"
 	"k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"reactive-tech.io/kubegres/controllers/ctx"
@@ -33,7 +33,7 @@ type BackUpStates struct {
 	IsPvcDeployed           bool
 	ConfigMap               string
 	CronJobLastScheduleTime string
-	DeployedCronJob         *v1beta1.CronJob
+	DeployedCronJob         *batchv1.CronJob
 
 	kubegresContext ctx.KubegresContext
 }
@@ -75,12 +75,12 @@ func (r *BackUpStates) loadStates() (err error) {
 	return nil
 }
 
-func (r *BackUpStates) getDeployedCronJob() (*v1beta1.CronJob, error) {
+func (r *BackUpStates) getDeployedCronJob() (*batchv1.CronJob, error) {
 
 	namespace := r.kubegresContext.Kubegres.Namespace
 	resourceName := ctx.CronJobNamePrefix + r.kubegresContext.Kubegres.Name
 	resourceKey := client.ObjectKey{Namespace: namespace, Name: resourceName}
-	cronJob := &v1beta1.CronJob{}
+	cronJob := &batchv1.CronJob{}
 
 	err := r.kubegresContext.Client.Get(r.kubegresContext.Ctx, resourceKey, cronJob)
 

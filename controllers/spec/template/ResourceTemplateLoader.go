@@ -22,7 +22,7 @@ package template
 
 import (
 	apps "k8s.io/api/apps/v1"
-	"k8s.io/api/batch/v1beta1"
+	batchv1 "k8s.io/api/batch/v1"
 	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -63,15 +63,15 @@ func (r *ResourceTemplateLoader) LoadReplicaStatefulSet() (statefulSetTemplate a
 	return r.loadStatefulSet(yaml.ReplicaStatefulSetTemplate)
 }
 
-func (r *ResourceTemplateLoader) LoadBackUpCronJob() (cronJob v1beta1.CronJob, err error) {
+func (r *ResourceTemplateLoader) LoadBackUpCronJob() (cronJob batchv1.CronJob, err error) {
 	obj, err := r.decodeYaml(yaml.BackUpCronJobTemplate)
 
 	if err != nil {
 		r.log.Error(err, "Unable to load Kubegres BackUp CronJob. Given error:")
-		return v1beta1.CronJob{}, err
+		return batchv1.CronJob{}, err
 	}
 
-	return *obj.(*v1beta1.CronJob), nil
+	return *obj.(*batchv1.CronJob), nil
 }
 
 func (r *ResourceTemplateLoader) loadService(yamlContents string) (serviceTemplate core.Service, err error) {

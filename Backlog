@@ -1,45 +1,36 @@
-
-- Scheduled for December 2021:
-    - update local kind & kubectl
-    - Build controller with Kubebuilder v3.2.0
-    - Remove warning for CronJob which was updated from beta to stable since Kubernetes 1.21
+Features in order of priority:
 
 - add a test in spec_readinessProbe_test and spec_livenessProbe_test so that
   we test the default behaviour when no option is set from the YAML
 
-- Scheduled for either December 2021 or Jan 2022:
-    - #20 : Delete PVC
+- #20 : Delete PVC
 
-- Scheduled for May 2022:
-    - #12 : Reuse PVC (see below) and Primary becomes a Replica
+- #12 : Reuse PVC (see below) and Primary becomes a Replica
 
     As part of the available options for the field "failover.pvc", there would be:
         - "retain": the default option currently with Kubegres where PVC are kept but not reused for safety and investigation reasons
         - "delete": the PVC will be deleted
         - "reuse": if the state of the PVC is healthy, it will be reused by the newly created Replica pod. I think that matches with your suggestion?
 
-- Scheduled for June 2022:
-    - #?: PG bouncer
+- #30: Add one or many sidecar container options in Kubegres YAML
 
-- Scheduled for July 2022:
-    - #51: add documentation about how to recover backup
-    - add use cases documentation, for example how to expand storage manually and how to upgrade Postgres major version.
-    - check how to setup log archiving in case of replica does not found a data
+- #?: PG bouncer
 
-- Scheduled for August 2022:
-    - #46: Define Service Type for Primary and Replica
+- #51: add documentation about how to recover backup
+- add use cases documentation, for example how to expand storage manually and how to upgrade Postgres major version.
+- check how to setup log archiving in case of replica does not found a data
 
-- Scheduled for September 2022:
-    - #7  : Allow major version upgrade using pg_upgrade
+- #46: Define Service Type for Primary and Replica
 
-- Scheduled for October 2022:
-    - #35 : Restore database from a PV backup
+- #7  : Allow major version upgrade using pg_upgrade
 
-- Scheduled for November 2022:
-    - #10 : Deploy Kubegres with a HELM chart
+- #35 : Restore database from a PV backup
 
-- Scheduled for December 2022:
-    - #? : Add a field to allow restarting StatefulSets and Pods via the YAML of "Kind: Kubegres"?
+- #82 : Allow using a unique image for the backup job
+
+- #10 : Deploy Kubegres with a HELM chart
+
+- #? : Add a field to allow restarting StatefulSets and Pods via the YAML of "Kind: Kubegres"?
 
 Blocked:
 #49 : Expand Storage (waiting on the Kubernetes feature: https://github.com/kubernetes/enhancements/pull/2842)

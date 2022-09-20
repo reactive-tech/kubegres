@@ -27,39 +27,43 @@ import (
 	"strings"
 )
 
-type MockLogger struct {
-	InfoLogger logr.InfoLogger
-	Name       string
+type MockLogSink struct {
+	name string
 }
 
-func (r *MockLogger) Info(msg string, keysAndValues ...interface{}) {
-	log.Println(r.constructFullMsg(msg, keysAndValues))
+func CreateMockLogger() logr.Logger {
+	logSink := &MockLogSink{}
+	logger := logr.New(logSink)
+	return logger
 }
 
-func (r *MockLogger) Error(err error, msg string, keysAndValues ...interface{}) {
-	log.Println(r.constructFullErrMsg(err, msg, keysAndValues))
+func (r *MockLogSink) Init(info logr.RuntimeInfo) {
 }
 
-func (r *MockLogger) Enabled() bool {
+func (r *MockLogSink) Enabled(level int) bool {
 	return true
 }
 
-func (r *MockLogger) V(level int) logr.InfoLogger {
+func (r *MockLogSink) Info(level int, msg string, keysAndValues ...interface{}) {
+	log.Println(r.constructFullMsg(msg, keysAndValues))
+}
+
+func (r *MockLogSink) Error(err error, msg string, keysAndValues ...interface{}) {
+	log.Println(r.constructFullErrMsg(err, msg, keysAndValues))
+}
+
+func (r *MockLogSink) WithValues(keysAndValues ...interface{}) logr.LogSink {
 	return r
 }
 
-func (r *MockLogger) WithValues(keysAndValues ...interface{}) logr.Logger {
-	return r
-}
-
-func (r *MockLogger) WithName(name string) logr.Logger {
-	if !strings.Contains(r.Name, name) {
-		r.Name += name + " - "
+func (r *MockLogSink) WithName(name string) logr.LogSink {
+	if !strings.Contains(r.name, name) {
+		r.name += name + " - "
 	}
 	return r
 }
 
-func (r *MockLogger) constructFullErrMsg(err error, msg string, keysAndValues ...interface{}) string {
+func (r *MockLogSink) constructFullErrMsg(err error, msg string, keysAndValues ...interface{}) string {
 	msgToReturn := ""
 	separator := ""
 
@@ -77,14 +81,14 @@ func (r *MockLogger) constructFullErrMsg(err error, msg string, keysAndValues ..
 	return msgToReturn
 }
 
-func (r *MockLogger) constructFullMsg(msg string, keysAndValues ...interface{}) string {
+func (r *MockLogSink) constructFullMsg(msg string, keysAndValues ...interface{}) string {
 	if msg == "" {
-		return r.Name + ""
+		return r.name + ""
 	}
 
 	keysAndValuesStr := log2.InterfacesToStr(keysAndValues...)
 	if keysAndValuesStr != "" {
-		return r.Name + msg + " " + keysAndValuesStr
+		return r.name + msg + " " + keysAndValuesStr
 	}
-	return r.Name + msg
+	return r.name + msg
 }

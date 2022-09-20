@@ -21,7 +21,6 @@ limitations under the License.
 package test
 
 import (
-	"github.com/go-logr/zapr"
 	"k8s.io/client-go/tools/record"
 	"log"
 	"path/filepath"
@@ -50,7 +49,7 @@ import (
 
 var kindCluster kindcluster.KindTestClusterUtil
 
-//var cfgTest *rest.Config
+// var cfgTest *rest.Config
 var k8sClientTest client.Client
 var testEnv *envtest.Environment
 var eventRecorderTest util.MockEventRecorderTestUtil
@@ -67,7 +66,7 @@ var _ = BeforeSuite(func(done Done) {
 
 	kindCluster.StartCluster()
 
-	logf.SetLogger(zapr.NewLogger(zap.NewRaw(zap.UseDevMode(true), zap.WriteTo(GinkgoWriter))))
+	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
 	log.Print("START OF: BeforeSuite")
 
@@ -97,12 +96,12 @@ var _ = BeforeSuite(func(done Done) {
 	})
 	Expect(err).ToNot(HaveOccurred())
 
-	mockLogger := util.MockLogger{}
+	mockLogger := util.CreateMockLogger()
 	eventRecorderTest = util.MockEventRecorderTestUtil{}
 
 	err = (&controllers.KubegresReconciler{
 		Client:   k8sManager.GetClient(),
-		Logger:   &mockLogger,
+		Logger:   mockLogger,
 		Scheme:   k8sManager.GetScheme(),
 		Recorder: record.EventRecorder(&eventRecorderTest),
 	}).SetupWithManager(k8sManager)

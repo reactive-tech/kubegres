@@ -1,0 +1,3 @@
+kubebuilder init --domain reactive-tech.io --repo reactive-tech.io/kubegres
+kubebuilder create api --group kubegres --version v1 --kind Kubegres
+make manifests

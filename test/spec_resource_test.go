@@ -106,7 +106,7 @@ var _ = Describe("Setting Kubegres spec 'resource'", func() {
 
 			log.Print("START OF: Test 'GIVEN existing Kubegres is updated with spec 'resources' set to a new value")
 
-			newResources := test.givenResources("2", "4Gi", "0.5", "0.5Gi")
+			newResources := test.givenResources("2", "4Gi", "500m", "512Mi")
 
 			test.givenExistingKubegresSpecIsSetTo(newResources)
 

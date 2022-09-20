@@ -115,6 +115,7 @@ type KubegresStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+
 // Kubegres is the Schema for the kubegres API
 type Kubegres struct {
 	metav1.TypeMeta   `json:",inline"`

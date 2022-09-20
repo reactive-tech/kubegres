@@ -4,7 +4,7 @@ package yaml
  // Any manual modification to this file will be lost during next compilation. 
 
 const (
-BackUpCronJobTemplate = `apiVersion: batch/v1beta1
+BackUpCronJobTemplate = `apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: backup-job-postgres-name

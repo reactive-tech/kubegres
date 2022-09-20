@@ -118,9 +118,9 @@ func (r *SpecReadinessProbeTest) whenKubernetesIsUpdated() {
 func (r *SpecReadinessProbeTest) givenReadinessProbe1() *v12.Probe {
 	command := []string{"sh", "-c", "exec pg_isready -U postgres -h $POD_IP"}
 	execAction := &v12.ExecAction{Command: command}
-	handler := v12.Handler{Exec: execAction}
+	handler := v12.ProbeHandler{Exec: execAction}
 	return &v12.Probe{
-		Handler:             handler,
+		ProbeHandler:        handler,
 		InitialDelaySeconds: int32(6),
 		TimeoutSeconds:      int32(5),
 		PeriodSeconds:       int32(10),
@@ -132,9 +132,9 @@ func (r *SpecReadinessProbeTest) givenReadinessProbe1() *v12.Probe {
 func (r *SpecReadinessProbeTest) givenReadinessProbe2() *v12.Probe {
 	command := []string{"sh", "-c", "exec pg_isready -U postgres -h $POD_IP"}
 	execAction := &v12.ExecAction{Command: command}
-	handler := v12.Handler{Exec: execAction}
+	handler := v12.ProbeHandler{Exec: execAction}
 	return &v12.Probe{
-		Handler:             handler,
+		ProbeHandler:        handler,
 		InitialDelaySeconds: int32(7),
 		TimeoutSeconds:      int32(10),
 		PeriodSeconds:       int32(20),

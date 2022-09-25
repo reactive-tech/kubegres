@@ -47,6 +47,8 @@ spec:
                 type: string
               database:
                 properties:
+                  folder:
+                    type: string
                   size:
                     type: string
                   storageClassName:

@@ -189,7 +189,7 @@ data:
     echo "$dt - Starting DB backup of Kubegres resource $KUBEGRES_RESOURCE_NAME into file: $backUpFilePath";
     echo "$dt - Running: pg_dumpall -h $BACKUP_SOURCE_DB_HOST_NAME -U postgres -c | gzip > $backUpFilePath"
 
-    pg_dumpall -h $BACKUP_SOURCE_DB_HOST_NAME -U postgres -c | gzip > $backUpFilePath
+    pg_dumpall -h $BACKUP_SOURCE_DB_HOST_NAME -U $POSTGRES_USER -c | gzip > $backUpFilePath
 
     if [ $? -ne 0 ]; then
       rm $backUpFilePath
@@ -405,7 +405,7 @@ spec:
               command:
                 - sh
                 - -c
-                - exec pg_isready -U postgres -h $POD_IP
+                - exec pg_isready -U $POSTGRES_USER -h $POD_IP
             failureThreshold: 10
             initialDelaySeconds: 60
             periodSeconds: 20
@@ -417,7 +417,7 @@ spec:
               command:
                 - sh
                 - -c
-                - exec pg_isready -U postgres -h $POD_IP
+                - exec pg_isready -U $POSTGRES_USER -h $POD_IP
             failureThreshold: 3
             initialDelaySeconds: 5
             periodSeconds: 10
@@ -553,7 +553,7 @@ spec:
               command:
                 - sh
                 - -c
-                - exec pg_isready -U postgres -h $POD_IP
+                - exec pg_isready -U $POSTGRES_USER -h $POD_IP
             failureThreshold: 10
             initialDelaySeconds: 60
             periodSeconds: 20
@@ -565,7 +565,7 @@ spec:
               command:
                 - sh
                 - -c
-                - exec pg_isready -U postgres -h $POD_IP
+                - exec pg_isready -U $POSTGRES_USER -h $POD_IP
             failureThreshold: 3
             initialDelaySeconds: 5
             periodSeconds: 10

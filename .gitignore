@@ -6,8 +6,9 @@ docker-build
 *.dll
 *.so
 *.dylib
-bin
+bin/*
 testbin/*
+Dockerfile.cross
 
 # Test binary, build with `go test -c`
 *.test
@@ -19,8 +20,11 @@ testbin/*
 
 !vendor/**/zz_generated.*
 
+test-output.txt
+
 # editor and IDE paraphernalia
 .idea
+.vscode
 *.swp
 *.swo
 *~

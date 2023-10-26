@@ -2,6 +2,13 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: kubegres-editor-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: kubegres
+    app.kubernetes.io/part-of: kubegres
+    app.kubernetes.io/managed-by: kustomize
   name: kubegres-editor-role
 rules:
 - apiGroups:

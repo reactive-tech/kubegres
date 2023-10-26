@@ -1,6 +1,12 @@
 apiVersion: kubegres.reactive-tech.io/v1
 kind: Kubegres
 metadata:
+  labels:
+    app.kubernetes.io/name: kubegres
+    app.kubernetes.io/instance: kubegres-sample
+    app.kubernetes.io/part-of: kubegres
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: kubegres
   name: kubegres-sample
 spec:
   # TODO(user): Add fields here

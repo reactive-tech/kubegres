@@ -85,12 +85,10 @@ data:
     #echo "$dt - Running: psql -v ON_ERROR_STOP=1 --username $POSTGRES_USER --dbname $POSTGRES_DB ...";
 
     #psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
-      #CREATE DATABASE $customDatabaseName;
-      #\connect $customDatabaseName;
-      #CREATE USER $customUserName WITH PASSWORD '$POSTGRES_MYAPP_PASSWORD';
-      #GRANT SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON ALL TABLES IN SCHEMA public TO $customUserName;
-      #GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO $customUserName;
-      #GRANT USAGE, CREATE ON SCHEMA public TO $customUserName;
+    #CREATE USER $customUserName WITH PASSWORD '$POSTGRES_MYAPP_PASSWORD';
+    #CREATE DATABASE $customDatabaseName;
+    #\connect $customDatabaseName;
+    #GRANT ALL ON SCHEMA public TO $customUserName;
     #EOSQL
 
     #echo "$dt - Init script is completed";

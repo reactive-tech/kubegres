@@ -51,8 +51,8 @@ spec:
   #  promotePod: "mypostgres-3-0"
 
   #backup:
-  #  schedule: "*/1 * * * *"
-  #  pvcName: postgres-db-mypostgres-2-0
+  #  schedule: "*/5 * * * *"
+  #  pvcName: backup
   #  volumeMount: /tmp/mypostgres
 
   #imagePullSecrets:
@@ -110,6 +110,12 @@ spec:
   #               storage: 1Gi
 
   env:
+    - name: PGPASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: mypostgres-secret
+          key: superUserPassword
+
     - name: POSTGRES_PASSWORD
       valueFrom:
         secretKeyRef:

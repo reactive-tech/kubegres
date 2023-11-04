@@ -1,9 +1,7 @@
 Features in order of priority:
 
-- add a test in spec_readinessProbe_test and spec_livenessProbe_test so that
-  we test the default behaviour when no option is set from the YAML
-
-- #20 : Delete PVC
+- being able to configure how sensitive is hte automatic recovery process
+  by setting a time value in seconds
 
 - #12 : Reuse PVC (see below) and Primary becomes a Replica
 
@@ -12,9 +10,12 @@ Features in order of priority:
         - "delete": the PVC will be deleted
         - "reuse": if the state of the PVC is healthy, it will be reused by the newly created Replica pod. I think that matches with your suggestion?
 
-- #30: Add one or many sidecar container options in Kubegres YAML
+- #20 : Delete PVC (is it the same as #12?)
 
-- #?: PG bouncer
+- add a test in spec_readinessProbe_test and spec_livenessProbe_test so that
+  we test the default behaviour when no option is set from the YAML
+
+- #30: Add one or many sidecar container options in Kubegres YAML
 
 - #51: add documentation about how to recover backup
 - add use cases documentation, for example how to expand storage manually and how to upgrade Postgres major version.
@@ -29,6 +30,8 @@ Features in order of priority:
 - #82 : Allow using a unique image for the backup job
 
 - #10 : Deploy Kubegres with a HELM chart
+
+- #?: PG bouncer
 
 - #? : Add a field to allow restarting StatefulSets and Pods via the YAML of "Kind: Kubegres"?
 

@@ -17,7 +17,7 @@ stateful-set's life-cycle and data replication could be with Kubernetes.
 
 * It provides a very simple YAML with properties specialised for PostgreSql.
 
-* It is resilient, has over [85 automatized tests](https://github.com/reactive-tech/kubegres/tree/main/internal/test) cases and
+* It is resilient, has over [93 automatized tests](https://github.com/reactive-tech/kubegres/tree/main/internal/test) cases and
   has been running in production.
 
 

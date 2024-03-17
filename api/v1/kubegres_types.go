@@ -62,20 +62,21 @@ type Probe struct {
 }
 
 type KubegresSpec struct {
-	Replicas         *int32                    `json:"replicas,omitempty"`
-	Image            string                    `json:"image,omitempty"`
-	Port             int32                     `json:"port,omitempty"`
-	ImagePullSecrets []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
-	CustomConfig     string                    `json:"customConfig,omitempty"`
-	Database         KubegresDatabase          `json:"database,omitempty"`
-	Failover         KubegresFailover          `json:"failover,omitempty"`
-	Backup           KubegresBackUp            `json:"backup,omitempty"`
-	Env              []v1.EnvVar               `json:"env,omitempty"`
-	Scheduler        KubegresScheduler         `json:"scheduler,omitempty"`
-	Resources        v1.ResourceRequirements   `json:"resources,omitempty"`
-	Volume           Volume                    `json:"volume,omitempty"`
-	SecurityContext  *v1.PodSecurityContext    `json:"securityContext,omitempty"`
-	Probe            Probe                     `json:"probe,omitempty"`
+	Replicas                 *int32                    `json:"replicas,omitempty"`
+	Image                    string                    `json:"image,omitempty"`
+	Port                     int32                     `json:"port,omitempty"`
+	ImagePullSecrets         []v1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
+	CustomConfig             string                    `json:"customConfig,omitempty"`
+	Database                 KubegresDatabase          `json:"database,omitempty"`
+	Failover                 KubegresFailover          `json:"failover,omitempty"`
+	Backup                   KubegresBackUp            `json:"backup,omitempty"`
+	Env                      []v1.EnvVar               `json:"env,omitempty"`
+	Scheduler                KubegresScheduler         `json:"scheduler,omitempty"`
+	Resources                v1.ResourceRequirements   `json:"resources,omitempty"`
+	Volume                   Volume                    `json:"volume,omitempty"`
+	SecurityContext          *v1.PodSecurityContext    `json:"securityContext,omitempty"`
+	ContainerSecurityContext *v1.SecurityContext       `json:"containerSecurityContext,omitempty"`
+	Probe                    Probe                     `json:"probe,omitempty"`
 }
 
 // ----------------------- STATUS -----------------------------------------

@@ -21,8 +21,9 @@ limitations under the License.
 package template
 
 import (
-	"reactive-tech.io/kubegres/internal/controller/ctx"
 	"strconv"
+
+	"reactive-tech.io/kubegres/internal/controller/ctx"
 
 	apps "k8s.io/api/apps/v1"
 	batch "k8s.io/api/batch/v1"
@@ -251,6 +252,14 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 
 	if postgresSpec.Volume.VolumeMounts != nil {
 		statefulSetTemplate.Spec.Template.Spec.Containers[0].VolumeMounts = append(statefulSetTemplate.Spec.Template.Spec.Containers[0].VolumeMounts, r.kubegresContext.Kubegres.Spec.Volume.VolumeMounts...)
+	}
+
+	if postgresSpec.ContainerSecurityContext != nil {
+		statefulSetTemplate.Spec.Template.Spec.Containers[0].SecurityContext = postgresSpec.ContainerSecurityContext
+
+		if len(statefulSetTemplate.Spec.Template.Spec.InitContainers) > 0 {
+			statefulSetTemplate.Spec.Template.Spec.InitContainers[0].SecurityContext = postgresSpec.ContainerSecurityContext
+		}
 	}
 
 	if postgresSpec.SecurityContext != nil {

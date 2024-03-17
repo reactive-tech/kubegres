@@ -22,6 +22,7 @@ package resources
 
 import (
 	"context"
+
 	ctx2 "reactive-tech.io/kubegres/internal/controller/ctx"
 	"reactive-tech.io/kubegres/internal/controller/ctx/log"
 	"reactive-tech.io/kubegres/internal/controller/ctx/status"
@@ -163,6 +164,7 @@ func addStatefulSetSpecEnforcers(rc *ResourcesContext) {
 	tolerationsSpecEnforcer := statefulset_spec2.CreateTolerationsSpecEnforcer(rc.KubegresContext)
 	resourcesSpecEnforcer := statefulset_spec2.CreateResourcesSpecEnforcer(rc.KubegresContext)
 	volumeSpecEnforcer := statefulset_spec2.CreateVolumeSpecEnforcer(rc.KubegresContext)
+	containerSecurityContextSpecEnforcer := statefulset_spec2.CreateContainerSecurityContextSpecEnforcer(rc.KubegresContext)
 	securityContextSpecEnforcer := statefulset_spec2.CreateSecurityContextSpecEnforcer(rc.KubegresContext)
 	livenessProbeSpecEnforcer := statefulset_spec2.CreateLivenessProbeSpecEnforcer(rc.KubegresContext)
 	readinessProbeSpecEnforcer := statefulset_spec2.CreateReadinessProbeSpecEnforcer(rc.KubegresContext)
@@ -176,6 +178,7 @@ func addStatefulSetSpecEnforcers(rc *ResourcesContext) {
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&tolerationsSpecEnforcer)
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&resourcesSpecEnforcer)
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&volumeSpecEnforcer)
+	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&containerSecurityContextSpecEnforcer)
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&securityContextSpecEnforcer)
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&livenessProbeSpecEnforcer)
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&readinessProbeSpecEnforcer)

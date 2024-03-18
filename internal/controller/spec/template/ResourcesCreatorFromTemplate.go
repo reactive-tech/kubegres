@@ -254,6 +254,14 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 		statefulSetTemplate.Spec.Template.Spec.Containers[0].VolumeMounts = append(statefulSetTemplate.Spec.Template.Spec.Containers[0].VolumeMounts, r.kubegresContext.Kubegres.Spec.Volume.VolumeMounts...)
 	}
 
+	if postgresSpec.ContainerSecurityContext != nil {
+		statefulSetTemplate.Spec.Template.Spec.Containers[0].SecurityContext = postgresSpec.ContainerSecurityContext
+
+		if len(statefulSetTemplate.Spec.Template.Spec.InitContainers) > 0 {
+			statefulSetTemplate.Spec.Template.Spec.InitContainers[0].SecurityContext = postgresSpec.ContainerSecurityContext
+		}
+	}
+
 	if postgresSpec.SecurityContext != nil {
 		statefulSetTemplate.Spec.Template.Spec.SecurityContext = postgresSpec.SecurityContext
 	}

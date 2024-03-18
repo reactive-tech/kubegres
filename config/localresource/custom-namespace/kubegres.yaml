@@ -28,6 +28,23 @@ spec:
   #  pvcName: backup
   #  volumeMount: /tmp/mypostgres
 
+  #containerSecurityContext:
+  #  allowPrivilegeEscalation: false
+  #  capabilities:
+  #    drop:
+  #      - ALL
+  #  seccompProfile:
+  #    type: RuntimeDefault
+  #  runAsNonRoot: true
+  #  readOnlyRootFilesystem: false
+  #  privileged: false
+
+  #securityContext:
+  #  runAsUser: 1001
+  #  runAsGroup: 1001
+  #  fsGroup: 1001
+  #  runAsNonRoot: true
+
   env:
     - name: POSTGRES_PASSWORD
       valueFrom:

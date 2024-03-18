@@ -22,17 +22,18 @@ package util
 
 import (
 	"context"
+	"log"
+	"strconv"
+	"time"
+
 	"github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"log"
 	postgresv1 "reactive-tech.io/kubegres/api/v1"
 	"reactive-tech.io/kubegres/internal/test/resourceConfigs"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strconv"
-	"time"
 )
 
 type TestResourceCreator struct {
@@ -182,6 +183,24 @@ func (r *TestResourceCreator) CreateServiceToSqlQueryDb(kubegresName string, nod
 	resourceLabel := "Service " + serviceResourceName + " (nodePort: " + strconv.Itoa(nodePort) + ")"
 
 	return r.createResourceFromYaml(resourceLabel, serviceResourceName, &existingResource, &resourceToCreate)
+}
+
+func (r *TestResourceCreator) CreateServiceAccount(serviceAccountName string) {
+	existingResource := v1.ServiceAccount{}
+	resourceToCreate := resourceConfigs.LoadServiceAccountYaml()
+	resourceToCreate.Namespace = r.namespace
+	resourceToCreate.Name = resourceConfigs.ServiceAccountResourceName
+
+	if serviceAccountName != "" {
+		resourceToCreate.Name = serviceAccountName
+	}
+	_, err := r.createResourceFromYaml("ServiceAccount", resourceToCreate.Name, &existingResource, &resourceToCreate)
+	if err != nil {
+		log.Println("Error while creating ServiceAccount resource : ", err)
+		gomega.Expect(err).Should(gomega.Succeed())
+	} else {
+		log.Println("ServiceAccount resource created")
+	}
 }
 
 func (r *TestResourceCreator) DeleteResource(resourceToDelete client.Object, resourceName string) bool {

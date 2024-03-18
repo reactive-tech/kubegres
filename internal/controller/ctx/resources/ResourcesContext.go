@@ -22,6 +22,7 @@ package resources
 
 import (
 	"context"
+
 	ctx2 "reactive-tech.io/kubegres/internal/controller/ctx"
 	"reactive-tech.io/kubegres/internal/controller/ctx/log"
 	"reactive-tech.io/kubegres/internal/controller/ctx/status"
@@ -166,6 +167,7 @@ func addStatefulSetSpecEnforcers(rc *ResourcesContext) {
 	securityContextSpecEnforcer := statefulset_spec2.CreateSecurityContextSpecEnforcer(rc.KubegresContext)
 	livenessProbeSpecEnforcer := statefulset_spec2.CreateLivenessProbeSpecEnforcer(rc.KubegresContext)
 	readinessProbeSpecEnforcer := statefulset_spec2.CreateReadinessProbeSpecEnforcer(rc.KubegresContext)
+	serviAccountNameSpecEnforcer := statefulset_spec2.CreateServiceAccountNameSpecEnforcer(rc.KubegresContext)
 
 	rc.StatefulSetsSpecsEnforcer = statefulset_spec2.CreateStatefulSetsSpecsEnforcer(rc.KubegresContext)
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&imageSpecEnforcer)
@@ -179,6 +181,7 @@ func addStatefulSetSpecEnforcers(rc *ResourcesContext) {
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&securityContextSpecEnforcer)
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&livenessProbeSpecEnforcer)
 	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&readinessProbeSpecEnforcer)
+	rc.StatefulSetsSpecsEnforcer.AddSpecEnforcer(&serviAccountNameSpecEnforcer)
 
 	rc.AllStatefulSetsSpecEnforcer = statefulset_spec2.CreateAllStatefulSetsSpecEnforcer(rc.KubegresContext, rc.ResourcesStates, rc.BlockingOperation, rc.StatefulSetsSpecsEnforcer)
 }

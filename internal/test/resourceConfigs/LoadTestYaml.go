@@ -22,10 +22,11 @@ package resourceConfigs
 
 import (
 	"io/ioutil"
+	"log"
+
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
-	"log"
 	kubegresv1 "reactive-tech.io/kubegres/api/v1"
 )
 
@@ -51,6 +52,12 @@ func LoadSecretYaml() v1.Secret {
 	fileContents := getFileContents(SecretYamlFile)
 	obj := decodeYaml(fileContents)
 	return *obj.(*v1.Secret)
+}
+
+func LoadServiceAccountYaml() v1.ServiceAccount {
+	fileContents := getFileContents(ServiceAccountYamlFile)
+	obj := decodeYaml(fileContents)
+	return *obj.(*v1.ServiceAccount)
 }
 
 func LoadYamlServiceToSqlQueryPrimaryDb() v1.Service {

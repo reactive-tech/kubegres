@@ -21,8 +21,9 @@ limitations under the License.
 package template
 
 import (
-	"reactive-tech.io/kubegres/internal/controller/ctx"
 	"strconv"
+
+	"reactive-tech.io/kubegres/internal/controller/ctx"
 
 	apps "k8s.io/api/apps/v1"
 	batch "k8s.io/api/batch/v1"
@@ -263,6 +264,10 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 
 	if postgresSpec.Probe.ReadinessProbe != nil {
 		statefulSetTemplate.Spec.Template.Spec.Containers[0].ReadinessProbe = postgresSpec.Probe.ReadinessProbe
+	}
+
+	if postgresSpec.ServiceAccountName != "" {
+		statefulSetTemplate.Spec.Template.Spec.ServiceAccountName = postgresSpec.ServiceAccountName
 	}
 }
 

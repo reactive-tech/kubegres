@@ -40,6 +40,9 @@ const (
 	SecretYamlFile     = "resourceConfigs/secret.yaml"
 	SecretResourceName = "my-kubegres-secret"
 
+	ServiceAccountYamlFile     = "resourceConfigs/serviceAccount.yaml"
+	ServiceAccountResourceName = "my-kubegres"
+
 	ServiceToSqlQueryPrimaryDbYamlFile     = "resourceConfigs/primaryService.yaml"
 	ServiceToSqlQueryPrimaryDbResourceName = "test-kubegres-primary"
 	ServiceToSqlQueryPrimaryDbNodePort     = 30007

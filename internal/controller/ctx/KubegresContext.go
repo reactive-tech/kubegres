@@ -22,12 +22,13 @@ package ctx
 
 import (
 	"context"
+	"strconv"
+	"strings"
+
 	"reactive-tech.io/kubegres/api/v1"
 	"reactive-tech.io/kubegres/internal/controller/ctx/log"
 	"reactive-tech.io/kubegres/internal/controller/ctx/status"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strconv"
-	"strings"
 )
 
 type KubegresContext struct {
@@ -48,6 +49,7 @@ const (
 	BaseConfigMapName                      = "base-kubegres-config"
 	CronJobNamePrefix                      = "backup-"
 	DefaultContainerPortNumber             = 5432
+	DefaultPodServiceAccountName           = "default"
 	DefaultDatabaseVolumeMount             = "/var/lib/postgresql/data"
 	DefaultDatabaseFolder                  = "pgdata"
 	EnvVarNamePgData                       = "PGDATA"

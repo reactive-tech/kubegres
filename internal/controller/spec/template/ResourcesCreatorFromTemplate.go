@@ -273,6 +273,10 @@ func (r *ResourcesCreatorFromTemplate) initStatefulSet(
 	if postgresSpec.Probe.ReadinessProbe != nil {
 		statefulSetTemplate.Spec.Template.Spec.Containers[0].ReadinessProbe = postgresSpec.Probe.ReadinessProbe
 	}
+
+	if postgresSpec.ServiceAccountName != "" {
+		statefulSetTemplate.Spec.Template.Spec.ServiceAccountName = postgresSpec.ServiceAccountName
+	}
 }
 
 // Extract annotations set in Kubegres YAML by

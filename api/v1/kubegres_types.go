@@ -77,6 +77,7 @@ type KubegresSpec struct {
 	SecurityContext          *v1.PodSecurityContext    `json:"securityContext,omitempty"`
 	ContainerSecurityContext *v1.SecurityContext       `json:"containerSecurityContext,omitempty"`
 	Probe                    Probe                     `json:"probe,omitempty"`
+	ServiceAccountName       string                    `json:"serviceAccountName,omitempty"`
 }
 
 // ----------------------- STATUS -----------------------------------------

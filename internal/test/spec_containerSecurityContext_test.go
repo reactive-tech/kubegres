@@ -235,7 +235,7 @@ func (r *SpeccontainerSecurityContextTest) thenStatefulSetStatesShouldBe(expecte
 				currentInitContainerSecurityContext := resource.StatefulSet.Spec.Template.Spec.InitContainers[0].SecurityContext
 				if !reflect.DeepEqual(currentInitContainerSecurityContext, expectedContainerSecurityContext) {
 					log.Println("StatefulSet '" + resource.StatefulSet.Name + "' has not the expected initContainerSecurityContext which should be nil" +
-						"Current valye: '" + currentInitContainerSecurityContext.String() + "'. Waiting...")
+						"Current value: '" + currentInitContainerSecurityContext.String() + "'. Waiting...")
 					return false
 				}
 			}

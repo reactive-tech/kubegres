@@ -21,7 +21,7 @@ import (
 var _ = Describe("Setting Kubegres spec 'containerSecurityContext'", func() {
 	var test = SpeccontainerSecurityContextTest{}
 	BeforeEach(func() {
-		Skip("Temporarily skipping test")
+		//Skip("Temporarily skipping test")
 
 		namespace := resourceConfigs2.DefaultNamespace
 		test.resourceRetriever = util2.CreateTestResourceRetriever(k8sClientTest, namespace)
@@ -65,8 +65,9 @@ var _ = Describe("Setting Kubegres spec 'containerSecurityContext'", func() {
 			log.Print("START OF: Test 'GIVEN new Kubegres is created with spec 'containerSecurityContext' set to a value and spec 'replica' set to 3")
 
 			securityContext := test.givencontainerSecurityContext1()
+			podSecurityContext := &v12.PodSecurityContext{RunAsUser: pointer.Int64Ptr(1000)}
 
-			test.givenNewKubegresSpecIsSetTo(securityContext, 3)
+			test.givenNewKubegresSpecIsSetTo(securityContext, podSecurityContext, 3)
 
 			test.whenKubegresIsCreated()
 
@@ -119,7 +120,7 @@ func (r *SpeccontainerSecurityContextTest) givencontainerSecurityContext1() *v12
 		AllowPrivilegeEscalation: pointer.BoolPtr(false),
 		Capabilities:             &v12.Capabilities{Drop: []v12.Capability{"ALL"}},
 		SeccompProfile:           &v12.SeccompProfile{Type: v12.SeccompProfileTypeRuntimeDefault},
-		ReadOnlyRootFilesystem:   pointer.BoolPtr(true),
+		ReadOnlyRootFilesystem:   pointer.BoolPtr(false),
 		Privileged:               pointer.BoolPtr(false),
 	}
 }
@@ -140,9 +141,10 @@ func (r *SpeccontainerSecurityContextTest) givenNewKubegresSpecIsWithoutcontaine
 	r.kubegresResource.Spec.Replicas = &replicaCount
 }
 
-func (r *SpeccontainerSecurityContextTest) givenNewKubegresSpecIsSetTo(securityContext *v12.SecurityContext, specNbreReplicas int32) {
+func (r *SpeccontainerSecurityContextTest) givenNewKubegresSpecIsSetTo(securityContext *v12.SecurityContext, podSecurityContext *v12.PodSecurityContext, specNbreReplicas int32) {
 	r.kubegresResource = resourceConfigs2.LoadKubegresYaml()
 	r.kubegresResource.Spec.ContainerSecurityContext = securityContext
+	r.kubegresResource.Spec.SecurityContext = podSecurityContext
 	r.kubegresResource.Spec.Replicas = &specNbreReplicas
 }
 
@@ -181,7 +183,7 @@ func (r *SpeccontainerSecurityContextTest) thenStatefulSetStatesShouldBeWithoutc
 			emptyResources := &v12.SecurityContext{}
 			if !reflect.DeepEqual(currentContainerSecurityContext, emptyResources) {
 				log.Println("StatefulSet '" + resource.StatefulSet.Name + "' has not the expected containerSecurityContext which should be nil" +
-					"Current valye: '" + currentContainerSecurityContext.String() + "'. Waiting...")
+					"Current value: '" + currentContainerSecurityContext.String() + "'. Waiting...")
 				return false
 			}
 
@@ -190,7 +192,7 @@ func (r *SpeccontainerSecurityContextTest) thenStatefulSetStatesShouldBeWithoutc
 				currentInitContainerSecurityContext := resource.StatefulSet.Spec.Template.Spec.InitContainers[0].SecurityContext
 				if !reflect.DeepEqual(currentInitContainerSecurityContext, emptyResources) {
 					log.Println("StatefulSet '" + resource.StatefulSet.Name + "' has not the expected initContainerSecurityContext which should be nil" +
-						"Current valye: '" + currentInitContainerSecurityContext.String() + "'. Waiting...")
+						"Current value: '" + currentInitContainerSecurityContext.String() + "'. Waiting...")
 					return false
 				}
 			}
@@ -263,7 +265,7 @@ func (r *SpeccontainerSecurityContextTest) thenDeployedKubegresSpecShouldWithout
 		return
 	}
 
-	Expect(r.kubegresResource.Spec.SecurityContext).Should(Equal(emptyResources))
+	Expect(r.kubegresResource.Spec.ContainerSecurityContext).Should(Equal(emptyResources))
 }
 
 func (r *SpeccontainerSecurityContextTest) thenDeployedKubegresSpecShouldBeSetTo(expectedcontainerSecurityContext *v12.SecurityContext) {

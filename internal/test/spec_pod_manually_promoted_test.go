@@ -38,7 +38,7 @@ var _ = Describe("Primary instances is not available, when the promotion of a Po
 	var test = SpecFailoverIsDisabledAndPromotePodAreSetTest{}
 
 	BeforeEach(func() {
-		Skip("Temporarily skipping test")
+		//Skip("Temporarily skipping test")
 
 		namespace := resourceConfigs2.DefaultNamespace
 		test.resourceRetriever = util2.CreateTestResourceRetriever(k8sClientTest, namespace)

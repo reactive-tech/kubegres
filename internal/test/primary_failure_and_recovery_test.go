@@ -37,7 +37,7 @@ var _ = Describe("Primary instances is not available, checking recovery works", 
 	var test = PrimaryFailureAndRecoveryTest{}
 
 	BeforeEach(func() {
-		Skip("Temporarily skipping test")
+		//Skip("Temporarily skipping test")
 
 		namespace := resourceConfigs2.DefaultNamespace
 		test.resourceRetriever = util2.CreateTestResourceRetriever(k8sClientTest, namespace)

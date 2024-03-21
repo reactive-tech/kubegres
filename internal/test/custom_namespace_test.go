@@ -40,7 +40,7 @@ var _ = Describe("Creating Kubegres with a custom namespace", func() {
 	var test = CustomNamespaceTest{}
 
 	BeforeEach(func() {
-		Skip("Temporarily skipping test")
+		//Skip("Temporarily skipping test")
 
 		namespace := customNamespace
 		test.resourceRetriever = util2.CreateTestResourceRetriever(k8sClientTest, namespace)

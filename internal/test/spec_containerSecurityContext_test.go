@@ -21,6 +21,8 @@ import (
 var _ = Describe("Setting Kubegres spec 'containerSecurityContext'", func() {
 	var test = SpeccontainerSecurityContextTest{}
 	BeforeEach(func() {
+		//Skip("Temporarily skipping test")
+
 		namespace := resourceConfigs2.DefaultNamespace
 		test.resourceRetriever = util2.CreateTestResourceRetriever(k8sClientTest, namespace)
 		test.resourceCreator = util2.CreateTestResourceCreator(k8sClientTest, test.resourceRetriever, namespace)

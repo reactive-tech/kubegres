@@ -33,6 +33,13 @@ Among many reasons, there are [5 main ones why we recommend Kubegres](https://ww
 
 If you would like to install Kubegres, please read the page [Getting started](http://www.kubegres.io/doc/getting-started.html).
 
+**Sponsor**
+
+Kubegres is sponsored by [Etikbee](https://www.etikbee.com) 
+which is using Kubegres in production with over 25 microservices each using a cluster of Postgres.
+Etikbee is a UK based marketplace which promotes reuse by allowing merchants 
+to list their products for rent, for sale and advertise services such as product repair.
+
 **Contribute**
 
 If you would like to contribute to Kubegres, please read the page [How to contribute](http://www.kubegres.io/contribute/).
@@ -52,11 +59,6 @@ APIs using CRDs. Kubebuilder is maintained by the official Kubernetes API Machin
 new features requested by organisations paying supports as long the new features would benefit the Open Source community.
 We start working on the implementation of new features within 24h of the request from organisations paying supports.
 More details in the [support page](https://www.kubegres.io/support/).
-
-**Sponsor**
-
-If you would like to help this project by sponsoring it, we can display your company's logo on this GitHub page
-and on [https://www.kubegres.io](https://www.kubegres.io). More details in the [sponsor page](https://www.kubegres.io/sponsor/).
 
 **Interesting links**
 * A webinar about Kubegres was hosted by PostgresConf on 25 May 2021. [Watch the recorded video.](https://postgresconf.org/conferences/2021_Postgres_Conference_Webinars/program/proposals/creating-a-resilient-postgresql-cluster-with-kubegres)

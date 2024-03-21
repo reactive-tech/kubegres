@@ -37,7 +37,7 @@ var _ = Describe("Checking changes in Primary DB is replicated in Replica DBs", 
 	var test = DataIsReplicatedTest{}
 
 	BeforeEach(func() {
-		Skip("Temporarily skipping test")
+		//Skip("Temporarily skipping test")
 
 		namespace := resourceConfigs2.DefaultNamespace
 		test.resourceRetriever = util2.CreateTestResourceRetriever(k8sClientTest, namespace)

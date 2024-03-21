@@ -41,7 +41,7 @@ var _ = Describe("Setting Kubegres specs 'customConfig'", func() {
 	var test = SpecCustomConfigTest{}
 
 	BeforeEach(func() {
-		Skip("Temporarily skipping test")
+		//Skip("Temporarily skipping test")
 
 		namespace := resourceConfigs2.DefaultNamespace
 		test.resourceRetriever = util2.CreateTestResourceRetriever(k8sClientTest, namespace)

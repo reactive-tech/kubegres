@@ -38,7 +38,7 @@ var _ = Describe("Setting Kubegres spec 'scheduler.tolerations'", func() {
 	var test = SpecTolerationsTest{}
 
 	BeforeEach(func() {
-		Skip("Temporarily skipping test")
+		//Skip("Temporarily skipping test")
 
 		namespace := resourceConfigs2.DefaultNamespace
 		test.resourceRetriever = util2.CreateTestResourceRetriever(k8sClientTest, namespace)

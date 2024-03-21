@@ -38,7 +38,7 @@ var _ = Describe("Setting Kubegres spec 'image'", func() {
 	var test = SpecImageTest{}
 
 	BeforeEach(func() {
-		Skip("Temporarily skipping test")
+		//Skip("Temporarily skipping test")
 
 		namespace := resourceConfigs2.DefaultNamespace
 		test.resourceRetriever = util2.CreateTestResourceRetriever(k8sClientTest, namespace)
@@ -70,9 +70,9 @@ var _ = Describe("Setting Kubegres spec 'image'", func() {
 		})
 	})
 
-	Context("GIVEN new Kubegres is created with spec 'image' set to 'postgres:16.0' and spec 'replica' set to 3 and later 'image' is updated to 'postgres:16.1'", func() {
+	Context("GIVEN new Kubegres is created with spec 'image' set to 'postgres:16.0' and spec 'replica' set to 3 and later 'image' is updated to 'postgres:16.2'", func() {
 
-		It("GIVEN new Kubegres is created with spec 'image' set to 'postgres:16.0' and spec 'replica' set to 3 THEN 1 primary and 2 replica should be created with spec 'image' set to 'postgres:16.1'", func() {
+		It("GIVEN new Kubegres is created with spec 'image' set to 'postgres:16.0' and spec 'replica' set to 3 THEN 1 primary and 2 replica should be created with spec 'image' set to 'postgres:16.2'", func() {
 
 			log.Print("START OF: Test 'GIVEN new Kubegres is created with spec 'image' set to 'postgres:16.0' and spec 'replica' set to 3")
 
@@ -92,22 +92,22 @@ var _ = Describe("Setting Kubegres spec 'image'", func() {
 			log.Print("END OF: Test 'GIVEN new Kubegres is created with spec 'image' set to 'postgres:16.0' and spec 'replica' set to 3'")
 		})
 
-		It("GIVEN existing Kubegres is updated with spec 'image' set from 'postgres:16.0' to 'postgres:16.1' THEN 1 primary and 2 replica should be re-deployed with spec 'image' set to 'postgres:16.1'", func() {
+		It("GIVEN existing Kubegres is updated with spec 'image' set from 'postgres:16.0' to 'postgres:16.2' THEN 1 primary and 2 replica should be re-deployed with spec 'image' set to 'postgres:16.2'", func() {
 
-			log.Print("START OF: Test 'GIVEN existing Kubegres is updated with spec 'image' set from 'postgres:16.0' to 'postgres:16.1'")
+			log.Print("START OF: Test 'GIVEN existing Kubegres is updated with spec 'image' set from 'postgres:16.0' to 'postgres:16.2'")
 
-			test.givenExistingKubegresSpecIsSetTo("postgres:16.1")
+			test.givenExistingKubegresSpecIsSetTo("postgres:16.2")
 
 			test.whenKubernetesIsUpdated()
 
-			test.thenPodsStatesShouldBe("postgres:16.1", 1, 2)
+			test.thenPodsStatesShouldBe("postgres:16.2", 1, 2)
 
-			test.thenDeployedKubegresSpecShouldBeSetTo("postgres:16.1")
+			test.thenDeployedKubegresSpecShouldBeSetTo("postgres:16.2")
 
 			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
 			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
 
-			log.Print("END OF: Test 'GIVEN existing Kubegres is updated with spec 'image' set from 'postgres:16.0' to 'postgres:16.1'")
+			log.Print("END OF: Test 'GIVEN existing Kubegres is updated with spec 'image' set from 'postgres:16.0' to 'postgres:16.2'")
 		})
 
 	})

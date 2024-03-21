@@ -5,4 +5,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: reactivetechio/kubegres
-  newTag: "1.17"
+  newTag: "1.18"

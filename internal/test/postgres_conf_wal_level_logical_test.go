@@ -37,7 +37,7 @@ var _ = Describe("We set the wal-level to 'logical' and simulate when Primary in
 	var test = PostgresConfWalLevelLogicalTest{}
 
 	BeforeEach(func() {
-		Skip("Temporarily skipping test")
+		//Skip("Temporarily skipping test")
 
 		namespace := resourceConfigs2.DefaultNamespace
 		test.resourceRetriever = util2.CreateTestResourceRetriever(k8sClientTest, namespace)

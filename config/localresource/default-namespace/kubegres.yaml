@@ -6,7 +6,7 @@ metadata:
 spec:
 
   replicas: 3
-  image: postgres:16.1
+  image: postgres:16.2
   #port: 5432
 
   database:
@@ -100,8 +100,7 @@ spec:
   #          sizeLimit: "600Mi"
   #
   #    volumeClaimTemplates:
-  #      - metadata:
-  #          name: anyMount
+  #      - name: anyMount
   #        spec:
   #          accessModes: [ "ReadWriteOnce" ]
   #          storageClassName: standard

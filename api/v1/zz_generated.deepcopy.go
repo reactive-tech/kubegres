@@ -209,6 +209,11 @@ func (in *KubegresSpec) DeepCopyInto(out *KubegresSpec) {
 		*out = new(corev1.PodSecurityContext)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.ContainerSecurityContext != nil {
+		in, out := &in.ContainerSecurityContext, &out.ContainerSecurityContext
+		*out = new(corev1.SecurityContext)
+		(*in).DeepCopyInto(*out)
+	}
 	in.Probe.DeepCopyInto(&out.Probe)
 }
 

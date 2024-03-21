@@ -36,7 +36,7 @@ If you would like to install Kubegres, please read the page [Getting started](ht
 **Sponsor**
 
 Kubegres is sponsored by [Etikbee](https://www.etikbee.com) 
-which is using Kubegres in production with over 25 microservices each using a cluster of Postgres.
+which is using Kubegres in production with over 25 clusters of Postgres.
 Etikbee is a UK based marketplace which promotes reuse by allowing merchants 
 to list their products for rent, for sale and advertise services such as product repair.
 

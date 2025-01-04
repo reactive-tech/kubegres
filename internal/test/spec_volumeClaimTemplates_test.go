@@ -214,7 +214,7 @@ func (r *SpecVolumeClaimTemplatesTest) givenVolumeClaimTemplate(volumeName, volu
 		Spec: v12.PersistentVolumeClaimSpec{
 			AccessModes:      []v12.PersistentVolumeAccessMode{v12.ReadWriteOnce},
 			StorageClassName: &storageClassName,
-			Resources: v12.ResourceRequirements{
+			Resources: v12.VolumeResourceRequirements{
 				Requests: requests,
 			},
 		},

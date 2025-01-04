@@ -70,44 +70,44 @@ var _ = Describe("Setting Kubegres spec 'image'", func() {
 		})
 	})
 
-	Context("GIVEN new Kubegres is created with spec 'image' set to 'postgres:16.0' and spec 'replica' set to 3 and later 'image' is updated to 'postgres:16.2'", func() {
+	Context("GIVEN new Kubegres is created with spec 'image' set to 'postgres:17.0' and spec 'replica' set to 3 and later 'image' is updated to 'postgres:17.2'", func() {
 
-		It("GIVEN new Kubegres is created with spec 'image' set to 'postgres:16.0' and spec 'replica' set to 3 THEN 1 primary and 2 replica should be created with spec 'image' set to 'postgres:16.2'", func() {
+		It("GIVEN new Kubegres is created with spec 'image' set to 'postgres:17.0' and spec 'replica' set to 3 THEN 1 primary and 2 replica should be created with spec 'image' set to 'postgres:17.2'", func() {
 
-			log.Print("START OF: Test 'GIVEN new Kubegres is created with spec 'image' set to 'postgres:16.0' and spec 'replica' set to 3")
+			log.Print("START OF: Test 'GIVEN new Kubegres is created with spec 'image' set to 'postgres:17.0' and spec 'replica' set to 3")
 
-			test.givenNewKubegresSpecIsSetTo("postgres:16.0", 3)
+			test.givenNewKubegresSpecIsSetTo("postgres:17.0", 3)
 
 			test.whenKubegresIsCreated()
 
-			test.thenPodsStatesShouldBe("postgres:16.0", 1, 2)
+			test.thenPodsStatesShouldBe("postgres:17.0", 1, 2)
 
-			test.thenDeployedKubegresSpecShouldBeSetTo("postgres:16.0")
+			test.thenDeployedKubegresSpecShouldBeSetTo("postgres:17.0")
 
 			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
 			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
 
 			test.keepCreatedResourcesForNextTest = true
 
-			log.Print("END OF: Test 'GIVEN new Kubegres is created with spec 'image' set to 'postgres:16.0' and spec 'replica' set to 3'")
+			log.Print("END OF: Test 'GIVEN new Kubegres is created with spec 'image' set to 'postgres:17.0' and spec 'replica' set to 3'")
 		})
 
-		It("GIVEN existing Kubegres is updated with spec 'image' set from 'postgres:16.0' to 'postgres:16.2' THEN 1 primary and 2 replica should be re-deployed with spec 'image' set to 'postgres:16.2'", func() {
+		It("GIVEN existing Kubegres is updated with spec 'image' set from 'postgres:17.0' to 'postgres:17.2' THEN 1 primary and 2 replica should be re-deployed with spec 'image' set to 'postgres:17.2'", func() {
 
-			log.Print("START OF: Test 'GIVEN existing Kubegres is updated with spec 'image' set from 'postgres:16.0' to 'postgres:16.2'")
+			log.Print("START OF: Test 'GIVEN existing Kubegres is updated with spec 'image' set from 'postgres:17.0' to 'postgres:17.2'")
 
-			test.givenExistingKubegresSpecIsSetTo("postgres:16.2")
+			test.givenExistingKubegresSpecIsSetTo("postgres:17.2")
 
 			test.whenKubernetesIsUpdated()
 
-			test.thenPodsStatesShouldBe("postgres:16.2", 1, 2)
+			test.thenPodsStatesShouldBe("postgres:17.2", 1, 2)
 
-			test.thenDeployedKubegresSpecShouldBeSetTo("postgres:16.2")
+			test.thenDeployedKubegresSpecShouldBeSetTo("postgres:17.2")
 
 			test.dbQueryTestCases.ThenWeCanSqlQueryPrimaryDb()
 			test.dbQueryTestCases.ThenWeCanSqlQueryReplicaDb()
 
-			log.Print("END OF: Test 'GIVEN existing Kubegres is updated with spec 'image' set from 'postgres:16.0' to 'postgres:16.2'")
+			log.Print("END OF: Test 'GIVEN existing Kubegres is updated with spec 'image' set from 'postgres:17.0' to 'postgres:17.2'")
 		})
 
 	})

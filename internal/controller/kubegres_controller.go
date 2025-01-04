@@ -163,6 +163,7 @@ func (r *KubegresReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&kubegresv1.Kubegres{}).
+		Named(ctx2.KindKubegres).
 		Owns(&apps.StatefulSet{}).
 		Owns(&core.Service{}).
 		Complete(r)

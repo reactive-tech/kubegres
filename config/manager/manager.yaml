@@ -3,7 +3,7 @@ kind: Namespace
 metadata:
   labels:
     control-plane: controller-manager
-    app.kubernetes.io/name: kubegres-new
+    app.kubernetes.io/name: kubegres
     app.kubernetes.io/managed-by: kustomize
   name: system
 ---
@@ -14,7 +14,7 @@ metadata:
   namespace: system
   labels:
     control-plane: controller-manager
-    app.kubernetes.io/name: kubegres-new
+    app.kubernetes.io/name: kubegres
     app.kubernetes.io/managed-by: kustomize
 spec:
   selector:

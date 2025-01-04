@@ -2,7 +2,7 @@ apiVersion: kubegres.reactive-tech.io/v1
 kind: Kubegres
 metadata:
   labels:
-    app.kubernetes.io/name: kubegres-new
+    app.kubernetes.io/name: kubegres
     app.kubernetes.io/managed-by: kustomize
   name: kubegres-sample
 spec:

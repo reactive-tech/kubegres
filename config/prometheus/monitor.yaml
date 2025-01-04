@@ -4,7 +4,7 @@ kind: ServiceMonitor
 metadata:
   labels:
     control-plane: controller-manager
-    app.kubernetes.io/name: kubegres-new
+    app.kubernetes.io/name: kubegres
     app.kubernetes.io/managed-by: kustomize
   name: controller-manager-metrics-monitor
   namespace: system

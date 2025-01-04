@@ -3,9 +3,9 @@ kind: Namespace
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kubegres-new
+    app.kubernetes.io/name: kubegres
     control-plane: controller-manager
-  name: kubegres-new-system
+  name: kubegres-system
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -4075,18 +4075,18 @@ kind: ServiceAccount
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kubegres-new
-  name: kubegres-new-controller-manager
-  namespace: kubegres-new-system
+    app.kubernetes.io/name: kubegres
+  name: kubegres-controller-manager
+  namespace: kubegres-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kubegres-new
-  name: kubegres-new-leader-election-role
-  namespace: kubegres-new-system
+    app.kubernetes.io/name: kubegres
+  name: kubegres-leader-election-role
+  namespace: kubegres-system
 rules:
 - apiGroups:
   - ""
@@ -4125,8 +4125,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kubegres-new
-  name: kubegres-new-kubegres-editor-role
+    app.kubernetes.io/name: kubegres
+  name: kubegres-kubegres-editor-role
 rules:
 - apiGroups:
   - kubegres.reactive-tech.io
@@ -4152,8 +4152,8 @@ kind: ClusterRole
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kubegres-new
-  name: kubegres-new-kubegres-viewer-role
+    app.kubernetes.io/name: kubegres
+  name: kubegres-kubegres-viewer-role
 rules:
 - apiGroups:
   - kubegres.reactive-tech.io
@@ -4173,7 +4173,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: kubegres-new-manager-role
+  name: kubegres-manager-role
 rules:
 - apiGroups:
   - ""
@@ -4253,7 +4253,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: kubegres-new-metrics-auth-role
+  name: kubegres-metrics-auth-role
 rules:
 - apiGroups:
   - authentication.k8s.io
@@ -4271,7 +4271,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: kubegres-new-metrics-reader
+  name: kubegres-metrics-reader
 rules:
 - nonResourceURLs:
   - /metrics
@@ -4283,56 +4283,56 @@ kind: RoleBinding
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kubegres-new
-  name: kubegres-new-leader-election-rolebinding
-  namespace: kubegres-new-system
+    app.kubernetes.io/name: kubegres
+  name: kubegres-leader-election-rolebinding
+  namespace: kubegres-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: kubegres-new-leader-election-role
+  name: kubegres-leader-election-role
 subjects:
 - kind: ServiceAccount
-  name: kubegres-new-controller-manager
-  namespace: kubegres-new-system
+  name: kubegres-controller-manager
+  namespace: kubegres-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kubegres-new
-  name: kubegres-new-manager-rolebinding
+    app.kubernetes.io/name: kubegres
+  name: kubegres-manager-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: kubegres-new-manager-role
+  name: kubegres-manager-role
 subjects:
 - kind: ServiceAccount
-  name: kubegres-new-controller-manager
-  namespace: kubegres-new-system
+  name: kubegres-controller-manager
+  namespace: kubegres-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: kubegres-new-metrics-auth-rolebinding
+  name: kubegres-metrics-auth-rolebinding
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: kubegres-new-metrics-auth-role
+  name: kubegres-metrics-auth-role
 subjects:
 - kind: ServiceAccount
-  name: kubegres-new-controller-manager
-  namespace: kubegres-new-system
+  name: kubegres-controller-manager
+  namespace: kubegres-system
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kubegres-new
+    app.kubernetes.io/name: kubegres
     control-plane: controller-manager
-  name: kubegres-new-controller-manager-metrics-service
-  namespace: kubegres-new-system
+  name: kubegres-controller-manager-metrics-service
+  namespace: kubegres-system
 spec:
   ports:
   - name: https
@@ -4347,10 +4347,10 @@ kind: Deployment
 metadata:
   labels:
     app.kubernetes.io/managed-by: kustomize
-    app.kubernetes.io/name: kubegres-new
+    app.kubernetes.io/name: kubegres
     control-plane: controller-manager
-  name: kubegres-new-controller-manager
-  namespace: kubegres-new-system
+  name: kubegres-controller-manager
+  namespace: kubegres-system
 spec:
   replicas: 1
   selector:
@@ -4398,5 +4398,5 @@ spec:
             - ALL
       securityContext:
         runAsNonRoot: true
-      serviceAccountName: kubegres-new-controller-manager
+      serviceAccountName: kubegres-controller-manager
       terminationGracePeriodSeconds: 10
